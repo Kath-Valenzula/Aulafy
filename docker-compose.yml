@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aulafy_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aulafy_db
+      POSTGRES_USER: aulafy_user
+      POSTGRES_PASSWORD: aulafy_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - aulafy_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  aulafy_postgres_data:
