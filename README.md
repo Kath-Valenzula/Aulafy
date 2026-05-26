@@ -77,15 +77,65 @@ La interfaz queda disponible en `http://localhost:4200` y la API en `http://loca
 ## Variables de entorno
 
 ```bash
-DB_URL=jdbc:postgresql://localhost:5432/aulafy_db
-DB_USERNAME=aulafy_user
-DB_PASSWORD=aulafy_pass
+DATABASE_URL=jdbc:postgresql://localhost:5432/aulafy_db
+DATABASE_USERNAME=aulafy_user
+DATABASE_PASSWORD=aulafy_pass
 JWT_SECRET=definir-una-clave-larga-para-produccion
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
+FRONTEND_URL=http://localhost:4200
+SPRING_PROFILES_ACTIVE=dev
 ```
 
 Si Telegram no esta configurado, la API registra el intento como `NO_CONFIGURADO` y la aplicacion sigue funcionando.
+
+## Despliegue en Azure
+
+El ambiente staging propuesto usa:
+
+- Azure Static Web Apps para `frontend/aulafy-web`.
+- Azure App Service para `backend/aulafy-api`.
+- Azure Database for PostgreSQL Flexible Server para `aulafy_db`.
+- GitHub Actions para construir y desplegar.
+- App Settings y GitHub Secrets para configuracion sensible.
+
+Documentacion paso a paso:
+
+- `docs/despliegue/azure-staging.md`
+- `docs/despliegue/checklist-staging.md`
+
+Build backend:
+
+```bash
+cd backend/aulafy-api
+mvn clean test
+mvn clean package
+java -jar target/*.jar
+```
+
+Build frontend staging:
+
+```bash
+cd frontend/aulafy-web
+npm install
+npm run build:staging
+```
+
+Variables requeridas para Azure App Service:
+
+```bash
+SPRING_PROFILES_ACTIVE=staging
+DATABASE_URL=jdbc:postgresql://psql-aulafy-staging.postgres.database.azure.com:5432/aulafy_db?sslmode=require
+DATABASE_USERNAME=<usuario-postgresql>
+DATABASE_PASSWORD=<password-postgresql>
+JWT_SECRET=<clave-larga-segura>
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+FRONTEND_URL=https://<url-static-web-app>
+PORT=8080
+```
+
+Estado actual: el repositorio queda preparado para staging con perfiles Spring Boot, environments Angular, workflows GitHub Actions y documentacion Azure. Falta crear los recursos en Azure Portal y configurar secrets reales fuera del repositorio.
 
 ## Credenciales demo
 
