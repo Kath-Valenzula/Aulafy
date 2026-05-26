@@ -38,6 +38,7 @@ public class WebConfig {
         return Arrays.stream(origins.split(","))
                 .map(String::trim)
                 .filter(origin -> !origin.isBlank())
+                .distinct()
                 .toList();
     }
 }

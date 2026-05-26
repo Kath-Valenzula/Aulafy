@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:${DB_URL:jdbc:postgresql://localhost:5432/aulafy_db}}
+    username: ${DATABASE_USERNAME:${DB_USERNAME:aulafy_user}}
+    password: ${DATABASE_PASSWORD:${DB_PASSWORD:aulafy_pass}}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: true
