@@ -5,6 +5,7 @@ import cl.aulafy.api.calendar.dto.CalendarEventResponse;
 import cl.aulafy.api.calendar.entity.CalendarEvent;
 import cl.aulafy.api.calendar.repository.CalendarEventRepository;
 import cl.aulafy.api.common.exception.ResourceNotFoundException;
+import cl.aulafy.api.common.security.AccessControlService;
 import cl.aulafy.api.courses.entity.Course;
 import cl.aulafy.api.courses.service.CourseService;
 import cl.aulafy.api.notifications.telegram.TelegramNotificationService;
@@ -20,16 +21,20 @@ public class CalendarEventService {
     private final CalendarEventRepository calendarEventRepository;
     private final CourseService courseService;
     private final TelegramNotificationService telegramNotificationService;
+    private final AccessControlService accessControlService;
 
     public CalendarEventService(CalendarEventRepository calendarEventRepository, CourseService courseService,
-                                TelegramNotificationService telegramNotificationService) {
+                                TelegramNotificationService telegramNotificationService,
+                                AccessControlService accessControlService) {
         this.calendarEventRepository = calendarEventRepository;
         this.courseService = courseService;
         this.telegramNotificationService = telegramNotificationService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
-    public List<CalendarEventResponse> findByCourse(Long courseId) {
+    public List<CalendarEventResponse> findByCourse(Long courseId, User user) {
+        accessControlService.assertCanViewCourse(user, courseService.getById(courseId));
         return calendarEventRepository.findByCourseIdAndActiveTrueOrderByStartAtAsc(courseId)
                 .stream()
                 .map(CalendarEventResponse::from)
@@ -39,6 +44,7 @@ public class CalendarEventService {
     @Transactional
     public CalendarEventResponse create(Long courseId, CalendarEventRequest request, User createdBy) {
         Course course = courseService.getById(courseId);
+        accessControlService.assertCanManageCourse(createdBy, course);
         CalendarEvent event = new CalendarEvent(
                 course,
                 createdBy,
@@ -59,8 +65,9 @@ public class CalendarEventService {
     }
 
     @Transactional
-    public CalendarEventResponse update(Long id, CalendarEventRequest request) {
+    public CalendarEventResponse update(Long id, CalendarEventRequest request, User user) {
         CalendarEvent event = getById(id);
+        accessControlService.assertCanManageCourse(user, event.getCourse());
         event.setTitle(request.title().trim());
         event.setDescription(request.description().trim());
         event.setType(request.type());
@@ -71,8 +78,9 @@ public class CalendarEventService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, User user) {
         CalendarEvent event = getById(id);
+        accessControlService.assertCanManageCourse(user, event.getCourse());
         event.setActive(false);
     }
 

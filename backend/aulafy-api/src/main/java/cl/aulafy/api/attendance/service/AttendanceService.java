@@ -7,6 +7,7 @@ import cl.aulafy.api.attendance.entity.Attendance;
 import cl.aulafy.api.attendance.entity.AttendanceStatus;
 import cl.aulafy.api.attendance.repository.AttendanceRepository;
 import cl.aulafy.api.common.exception.BusinessException;
+import cl.aulafy.api.common.security.AccessControlService;
 import cl.aulafy.api.courses.entity.Course;
 import cl.aulafy.api.courses.service.CourseService;
 import cl.aulafy.api.users.entity.RoleName;
@@ -25,15 +26,19 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserService userService;
     private final CourseService courseService;
+    private final AccessControlService accessControlService;
 
-    public AttendanceService(AttendanceRepository attendanceRepository, UserService userService, CourseService courseService) {
+    public AttendanceService(AttendanceRepository attendanceRepository, UserService userService,
+                             CourseService courseService, AccessControlService accessControlService) {
         this.attendanceRepository = attendanceRepository;
         this.userService = userService;
         this.courseService = courseService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
-    public List<AttendanceResponse> findByStudent(Long studentId) {
+    public List<AttendanceResponse> findByStudent(Long studentId, User user) {
+        accessControlService.assertCanViewStudent(user, studentId);
         return attendanceRepository.findByStudentIdOrderByDateDesc(studentId)
                 .stream()
                 .map(AttendanceResponse::from)
@@ -41,9 +46,10 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceResponse create(AttendanceRequest request) {
+    public AttendanceResponse create(AttendanceRequest request, User user) {
         User student = getStudent(request.studentId());
         Course course = courseService.getById(request.courseId());
+        accessControlService.assertCanManageStudentRecord(user, student.getId(), course.getId());
         Attendance attendance = new Attendance(
                 student,
                 course,
@@ -55,7 +61,8 @@ public class AttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public AttendanceSummaryResponse summary(Long studentId) {
+    public AttendanceSummaryResponse summary(Long studentId, User user) {
+        accessControlService.assertCanViewStudent(user, studentId);
         User student = getStudent(studentId);
         List<Attendance> records = attendanceRepository.findByStudentIdOrderByDateDesc(studentId);
         long present = count(records, AttendanceStatus.PRESENTE);

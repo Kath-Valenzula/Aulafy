@@ -30,8 +30,11 @@ public class CalendarEventController {
     }
 
     @GetMapping("/courses/{courseId}/events")
-    public List<CalendarEventResponse> findByCourse(@PathVariable Long courseId) {
-        return calendarEventService.findByCourse(courseId);
+    public List<CalendarEventResponse> findByCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return calendarEventService.findByCourse(courseId, userDetails.getUser());
     }
 
     @PostMapping("/courses/{courseId}/events")
@@ -46,14 +49,18 @@ public class CalendarEventController {
 
     @PutMapping("/events/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public CalendarEventResponse update(@PathVariable Long id, @Valid @RequestBody CalendarEventRequest request) {
-        return calendarEventService.update(id, request);
+    public CalendarEventResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody CalendarEventRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return calendarEventService.update(id, request, userDetails.getUser());
     }
 
     @DeleteMapping("/events/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public MessageResponse delete(@PathVariable Long id) {
-        calendarEventService.delete(id);
+    public MessageResponse delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        calendarEventService.delete(id, userDetails.getUser());
         return new MessageResponse("Evento eliminado");
     }
 }

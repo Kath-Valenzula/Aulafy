@@ -1,7 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { AcademicSummaryResponse, GradeResponse } from '../../shared/models/aulafy.models';
+import {
+  AcademicSummaryResponse,
+  EvaluationResponse,
+  EvaluationType,
+  GradeResponse,
+  SubjectResponse
+} from '../../shared/models/aulafy.models';
 
 interface GradeRequest {
   studentId: number;
@@ -9,6 +15,17 @@ interface GradeRequest {
   score: number;
   maxScore: number;
   observation?: string | null;
+}
+
+interface EvaluationRequest {
+  courseId: number;
+  subjectId: number;
+  title: string;
+  description: string;
+  type: EvaluationType;
+  evaluationDate: string;
+  weight?: number | null;
+  active?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -25,5 +42,17 @@ export class AcademicService {
 
   createGrade(request: GradeRequest) {
     return this.http.post<GradeResponse>(`${environment.apiUrl}/grades`, request);
+  }
+
+  subjects(courseId: number) {
+    return this.http.get<SubjectResponse[]>(`${environment.apiUrl}/courses/${courseId}/subjects`);
+  }
+
+  evaluations(courseId: number) {
+    return this.http.get<EvaluationResponse[]>(`${environment.apiUrl}/courses/${courseId}/evaluations`);
+  }
+
+  createEvaluation(request: EvaluationRequest) {
+    return this.http.post<EvaluationResponse>(`${environment.apiUrl}/evaluations`, request);
   }
 }

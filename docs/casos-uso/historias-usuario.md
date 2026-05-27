@@ -5,6 +5,7 @@
 - Como administrador, quiero crear usuarios con rol para organizar el acceso a la plataforma.
 - Como colegio, quiero activar o desactivar usuarios para mantener el registro actualizado.
 - Como colegio, quiero crear cursos para agrupar estudiantes, profesores y comunicaciones.
+- Como colegio, quiero administrar asignaturas y evaluaciones para ordenar el seguimiento academico.
 - Como colegio, quiero publicar comunicados institucionales para centralizar informacion oficial.
 - Como colegio, quiero enviar mensajes por Telegram para avisos importantes.
 
@@ -14,6 +15,7 @@
 - Como profesor, quiero crear publicaciones por curso para informar tareas o materiales.
 - Como profesor, quiero activar o desactivar comentarios para controlar la conversacion.
 - Como profesor, quiero crear eventos de calendario para pruebas, tareas y reuniones.
+- Como profesor, quiero crear evaluaciones asociadas a asignaturas para registrar notas con contexto.
 - Como profesor, quiero registrar notas para mantener seguimiento academico.
 - Como profesor, quiero registrar asistencia para detectar riesgos tempranos.
 

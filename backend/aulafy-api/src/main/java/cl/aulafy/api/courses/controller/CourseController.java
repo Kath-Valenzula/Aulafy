@@ -1,10 +1,12 @@
 package cl.aulafy.api.courses.controller;
 
+import cl.aulafy.api.auth.security.CustomUserDetails;
 import cl.aulafy.api.courses.dto.CourseRequest;
 import cl.aulafy.api.courses.dto.CourseResponse;
 import cl.aulafy.api.courses.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,13 +28,13 @@ public class CourseController {
     }
 
     @GetMapping
-    public List<CourseResponse> findAll() {
-        return courseService.findAll();
+    public List<CourseResponse> findAll(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return courseService.findVisible(userDetails.getUser());
     }
 
     @GetMapping("/{id}")
-    public CourseResponse findById(@PathVariable Long id) {
-        return courseService.findById(id);
+    public CourseResponse findById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return courseService.findById(id, userDetails.getUser());
     }
 
     @PostMapping

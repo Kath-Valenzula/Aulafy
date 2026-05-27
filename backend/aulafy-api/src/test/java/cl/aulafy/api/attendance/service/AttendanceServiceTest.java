@@ -14,7 +14,7 @@ class AttendanceServiceTest {
 
     @Test
     void calculateAttendancePercentageCountsPresentAndLateAsAttendance() {
-        AttendanceService service = new AttendanceService(null, null, null);
+        AttendanceService service = new AttendanceService(null, null, null, null);
         List<Attendance> records = List.of(
                 new Attendance(null, null, LocalDate.now(), AttendanceStatus.PRESENTE, null),
                 new Attendance(null, null, LocalDate.now(), AttendanceStatus.ATRASADO, null),

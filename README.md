@@ -32,11 +32,13 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 - Autenticacion JWT y roles.
 - Administracion de usuarios.
 - Administracion de cursos.
+- Asignaturas y evaluaciones.
 - Muro de publicaciones y comentarios.
 - Calendario academico.
 - Seguimiento de notas y resumen academico.
 - Registro y resumen de asistencia.
 - Notificaciones Telegram preparadas por variables de entorno.
+- Seguridad backend por rol, curso, estudiante y vinculo apoderado-estudiante.
 
 ## Roles
 
@@ -77,15 +79,68 @@ La interfaz queda disponible en `http://localhost:4200` y la API en `http://loca
 ## Variables de entorno
 
 ```bash
-DB_URL=jdbc:postgresql://localhost:5432/aulafy_db
-DB_USERNAME=aulafy_user
-DB_PASSWORD=aulafy_pass
+DATABASE_URL=jdbc:postgresql://localhost:5432/aulafy_db
+DATABASE_USERNAME=aulafy_user
+DATABASE_PASSWORD=aulafy_pass
 JWT_SECRET=definir-una-clave-larga-para-produccion
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
+FRONTEND_URL=http://localhost:4200
+SPRING_PROFILES_ACTIVE=dev
 ```
 
 Si Telegram no esta configurado, la API registra el intento como `NO_CONFIGURADO` y la aplicacion sigue funcionando.
+
+## Despliegue en Azure
+
+El ambiente staging propuesto usa:
+
+- Azure Static Web Apps para `frontend/aulafy-web`.
+- Azure App Service para `backend/aulafy-api`.
+- Azure Database for PostgreSQL Flexible Server para `aulafy_db`.
+- GitHub Actions para construir y desplegar.
+- App Settings y GitHub Secrets para configuracion sensible.
+
+Documentacion paso a paso:
+
+- `docs/despliegue/azure-staging.md`
+- `docs/despliegue/checklist-staging.md`
+- `infra/azure/README.md`
+
+Build backend:
+
+```bash
+cd backend/aulafy-api
+mvn clean test
+mvn clean package
+java -jar target/*.jar
+```
+
+Build frontend staging:
+
+```bash
+cd frontend/aulafy-web
+npm install
+npm run build:staging
+```
+
+Variables requeridas para Azure App Service:
+
+```bash
+SPRING_PROFILES_ACTIVE=staging
+DATABASE_URL=jdbc:postgresql://psql-aulafy-staging.postgres.database.azure.com:5432/aulafy_db?sslmode=require
+DATABASE_USERNAME=<usuario-postgresql>
+DATABASE_PASSWORD=<password-postgresql>
+JWT_SECRET=<clave-larga-segura>
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+FRONTEND_URL=https://<url-static-web-app>
+PORT=8080
+```
+
+Estado actual: el repositorio queda preparado para staging con perfiles Spring Boot, environments Angular, workflows GitHub Actions y documentacion Azure. Falta crear los recursos en Azure Portal y configurar secrets reales fuera del repositorio.
+
+Control de costos: actualmente solo existe el Resource Group `rg-aulafy-staging` en `brazilsouth`. No se crearon PostgreSQL Flexible Server, App Service Plan ni App Service para evitar costos mensuales sin autorizacion.
 
 ## Credenciales demo
 
@@ -97,16 +152,18 @@ Si Telegram no esta configurado, la API registra el intento como `NO_CONFIGURADO
 
 ## Estado actual del MVP
 
-- Backend compila y tiene 5 pruebas unitarias verdes.
+- Backend compila y tiene 10 pruebas verdes entre unitarias e integracion.
 - Frontend compila y consume endpoints reales de la API.
 - Datos demo se cargan con `CommandLineRunner` cuando la base esta vacia.
 - Telegram queda integrado de forma modular sin credenciales en el repositorio.
 - La documentacion tecnica inicial esta disponible en `docs`.
+- Asignaturas, evaluaciones, notas y asistencia tienen base funcional.
+- El control de acceso no depende solo del frontend; backend valida rol y pertenencia.
 
 ## Roadmap
 
-1. Ajustar permisos por pertenencia real a curso y vinculo apoderado-estudiante.
-2. Agregar endpoints de administracion de evaluaciones y asignaturas.
-3. Mejorar manejo de errores visuales en formularios Angular.
-4. Agregar pruebas de integracion para controladores con seguridad.
-5. Preparar despliegue con perfiles `dev`, `test` y `prod`.
+1. Crear PR de `feature/project-setup` hacia `develop`.
+2. Configurar GitHub Secrets cuando se autorice staging.
+3. Crear recursos pagados solo para validacion cloud o demo.
+4. Ejecutar workflows manuales y validar `/api/health`.
+5. Preparar evidencias finales y pulir UX mobile-first.

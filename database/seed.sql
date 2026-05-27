@@ -16,8 +16,9 @@ ON CONFLICT DO NOTHING;
 INSERT INTO course_students (course_id, student_id) VALUES (1, 5)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO subjects (id, name, course_id)
-VALUES (1, 'Matematica', 1)
+INSERT INTO subjects (id, name, course_id, teacher_id, active) VALUES
+(1, 'Matematica', 1, 3, TRUE),
+(2, 'Lenguaje', 1, 3, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO student_profiles (id, user_id, course_id, run, emergency_contact)
@@ -42,8 +43,9 @@ INSERT INTO calendar_events (id, course_id, created_by_id, title, description, t
 (2, 1, 2, 'Reunion de apoderados', 'Revision de avances del semestre.', 'REUNION', CURRENT_TIMESTAMP + INTERVAL '14 days', CURRENT_TIMESTAMP + INTERVAL '14 days 60 minutes', FALSE, TRUE, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO evaluations (id, course_id, subject_id, title, evaluation_date, weight)
-VALUES (1, 1, 1, 'Control de fracciones', CURRENT_DATE - INTERVAL '3 days', 30)
+INSERT INTO evaluations (id, course_id, subject_id, title, description, type, evaluation_date, weight, active) VALUES
+(1, 1, 1, 'Control de fracciones', 'Control parcial de operatoria con fracciones.', 'CONTROL', CURRENT_DATE - INTERVAL '3 days', 30, TRUE),
+(2, 1, 2, 'Comprension lectora', 'Evaluacion de lectura domiciliaria.', 'PRUEBA', CURRENT_DATE + INTERVAL '10 days', 20, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO grades (id, student_id, evaluation_id, score, max_score, observation, created_at)

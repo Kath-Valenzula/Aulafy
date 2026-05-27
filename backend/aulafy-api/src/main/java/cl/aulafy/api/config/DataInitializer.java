@@ -1,6 +1,7 @@
 package cl.aulafy.api.config;
 
 import cl.aulafy.api.academic.entity.Evaluation;
+import cl.aulafy.api.academic.entity.EvaluationType;
 import cl.aulafy.api.academic.entity.Grade;
 import cl.aulafy.api.academic.repository.EvaluationRepository;
 import cl.aulafy.api.academic.repository.GradeRepository;
@@ -70,7 +71,8 @@ public class DataInitializer {
             course.getStudents().add(estudiante);
             courseRepository.save(course);
 
-            Subject subject = subjectRepository.save(new Subject("Matematica", course));
+            Subject mathematics = subjectRepository.save(new Subject("Matematica", course, profesor));
+            Subject language = subjectRepository.save(new Subject("Lenguaje", course, profesor));
             studentProfileRepository.save(new StudentProfile(estudiante, course, "11.111.111-1", "Apoderada Demo"));
             guardianStudentRepository.save(new GuardianStudent(apoderado, estudiante, "Apoderado titular"));
 
@@ -115,10 +117,21 @@ public class DataInitializer {
 
             Evaluation evaluation = evaluationRepository.save(new Evaluation(
                     course,
-                    subject,
+                    mathematics,
                     "Control de fracciones",
+                    "Control parcial de operatoria con fracciones.",
+                    EvaluationType.CONTROL,
                     LocalDate.now().minusDays(3),
                     30
+            ));
+            evaluationRepository.save(new Evaluation(
+                    course,
+                    language,
+                    "Comprension lectora",
+                    "Evaluacion de lectura domiciliaria.",
+                    EvaluationType.PRUEBA,
+                    LocalDate.now().plusDays(10),
+                    20
             ));
             gradeRepository.save(new Grade(estudiante, evaluation, BigDecimal.valueOf(6.4), BigDecimal.valueOf(7), "Buen desempeno"));
             attendanceRepository.saveAll(List.of(

@@ -21,6 +21,13 @@ public class AcademicSummaryService {
     }
 
     public String resolveStatus(BigDecimal average) {
+        return resolveStatus(average, 1);
+    }
+
+    public String resolveStatus(BigDecimal average, int gradeCount) {
+        if (gradeCount == 0) {
+            return "SIN_DATOS";
+        }
         if (average.compareTo(BigDecimal.valueOf(5.5)) >= 0) {
             return "DESTACADO";
         }
@@ -28,5 +35,15 @@ public class AcademicSummaryService {
             return "AL_DIA";
         }
         return "RIESGO";
+    }
+
+    public String resolveMessage(int gradeCount) {
+        if (gradeCount == 0) {
+            return "Sin evaluaciones registradas";
+        }
+        if (gradeCount == 1) {
+            return "Promedio parcial basado en 1 evaluacion registrada";
+        }
+        return "Promedio parcial basado en " + gradeCount + " evaluaciones registradas";
     }
 }

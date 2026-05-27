@@ -7,6 +7,7 @@ public record AcademicSummaryResponse(
         String studentName,
         int gradeCount,
         BigDecimal averageScore,
-        String status
+        String status,
+        String message
 ) {
 }

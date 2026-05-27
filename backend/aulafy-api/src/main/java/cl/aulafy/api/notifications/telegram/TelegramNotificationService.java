@@ -45,7 +45,7 @@ public class TelegramNotificationService {
     public NotificationLogResponse send(String chatId, String message) {
         String targetChatId = normalize(chatId);
         if (!isConfigured(targetChatId)) {
-            log.info("Telegram no configurado. Defina TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID para enviar mensajes.");
+            log.warn("Telegram no configurado. Defina TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID para enviar mensajes.");
             return save(targetChatId == null ? "NO_CONFIGURADO" : targetChatId, message, "NO_CONFIGURADO",
                     "Faltan variables de entorno de Telegram");
         }

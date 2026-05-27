@@ -1,5 +1,6 @@
 package cl.aulafy.api.posts.service;
 
+import cl.aulafy.api.common.security.AccessControlService;
 import cl.aulafy.api.courses.entity.Course;
 import cl.aulafy.api.courses.service.CourseService;
 import cl.aulafy.api.posts.dto.PostRequest;
@@ -27,6 +28,9 @@ class PostServiceTest {
 
     @Mock
     private CourseService courseService;
+
+    @Mock
+    private AccessControlService accessControlService;
 
     @InjectMocks
     private PostService postService;
