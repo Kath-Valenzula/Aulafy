@@ -31,8 +31,11 @@ public class PostController {
     }
 
     @GetMapping("/courses/{courseId}/posts")
-    public List<PostResponse> findByCourse(@PathVariable Long courseId) {
-        return postService.findByCourse(courseId);
+    public List<PostResponse> findByCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return postService.findByCourse(courseId, userDetails.getUser());
     }
 
     @PostMapping("/courses/{courseId}/posts")
@@ -46,32 +49,36 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}")
-    public PostResponse findById(@PathVariable Long id) {
-        return postService.findById(id);
+    public PostResponse findById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return postService.findById(id, userDetails.getUser());
     }
 
     @PutMapping("/posts/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public PostResponse update(@PathVariable Long id, @Valid @RequestBody PostRequest request) {
-        return postService.update(id, request);
+    public PostResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody PostRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return postService.update(id, request, userDetails.getUser());
     }
 
     @DeleteMapping("/posts/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public MessageResponse delete(@PathVariable Long id) {
-        postService.delete(id);
+    public MessageResponse delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        postService.delete(id, userDetails.getUser());
         return new MessageResponse("Publicacion eliminada");
     }
 
     @PatchMapping("/posts/{id}/pin")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public PostResponse togglePin(@PathVariable Long id) {
-        return postService.togglePin(id);
+    public PostResponse togglePin(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return postService.togglePin(id, userDetails.getUser());
     }
 
     @PatchMapping("/posts/{id}/comments-status")
     @PreAuthorize("hasAnyRole('ADMIN','COLEGIO','PROFESOR')")
-    public PostResponse toggleComments(@PathVariable Long id) {
-        return postService.toggleComments(id);
+    public PostResponse toggleComments(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return postService.toggleComments(id, userDetails.getUser());
     }
 }

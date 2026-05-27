@@ -23,6 +23,14 @@ Servicios:
 - Automatizacion: GitHub Actions.
 - Secretos: GitHub Secrets y App Settings de Azure.
 
+## Estado actual sin costos
+
+- Resource Group creado: `rg-aulafy-staging`.
+- Region usada: `brazilsouth`.
+- No se crearon PostgreSQL Flexible Server, App Service Plan ni App Service en esta iteracion.
+- Los scripts seguros quedaron preparados en `infra/azure`.
+- La creacion de recursos pagados queda pendiente de autorizacion manual y revision de costo.
+
 ## C. Recursos Azure a crear desde el portal
 
 Nombres sugeridos:

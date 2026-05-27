@@ -2,6 +2,7 @@ export type RoleName = 'ADMIN' | 'COLEGIO' | 'PROFESOR' | 'APODERADO' | 'ESTUDIA
 export type PostType = 'AVISO' | 'TAREA' | 'EVALUACION' | 'REUNION' | 'MATERIAL' | 'COMUNICADO';
 export type EventType = 'PRUEBA' | 'TAREA' | 'REUNION' | 'ACTIVIDAD' | 'COMUNICADO';
 export type AttendanceStatus = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATRASADO';
+export type EvaluationType = 'PRUEBA' | 'CONTROL' | 'TAREA' | 'TRABAJO' | 'PROYECTO';
 
 export interface UserResponse {
   id: number;
@@ -28,6 +29,30 @@ export interface CourseResponse {
   active: boolean;
   studentCount: number;
   teacherCount: number;
+}
+
+export interface SubjectResponse {
+  id: number;
+  name: string;
+  courseId: number;
+  courseName: string;
+  teacherId?: number | null;
+  teacherName?: string | null;
+  active: boolean;
+}
+
+export interface EvaluationResponse {
+  id: number;
+  courseId: number;
+  courseName: string;
+  subjectId: number;
+  subjectName: string;
+  title: string;
+  description: string;
+  type: EvaluationType;
+  evaluationDate: string;
+  weight?: number | null;
+  active: boolean;
 }
 
 export interface PostResponse {
@@ -76,6 +101,7 @@ export interface AcademicSummaryResponse {
   gradeCount: number;
   averageScore: number;
   status: string;
+  message: string;
 }
 
 export interface AttendanceResponse {

@@ -15,3 +15,11 @@ app:
   security:
     jwt:
       secret: aulafy-test-secret-key-change-in-real-environments
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.boot.autoconfigure: WARN

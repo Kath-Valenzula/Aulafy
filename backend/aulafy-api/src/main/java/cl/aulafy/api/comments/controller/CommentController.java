@@ -28,8 +28,11 @@ public class CommentController {
     }
 
     @GetMapping("/posts/{postId}/comments")
-    public List<CommentResponse> findByPost(@PathVariable Long postId) {
-        return commentService.findByPost(postId);
+    public List<CommentResponse> findByPost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return commentService.findByPost(postId, userDetails.getUser());
     }
 
     @PostMapping("/posts/{postId}/comments")
@@ -42,8 +45,8 @@ public class CommentController {
     }
 
     @DeleteMapping("/comments/{id}")
-    public MessageResponse delete(@PathVariable Long id) {
-        commentService.delete(id);
+    public MessageResponse delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        commentService.delete(id, userDetails.getUser());
         return new MessageResponse("Comentario eliminado");
     }
 }

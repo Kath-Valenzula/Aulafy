@@ -353,6 +353,10 @@ th {
   grid-template-columns: auto 1fr;
 }
 
+.timeline-item.upcoming {
+  border-color: #f2c94c;
+}
+
 .summary-strip {
   display: grid;
   gap: 1rem;
@@ -360,7 +364,8 @@ th {
 }
 
 .quick-actions,
-.inline-tools {
+.inline-tools,
+.pill-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.7rem;
@@ -368,6 +373,14 @@ th {
 
 .inline-tools input {
   max-width: 130px;
+}
+
+.inline-tools select {
+  max-width: 220px;
+}
+
+.pill-row {
+  margin-top: 0.45rem;
 }
 
 .empty-state,
@@ -468,5 +481,23 @@ th {
   .login-copy,
   .login-form {
     padding: 2rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-heading {
+    display: grid;
+  }
+
+  .inline-tools,
+  .page-heading > select {
+    width: 100%;
+  }
+
+  .inline-tools input,
+  .inline-tools select,
+  .inline-tools .button {
+    max-width: none;
+    width: 100%;
   }
 }

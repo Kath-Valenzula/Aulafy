@@ -21,6 +21,8 @@ import { CourseResponse, PostResponse, PostType } from '../../shared/models/aula
       </select>
     </section>
 
+    <p class="error" *ngIf="error">{{ error }}</p>
+
     <section class="work-area" *ngIf="canPublish()">
       <h3>Nueva publicacion</h3>
       <form class="form-grid" [formGroup]="form" (ngSubmit)="create()">
@@ -50,7 +52,7 @@ import { CourseResponse, PostResponse, PostType } from '../../shared/models/aula
       <article class="post-card" *ngFor="let post of posts">
         <header>
           <span class="badge">{{ post.type }}</span>
-          <small>{{ post.authorName }} · {{ post.createdAt | date:'short' }}</small>
+          <small>{{ post.authorName }} - {{ post.createdAt | date:'short' }}</small>
         </header>
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
@@ -59,7 +61,8 @@ import { CourseResponse, PostResponse, PostType } from '../../shared/models/aula
           <span>{{ post.commentsEnabled ? 'Comentarios abiertos' : 'Comentarios cerrados' }}</span>
         </footer>
       </article>
-      <p class="empty-state" *ngIf="!posts.length">No hay publicaciones cargadas para este curso.</p>
+      <p class="empty-state" *ngIf="loading">Cargando publicaciones...</p>
+      <p class="empty-state" *ngIf="!loading && !posts.length">No hay publicaciones cargadas para este curso.</p>
     </section>
   `
 })
@@ -72,6 +75,8 @@ export class FeedComponent implements OnInit {
   courses: CourseResponse[] = [];
   posts: PostResponse[] = [];
   selectedCourseId?: number;
+  loading = false;
+  error = '';
   postTypes: PostType[] = ['AVISO', 'TAREA', 'EVALUACION', 'REUNION', 'MATERIAL', 'COMUNICADO'];
   form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -81,10 +86,13 @@ export class FeedComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.coursesService.findAll().subscribe((courses) => {
-      this.courses = courses;
-      this.selectedCourseId = courses[0]?.id;
-      this.loadPosts();
+    this.coursesService.findAll().subscribe({
+      next: (courses) => {
+        this.courses = courses;
+        this.selectedCourseId = courses[0]?.id;
+        this.loadPosts();
+      },
+      error: () => this.error = 'No fue posible cargar los cursos disponibles.'
     });
   }
 
@@ -97,9 +105,12 @@ export class FeedComponent implements OnInit {
     if (!this.selectedCourseId || this.form.invalid) {
       return;
     }
-    this.postsService.create(this.selectedCourseId, this.form.getRawValue()).subscribe((post) => {
-      this.posts = [post, ...this.posts];
-      this.form.reset({ title: '', content: '', type: 'AVISO', commentsEnabled: true });
+    this.postsService.create(this.selectedCourseId, this.form.getRawValue()).subscribe({
+      next: (post) => {
+        this.posts = [post, ...this.posts].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.createdAt.localeCompare(a.createdAt));
+        this.form.reset({ title: '', content: '', type: 'AVISO', commentsEnabled: true });
+      },
+      error: () => this.error = 'No fue posible publicar. Revise permisos y datos.'
     });
   }
 
@@ -112,6 +123,17 @@ export class FeedComponent implements OnInit {
       this.posts = [];
       return;
     }
-    this.postsService.findByCourse(this.selectedCourseId).subscribe((posts) => this.posts = posts);
+    this.loading = true;
+    this.error = '';
+    this.postsService.findByCourse(this.selectedCourseId).subscribe({
+      next: (posts) => {
+        this.posts = posts;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No fue posible cargar las publicaciones para este curso.';
+        this.loading = false;
+      }
+    });
   }
 }

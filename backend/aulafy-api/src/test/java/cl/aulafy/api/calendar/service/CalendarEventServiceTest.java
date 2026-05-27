@@ -5,6 +5,7 @@ import cl.aulafy.api.calendar.dto.CalendarEventResponse;
 import cl.aulafy.api.calendar.entity.CalendarEvent;
 import cl.aulafy.api.calendar.entity.EventType;
 import cl.aulafy.api.calendar.repository.CalendarEventRepository;
+import cl.aulafy.api.common.security.AccessControlService;
 import cl.aulafy.api.courses.entity.Course;
 import cl.aulafy.api.courses.service.CourseService;
 import cl.aulafy.api.notifications.telegram.TelegramNotificationService;
@@ -35,6 +36,9 @@ class CalendarEventServiceTest {
 
     @Mock
     private TelegramNotificationService telegramNotificationService;
+
+    @Mock
+    private AccessControlService accessControlService;
 
     @InjectMocks
     private CalendarEventService calendarEventService;

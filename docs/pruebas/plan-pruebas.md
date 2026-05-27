@@ -9,13 +9,18 @@ cd backend/aulafy-api
 mvn clean test
 ```
 
-Casos actuales:
+Casos actuales automatizados:
 
 - `AuthServiceTest`: login valido retorna JWT y usuario.
+- `AuthServiceTest`: login invalido propaga credenciales invalidas.
+- `SecurityIntegrationTest`: endpoint protegido sin token responde 401.
+- `SecurityIntegrationTest`: rol incorrecto recibe 403.
 - `PostServiceTest`: crea publicacion valida para un curso.
+- `CommentServiceTest`: bloquea comentario si la publicacion no permite comentarios.
 - `CalendarEventServiceTest`: crea evento sin enviar Telegram cuando no corresponde.
 - `AcademicSummaryServiceTest`: calcula promedio parcial.
 - `AttendanceServiceTest`: calcula porcentaje de asistencia.
+- `TelegramNotificationServiceTest`: Telegram sin variables no rompe la aplicacion.
 
 ## Pruebas manuales frontend
 
@@ -36,6 +41,9 @@ Casos actuales:
 - ADMIN/COLEGIO debe ver usuarios, cursos y Telegram.
 - PROFESOR debe ver muro, calendario, notas, asistencia y Telegram.
 - APODERADO/ESTUDIANTE no deben ver administracion de usuarios o cursos.
+- ESTUDIANTE solo debe ver su informacion academica.
+- APODERADO solo debe ver estudiantes vinculados.
+- PROFESOR solo debe administrar cursos asignados.
 
 ## Publicaciones
 
@@ -52,8 +60,11 @@ Casos actuales:
 ## Notas
 
 - Consultar estudiante demo con id `5`.
+- Crear evaluacion en una asignatura activa.
 - Registrar una nota usando evaluacion demo id `1`.
 - Confirmar que el promedio se actualiza.
+- Confirmar mensaje "Sin evaluaciones registradas" si el estudiante no tiene notas.
+- Confirmar mensaje de promedio parcial cuando existe una sola evaluacion.
 
 ## Asistencia
 

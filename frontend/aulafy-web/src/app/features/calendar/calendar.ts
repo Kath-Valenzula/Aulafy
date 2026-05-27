@@ -21,6 +21,8 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
       </select>
     </section>
 
+    <p class="error" *ngIf="error">{{ error }}</p>
+
     <section class="work-area" *ngIf="canManage()">
       <h3>Nuevo evento</h3>
       <form class="form-grid" [formGroup]="form" (ngSubmit)="create()">
@@ -55,15 +57,20 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
     </section>
 
     <section class="timeline">
-      <article class="timeline-item" *ngFor="let event of events">
+      <article class="timeline-item" *ngFor="let event of events" [class.upcoming]="isUpcoming(event)">
         <span class="badge warning">{{ event.type }}</span>
         <div>
           <h3>{{ event.title }}</h3>
           <p>{{ event.description }}</p>
-          <small>{{ event.startAt | date:'medium' }} · {{ event.createdByName }}</small>
+          <small>{{ event.startAt | date:'medium' }} - {{ event.createdByName }}</small>
+          <div class="pill-row">
+            <span *ngIf="isUpcoming(event)" class="status">Proximo</span>
+            <span *ngIf="event.notifyTelegram" class="status">Telegram preparado</span>
+          </div>
         </div>
       </article>
-      <p class="empty-state" *ngIf="!events.length">No hay eventos registrados para este curso.</p>
+      <p class="empty-state" *ngIf="loading">Cargando eventos...</p>
+      <p class="empty-state" *ngIf="!loading && !events.length">No hay eventos proximos para este curso.</p>
     </section>
   `
 })
@@ -76,6 +83,8 @@ export class CalendarComponent implements OnInit {
   courses: CourseResponse[] = [];
   events: CalendarEventResponse[] = [];
   selectedCourseId?: number;
+  loading = false;
+  error = '';
   eventTypes: EventType[] = ['PRUEBA', 'TAREA', 'REUNION', 'ACTIVIDAD', 'COMUNICADO'];
   form = this.fb.nonNullable.group({
     title: ['', [Validators.required]],
@@ -87,10 +96,13 @@ export class CalendarComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.coursesService.findAll().subscribe((courses) => {
-      this.courses = courses;
-      this.selectedCourseId = courses[0]?.id;
-      this.loadEvents();
+    this.coursesService.findAll().subscribe({
+      next: (courses) => {
+        this.courses = courses;
+        this.selectedCourseId = courses[0]?.id;
+        this.loadEvents();
+      },
+      error: () => this.error = 'No fue posible cargar los cursos disponibles.'
     });
   }
 
@@ -107,9 +119,12 @@ export class CalendarComponent implements OnInit {
     this.calendarService.create(this.selectedCourseId, {
       ...value,
       endAt: value.endAt || null
-    }).subscribe((event) => {
-      this.events = [...this.events, event].sort((a, b) => a.startAt.localeCompare(b.startAt));
-      this.form.reset({ title: '', description: '', type: 'PRUEBA', startAt: this.nowInput(), endAt: '', notifyTelegram: false });
+    }).subscribe({
+      next: (event) => {
+        this.events = [...this.events, event].sort((a, b) => a.startAt.localeCompare(b.startAt));
+        this.form.reset({ title: '', description: '', type: 'PRUEBA', startAt: this.nowInput(), endAt: '', notifyTelegram: false });
+      },
+      error: () => this.error = 'No fue posible guardar el evento. Revise permisos y datos.'
     });
   }
 
@@ -117,12 +132,27 @@ export class CalendarComponent implements OnInit {
     return this.auth.hasAnyRole(['ADMIN', 'COLEGIO', 'PROFESOR']);
   }
 
+  isUpcoming(event: CalendarEventResponse): boolean {
+    return new Date(event.startAt).getTime() >= Date.now();
+  }
+
   private loadEvents(): void {
     if (!this.selectedCourseId) {
       this.events = [];
       return;
     }
-    this.calendarService.findByCourse(this.selectedCourseId).subscribe((events) => this.events = events);
+    this.loading = true;
+    this.error = '';
+    this.calendarService.findByCourse(this.selectedCourseId).subscribe({
+      next: (events) => {
+        this.events = events;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No fue posible cargar el calendario de este curso.';
+        this.loading = false;
+      }
+    });
   }
 
   private nowInput(): string {

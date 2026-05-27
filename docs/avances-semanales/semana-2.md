@@ -7,6 +7,8 @@
 - PostgreSQL preparado con Docker Compose.
 - Seguridad JWT con roles principales.
 - Frontend Angular con login, layout protegido, sidebar y pantallas iniciales.
+- Resource Group Azure staging creado sin recursos pagados adicionales.
+- Scripts `infra/azure` preparados para creacion controlada.
 
 ## Modulos iniciados
 
@@ -17,10 +19,12 @@
 - Notas y resumen academico.
 - Asistencia y resumen.
 - Notificaciones Telegram sin credenciales en el repositorio.
+- Asignaturas y evaluaciones.
+- Validaciones backend por rol, curso y vinculo apoderado-estudiante.
 
 ## Evidencias esperadas
 
-- `mvn clean test` con pruebas verdes.
+- `mvn clean test` con 10 pruebas verdes.
 - `npm run build` exitoso.
 - Login funcional con usuarios demo.
 - Visualizacion del muro, calendario, notas y asistencia.
@@ -28,8 +32,8 @@
 
 ## Proximos pasos
 
-1. Restringir datos por pertenencia real a curso.
-2. Crear mantenedor de asignaturas y evaluaciones.
-3. Agregar validaciones visuales por campo en Angular.
-4. Agregar pruebas de controladores con seguridad.
-5. Preparar presentacion tecnica con capturas del flujo demo.
+1. Crear PR hacia `develop`.
+2. Configurar GitHub Secrets cuando staging sea autorizado.
+3. Crear recursos pagados solo para validacion cloud.
+4. Preparar capturas de evidencia.
+5. Pulir formularios mobile-first para demo final.

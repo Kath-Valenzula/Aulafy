@@ -1,0 +1,90 @@
+erDiagram
+    USERS ||--o{ COURSE_STUDENTS : pertenece
+    USERS ||--o{ COURSE_TEACHERS : ensena
+    COURSES ||--o{ COURSE_STUDENTS : tiene
+    COURSES ||--o{ COURSE_TEACHERS : tiene
+    COURSES ||--o{ SUBJECTS : agrupa
+    USERS ||--o{ SUBJECTS : imparte
+    USERS ||--o| STUDENT_PROFILES : tiene
+    COURSES ||--o{ STUDENT_PROFILES : contiene
+    USERS ||--o{ GUARDIAN_STUDENTS : apoderado
+    USERS ||--o{ GUARDIAN_STUDENTS : estudiante
+    COURSES ||--o{ POSTS : publica
+    USERS ||--o{ POSTS : autor
+    POSTS ||--o{ COMMENTS : recibe
+    USERS ||--o{ COMMENTS : comenta
+    COURSES ||--o{ CALENDAR_EVENTS : agenda
+    USERS ||--o{ CALENDAR_EVENTS : crea
+    COURSES ||--o{ EVALUATIONS : evalua
+    SUBJECTS ||--o{ EVALUATIONS : contiene
+    EVALUATIONS ||--o{ GRADES : registra
+    USERS ||--o{ GRADES : recibe
+    USERS ||--o{ ATTENDANCE : registra
+    COURSES ||--o{ ATTENDANCE : controla
+
+    USERS {
+        bigint id PK
+        varchar full_name
+        varchar email
+        varchar password_hash
+        varchar role
+        boolean active
+        varchar telegram_chat_id
+    }
+
+    COURSES {
+        bigint id PK
+        varchar name
+        varchar level
+        varchar section
+        varchar school_name
+        boolean active
+    }
+
+    SUBJECTS {
+        bigint id PK
+        varchar name
+        bigint course_id FK
+        bigint teacher_id FK
+        boolean active
+    }
+
+    EVALUATIONS {
+        bigint id PK
+        bigint course_id FK
+        bigint subject_id FK
+        varchar title
+        text description
+        varchar type
+        date evaluation_date
+        integer weight
+        boolean active
+    }
+
+    GRADES {
+        bigint id PK
+        bigint student_id FK
+        bigint evaluation_id FK
+        numeric score
+        numeric max_score
+        varchar observation
+    }
+
+    ATTENDANCE {
+        bigint id PK
+        bigint student_id FK
+        bigint course_id FK
+        date date
+        varchar status
+        varchar comment
+    }
+
+    NOTIFICATION_LOGS {
+        bigint id PK
+        varchar type
+        varchar recipient
+        text message
+        varchar status
+        varchar detail
+        timestamp created_at
+    }

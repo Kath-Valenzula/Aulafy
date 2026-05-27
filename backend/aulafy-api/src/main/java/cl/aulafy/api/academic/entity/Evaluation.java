@@ -4,6 +4,8 @@ import cl.aulafy.api.courses.entity.Course;
 import cl.aulafy.api.courses.entity.Subject;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,11 +35,21 @@ public class Evaluation {
     @Column(nullable = false, length = 160)
     private String title;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description = "Evaluacion academica";
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private EvaluationType type = EvaluationType.PRUEBA;
+
     @Column(nullable = false)
     private LocalDate evaluationDate;
 
-    @Column(nullable = false)
+    @Column
     private Integer weight;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     public Evaluation() {
     }
@@ -46,6 +58,17 @@ public class Evaluation {
         this.course = course;
         this.subject = subject;
         this.title = title;
+        this.evaluationDate = evaluationDate;
+        this.weight = weight;
+    }
+
+    public Evaluation(Course course, Subject subject, String title, String description,
+                      EvaluationType type, LocalDate evaluationDate, Integer weight) {
+        this.course = course;
+        this.subject = subject;
+        this.title = title;
+        this.description = description;
+        this.type = type;
         this.evaluationDate = evaluationDate;
         this.weight = weight;
     }
@@ -66,11 +89,55 @@ public class Evaluation {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public EvaluationType getType() {
+        return type;
+    }
+
+    public void setType(EvaluationType type) {
+        this.type = type;
+    }
+
     public LocalDate getEvaluationDate() {
         return evaluationDate;
     }
 
+    public void setEvaluationDate(LocalDate evaluationDate) {
+        this.evaluationDate = evaluationDate;
+    }
+
     public Integer getWeight() {
         return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

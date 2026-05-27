@@ -32,11 +32,13 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 - Autenticacion JWT y roles.
 - Administracion de usuarios.
 - Administracion de cursos.
+- Asignaturas y evaluaciones.
 - Muro de publicaciones y comentarios.
 - Calendario academico.
 - Seguimiento de notas y resumen academico.
 - Registro y resumen de asistencia.
 - Notificaciones Telegram preparadas por variables de entorno.
+- Seguridad backend por rol, curso, estudiante y vinculo apoderado-estudiante.
 
 ## Roles
 
@@ -103,6 +105,7 @@ Documentacion paso a paso:
 
 - `docs/despliegue/azure-staging.md`
 - `docs/despliegue/checklist-staging.md`
+- `infra/azure/README.md`
 
 Build backend:
 
@@ -137,6 +140,8 @@ PORT=8080
 
 Estado actual: el repositorio queda preparado para staging con perfiles Spring Boot, environments Angular, workflows GitHub Actions y documentacion Azure. Falta crear los recursos en Azure Portal y configurar secrets reales fuera del repositorio.
 
+Control de costos: actualmente solo existe el Resource Group `rg-aulafy-staging` en `brazilsouth`. No se crearon PostgreSQL Flexible Server, App Service Plan ni App Service para evitar costos mensuales sin autorizacion.
+
 ## Credenciales demo
 
 - `admin@aulafy.cl` / `Admin1234`
@@ -147,16 +152,18 @@ Estado actual: el repositorio queda preparado para staging con perfiles Spring B
 
 ## Estado actual del MVP
 
-- Backend compila y tiene 5 pruebas unitarias verdes.
+- Backend compila y tiene 10 pruebas verdes entre unitarias e integracion.
 - Frontend compila y consume endpoints reales de la API.
 - Datos demo se cargan con `CommandLineRunner` cuando la base esta vacia.
 - Telegram queda integrado de forma modular sin credenciales en el repositorio.
 - La documentacion tecnica inicial esta disponible en `docs`.
+- Asignaturas, evaluaciones, notas y asistencia tienen base funcional.
+- El control de acceso no depende solo del frontend; backend valida rol y pertenencia.
 
 ## Roadmap
 
-1. Ajustar permisos por pertenencia real a curso y vinculo apoderado-estudiante.
-2. Agregar endpoints de administracion de evaluaciones y asignaturas.
-3. Mejorar manejo de errores visuales en formularios Angular.
-4. Agregar pruebas de integracion para controladores con seguridad.
-5. Preparar despliegue con perfiles `dev`, `test` y `prod`.
+1. Crear PR de `feature/project-setup` hacia `develop`.
+2. Configurar GitHub Secrets cuando se autorice staging.
+3. Crear recursos pagados solo para validacion cloud o demo.
+4. Ejecutar workflows manuales y validar `/api/health`.
+5. Preparar evidencias finales y pulir UX mobile-first.

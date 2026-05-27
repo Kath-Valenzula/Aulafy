@@ -2,6 +2,7 @@ package cl.aulafy.api.courses.service;
 
 import cl.aulafy.api.common.exception.BusinessException;
 import cl.aulafy.api.common.exception.ResourceNotFoundException;
+import cl.aulafy.api.common.security.AccessControlService;
 import cl.aulafy.api.courses.dto.CourseRequest;
 import cl.aulafy.api.courses.dto.CourseResponse;
 import cl.aulafy.api.courses.entity.Course;
@@ -19,10 +20,13 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserService userService;
+    private final AccessControlService accessControlService;
 
-    public CourseService(CourseRepository courseRepository, UserService userService) {
+    public CourseService(CourseRepository courseRepository, UserService userService,
+                         AccessControlService accessControlService) {
         this.courseRepository = courseRepository;
         this.userService = userService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
@@ -34,8 +38,24 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseResponse findById(Long id) {
-        return CourseResponse.from(getById(id));
+    public List<CourseResponse> findVisible(User user) {
+        if (user.getRole() == RoleName.ADMIN || user.getRole() == RoleName.COLEGIO) {
+            return findAll();
+        }
+        List<Course> courses = switch (user.getRole()) {
+            case PROFESOR -> courseRepository.findActiveByTeacherId(user.getId());
+            case ESTUDIANTE -> courseRepository.findActiveByStudentId(user.getId());
+            case APODERADO -> courseRepository.findActiveByGuardianId(user.getId());
+            default -> List.of();
+        };
+        return courses.stream().map(CourseResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CourseResponse findById(Long id, User user) {
+        Course course = getById(id);
+        accessControlService.assertCanViewCourse(user, course);
+        return CourseResponse.from(course);
     }
 
     @Transactional

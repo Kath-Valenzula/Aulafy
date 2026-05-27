@@ -22,7 +22,7 @@ flowchart LR
 2. Angular envia credenciales a `/api/auth/login`.
 3. Spring Security valida usuario y genera JWT.
 4. Angular guarda el token y lo envia en `Authorization: Bearer`.
-5. La API aplica permisos por rol y delega reglas de negocio a servicios.
+5. La API aplica permisos por rol, curso, estudiante y vinculo apoderado-estudiante.
 6. Los repositorios JPA persisten en PostgreSQL.
 7. El modulo Telegram envia mensajes si existen `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID`.
 
@@ -37,7 +37,7 @@ flowchart LR
 - `academic`: evaluaciones, notas y resumen.
 - `attendance`: asistencia y porcentaje.
 - `notifications`: logs y envio por Telegram.
-- `common`: errores globales y respuestas comunes.
+- `common`: errores globales, respuestas comunes y reglas transversales de acceso.
 
 ## Decisiones tecnicas
 
@@ -47,3 +47,4 @@ flowchart LR
 - Servicios para reglas de negocio y controladores delgados.
 - Variables de entorno para datos sensibles.
 - `ddl-auto=update` en desarrollo para facilitar la demostracion.
+- Staging en Azure queda preparado, pero los recursos pagados se crean solo con autorizacion.

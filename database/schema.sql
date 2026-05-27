@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS course_teachers (
 CREATE TABLE IF NOT EXISTS subjects (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
-    course_id BIGINT NOT NULL REFERENCES courses(id)
+    course_id BIGINT NOT NULL REFERENCES courses(id),
+    teacher_id BIGINT REFERENCES users(id),
+    active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS student_profiles (
@@ -93,8 +95,11 @@ CREATE TABLE IF NOT EXISTS evaluations (
     course_id BIGINT NOT NULL REFERENCES courses(id),
     subject_id BIGINT NOT NULL REFERENCES subjects(id),
     title VARCHAR(160) NOT NULL,
+    description TEXT NOT NULL,
+    type VARCHAR(30) NOT NULL,
     evaluation_date DATE NOT NULL,
-    weight INTEGER NOT NULL
+    weight INTEGER,
+    active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS grades (
