@@ -2,20 +2,17 @@
 
 ## Alta prioridad
 
-- Validar seguridad por roles y pertenencia a curso.
-- Completar mantenedor de asignaturas.
-- Completar mantenedor de evaluaciones.
-- Pulir feed academico.
-- Implementar pruebas de seguridad backend.
-- Documentar evidencia de staging Azure.
+- Ejecutar primer despliegue completo en AWS staging y dejar evidencia.
+- Configurar variables/secretos de GitHub Actions para workflows AWS.
+- Implementar pruebas automatizadas backend/frontend para modulos criticos.
+- Definir dominios finales y homologar URLs de staging/produccion.
 
 ## Media prioridad
 
-- Mejorar UX mobile-first en formularios.
-- Agregar filtros por curso y asignatura.
-- Preparar notificaciones Telegram para recordatorios.
-- Agregar pruebas manuales frontend.
-- Crear diagrama ER final para presentacion.
+- Fortalecer chat con confirmaciones de lectura y adjuntos.
+- Mejorar UX mobile-first en app familias/alumnos.
+- Crear set de pruebas de contrato frontend-backend.
+- Agregar monitoreo y alertas operativas en AWS/CloudWatch.
 
 ## Baja prioridad
 
@@ -38,7 +35,7 @@ Sebastian:
 - Base de datos.
 - Seguridad.
 - Telegram.
-- Endpoints.
+- Endpoints NestJS.
 - Pruebas backend.
 
 Ambos:

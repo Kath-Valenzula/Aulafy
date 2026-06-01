@@ -1,3 +1,3 @@
 export const environment = {
-  apiUrl: 'https://aulafy-api.azurewebsites.net/api'
+  apiUrl: 'https://api.aulafy.cl/api'
 };

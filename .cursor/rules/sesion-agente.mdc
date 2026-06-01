@@ -1,0 +1,25 @@
+---
+description: Protocolo de sesión del agente — contexto y changelog
+alwaysApply: true
+---
+
+# Protocolo de Sesión
+
+## Al Inicio de TODA Sesión
+1. Leer docs/estado-actual.md y docs/changelog.md (últimas 2-3 entradas)
+2. Si existe graphify-out/GRAPH_REPORT.md, usarlo para preguntas de arquitectura
+3. Confirmar: "Contexto cargado. [resumen en 1 línea del estado actual]"
+
+## Durante la Sesión
+- Consultar graphify antes de hacer búsquedas en archivos crudos
+- Leer archivos completos antes de modificar
+- Si se toma una decisión técnica importante, proponer entrada en docs/decisiones.md
+- NUNCA hardcodear credenciales. Ver docs/conexiones.md para la estructura
+
+## Al Final de Sesión con Cambios
+Proponer entrada para docs/changelog.md con:
+- Archivos modificados y descripción del cambio
+- Qué se logró
+- Siguiente paso recomendado
+
+Preguntar: "¿Actualizo docs/estado-actual.md con los pendientes?"

@@ -1,0 +1,38 @@
+name: Backend NestJS CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "backend/aulafy-api-nest/**"
+      - ".github/workflows/backend-nest-ci.yml"
+  pull_request:
+    paths:
+      - "backend/aulafy-api-nest/**"
+      - ".github/workflows/backend-nest-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build NestJS backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/aulafy-api-nest/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend/aulafy-api-nest
+        run: npm ci
+
+      - name: Build
+        working-directory: backend/aulafy-api-nest
+        run: npm run build

@@ -1,139 +1,361 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
+import { CommentsService } from '../../core/services/comments.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { PostsService } from '../../core/services/posts.service';
-import { CourseResponse, PostResponse, PostType } from '../../shared/models/aulafy.models';
+import { CommentResponse, CourseResponse, PostResponse, PostType } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-feed',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   template: `
-    <section class="page-heading">
-      <div>
-        <span class="eyebrow">Muro del curso</span>
-        <h2>Publicaciones</h2>
-      </div>
-      <select [value]="selectedCourseId || ''" (change)="selectCourse($event)">
-        <option value="" disabled>Seleccione curso</option>
-        <option *ngFor="let course of courses" [value]="course.id">{{ course.name }}</option>
-      </select>
+    <section class="mb-5">
+      <h2 class="text-2xl font-semibold text-on-background">Muro del Colegio</h2>
     </section>
 
-    <p class="error" *ngIf="error">{{ error }}</p>
+    <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
+      Cargando publicaciones...
+    </section>
 
-    <section class="work-area" *ngIf="canPublish()">
-      <h3>Nueva publicacion</h3>
-      <form class="form-grid" [formGroup]="form" (ngSubmit)="create()">
-        <label>
-          Titulo
-          <input formControlName="title" />
-        </label>
-        <label>
-          Tipo
-          <select formControlName="type">
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm">
+      {{ error }}
+    </section>
+
+    <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
+      No hay cursos disponibles para el muro.
+    </section>
+
+    <ng-container *ngIf="!loading && !error && courses.length">
+      <section class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <select
+          class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
+          [ngModel]="selectedCourseId"
+          (ngModelChange)="onCourseChange($event)"
+        >
+          <option *ngFor="let course of courses" [value]="course.id">{{ course.name }}</option>
+        </select>
+        <select
+          class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
+          [ngModel]="selectedTypeFilter"
+          (ngModelChange)="selectedTypeFilter = normalizeFilter($event)"
+        >
+          <option value="">Todos los tipos</option>
+          <option *ngFor="let type of postTypes" [value]="type">{{ type }}</option>
+        </select>
+      </section>
+
+      <section *ngIf="canCreatePost" class="bg-surface rounded-xl border border-outline-variant p-5 mb-4">
+        <h3 class="font-semibold text-primary mb-3">Crear publicación</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input
+            [(ngModel)]="postDraft.title"
+            class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
+            placeholder="Título"
+          />
+          <select
+            [ngModel]="postDraft.type"
+            (ngModelChange)="postDraft.type = $event"
+            class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
+          >
             <option *ngFor="let type of postTypes" [value]="type">{{ type }}</option>
           </select>
-        </label>
-        <label class="wide">
-          Contenido
-          <textarea rows="4" formControlName="content"></textarea>
-        </label>
-        <label class="inline-check">
-          <input type="checkbox" formControlName="commentsEnabled" />
-          Permitir comentarios
-        </label>
-        <button class="button primary" type="submit" [disabled]="form.invalid || !selectedCourseId">Publicar</button>
-      </form>
-    </section>
+          <textarea
+            [(ngModel)]="postDraft.content"
+            class="md:col-span-2 bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-h-24"
+            placeholder="Contenido"
+          ></textarea>
+          <label class="md:col-span-2 flex items-center gap-2 text-sm text-on-surface-variant">
+            <input [(ngModel)]="postDraft.commentsEnabled" type="checkbox" />
+            Permitir comentarios
+          </label>
+        </div>
+        <button
+          (click)="createPost()"
+          [disabled]="savingPost || !canSubmitPost"
+          class="mt-3 px-4 py-2 bg-primary-container text-on-primary rounded-lg font-semibold disabled:opacity-50"
+        >
+          {{ savingPost ? 'Guardando...' : 'Publicar' }}
+        </button>
+      </section>
 
-    <section class="feed-list">
-      <article class="post-card" *ngFor="let post of posts">
-        <header>
-          <span class="badge">{{ post.type }}</span>
-          <small>{{ post.authorName }} - {{ post.createdAt | date:'short' }}</small>
-        </header>
-        <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
-        <footer>
-          <span *ngIf="post.pinned">Fijada</span>
-          <span>{{ post.commentsEnabled ? 'Comentarios abiertos' : 'Comentarios cerrados' }}</span>
-        </footer>
-      </article>
-      <p class="empty-state" *ngIf="loading">Cargando publicaciones...</p>
-      <p class="empty-state" *ngIf="!loading && !posts.length">No hay publicaciones cargadas para este curso.</p>
-    </section>
+      <section *ngIf="actionMessage" class="bg-secondary-container/30 border border-secondary/20 rounded-xl p-4 mb-4">
+        <p class="text-sm text-on-secondary-container">{{ actionMessage }}</p>
+      </section>
+
+      <section *ngIf="!filteredPosts.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+        No hay publicaciones para los filtros seleccionados.
+      </section>
+
+      <section *ngIf="filteredPosts.length" class="flex flex-col gap-4">
+        <article *ngFor="let post of filteredPosts" class="bg-surface rounded-xl shadow-sm border border-outline-variant/20 p-5">
+          <div class="flex gap-3 items-start mb-3">
+            <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+              <span class="material-symbols-outlined text-sm">campaign</span>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold">{{ post.authorName }}</h3>
+              <p class="text-sm text-outline">{{ post.courseName }} • {{ post.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-md" [ngClass]="postTypeClass(post.type)">{{ post.type }}</span>
+          </div>
+          <h4 class="font-semibold mb-1">{{ post.title }}</h4>
+          <p class="text-sm text-on-surface-variant">{{ post.content }}</p>
+
+          <div class="mt-4 border-t border-outline-variant/20 pt-3">
+            <button
+              class="text-sm font-semibold text-primary"
+              [disabled]="loadingCommentsPostId === post.id"
+              (click)="toggleComments(post.id)"
+            >
+              {{ isCommentsOpen(post.id) ? 'Ocultar comentarios' : 'Ver comentarios' }}
+            </button>
+
+            <div *ngIf="isCommentsOpen(post.id)" class="mt-3 space-y-3">
+              <p *ngIf="loadingCommentsPostId === post.id" class="text-sm text-on-surface-variant">Cargando comentarios...</p>
+              <p *ngIf="loadingCommentsPostId !== post.id && !commentsByPost[post.id]?.length" class="text-sm text-on-surface-variant">
+                Sin comentarios aún.
+              </p>
+
+              <div *ngFor="let comment of commentsByPost[post.id]" class="bg-surface-container-low rounded-lg p-3">
+                <p class="text-sm"><strong>{{ comment.authorName }}:</strong> {{ comment.content }}</p>
+                <p class="text-xs text-outline mt-1">{{ comment.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+
+              <div *ngIf="post.commentsEnabled" class="flex gap-2">
+                <input
+                  class="flex-1 bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-sm"
+                  placeholder="Escribe un comentario..."
+                  [(ngModel)]="commentDraftByPost[post.id]"
+                />
+                <button
+                  class="px-3 py-2 bg-primary-container text-on-primary rounded-lg text-sm font-semibold disabled:opacity-50"
+                  [disabled]="savingCommentPostId === post.id || !canSubmitComment(post.id)"
+                  (click)="createComment(post.id)"
+                >
+                  Enviar
+                </button>
+              </div>
+              <p *ngIf="!post.commentsEnabled" class="text-sm text-outline">Comentarios deshabilitados en esta publicación.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </ng-container>
   `
 })
 export class FeedComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
   private readonly coursesService = inject(CoursesService);
   private readonly postsService = inject(PostsService);
-  private readonly auth = inject(AuthService);
+  private readonly commentsService = inject(CommentsService);
 
   courses: CourseResponse[] = [];
   posts: PostResponse[] = [];
-  selectedCourseId?: number;
-  loading = false;
+  selectedCourseId: number | null = null;
+  selectedTypeFilter: PostType | null = null;
+  loading = true;
   error = '';
+  actionMessage = '';
+  savingPost = false;
+  savingCommentPostId: number | null = null;
+  loadingCommentsPostId: number | null = null;
+  commentsOpenByPost: Record<number, boolean> = {};
+  commentsByPost: Record<number, CommentResponse[]> = {};
+  commentDraftByPost: Record<number, string> = {};
   postTypes: PostType[] = ['AVISO', 'TAREA', 'EVALUACION', 'REUNION', 'MATERIAL', 'COMUNICADO'];
-  form = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(160)]],
-    content: ['', [Validators.required]],
-    type: ['AVISO' as PostType, [Validators.required]],
-    commentsEnabled: [true]
-  });
 
-  ngOnInit(): void {
-    this.coursesService.findAll().subscribe({
-      next: (courses) => {
-        this.courses = courses;
-        this.selectedCourseId = courses[0]?.id;
-        this.loadPosts();
-      },
-      error: () => this.error = 'No fue posible cargar los cursos disponibles.'
-    });
-  }
+  postDraft: {
+    title: string;
+    content: string;
+    type: PostType;
+    commentsEnabled: boolean;
+  } = {
+    title: '',
+    content: '',
+    type: 'AVISO',
+    commentsEnabled: true
+  };
 
-  selectCourse(event: Event): void {
-    this.selectedCourseId = Number((event.target as HTMLSelectElement).value);
-    this.loadPosts();
-  }
-
-  create(): void {
-    if (!this.selectedCourseId || this.form.invalid) {
-      return;
-    }
-    this.postsService.create(this.selectedCourseId, this.form.getRawValue()).subscribe({
-      next: (post) => {
-        this.posts = [post, ...this.posts].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.createdAt.localeCompare(a.createdAt));
-        this.form.reset({ title: '', content: '', type: 'AVISO', commentsEnabled: true });
-      },
-      error: () => this.error = 'No fue posible publicar. Revise permisos y datos.'
-    });
-  }
-
-  canPublish(): boolean {
+  get canCreatePost(): boolean {
     return this.auth.hasAnyRole(['ADMIN', 'COLEGIO', 'PROFESOR']);
   }
 
-  private loadPosts(): void {
-    if (!this.selectedCourseId) {
-      this.posts = [];
+  get canSubmitPost(): boolean {
+    return Boolean(this.selectedCourseId && this.postDraft.title.trim() && this.postDraft.content.trim());
+  }
+
+  get filteredPosts(): PostResponse[] {
+    if (!this.selectedTypeFilter) {
+      return this.posts;
+    }
+    return this.posts.filter((post) => post.type === this.selectedTypeFilter);
+  }
+
+  ngOnInit(): void {
+    this.loadCoursesAndPosts();
+  }
+
+  onCourseChange(value: number | string): void {
+    const normalized = Number(value);
+    if (!normalized || this.selectedCourseId === normalized) {
       return;
     }
+    this.selectedCourseId = normalized;
+    this.selectedTypeFilter = null;
+    this.actionMessage = '';
+    this.loadPosts(normalized);
+  }
+
+  createPost(): void {
+    if (!this.canSubmitPost || !this.selectedCourseId) {
+      return;
+    }
+
+    this.savingPost = true;
+    this.actionMessage = '';
+
+    this.postsService
+      .create(this.selectedCourseId, {
+        title: this.postDraft.title.trim(),
+        content: this.postDraft.content.trim(),
+        type: this.postDraft.type,
+        commentsEnabled: this.postDraft.commentsEnabled
+      })
+      .subscribe({
+        next: () => {
+          this.savingPost = false;
+          this.actionMessage = 'Publicación creada correctamente.';
+          this.resetPostDraft();
+          this.loadPosts(this.selectedCourseId!);
+        },
+        error: () => {
+          this.savingPost = false;
+          this.actionMessage = 'No fue posible crear la publicación.';
+        }
+      });
+  }
+
+  toggleComments(postId: number): void {
+    this.commentsOpenByPost[postId] = !this.commentsOpenByPost[postId];
+    if (!this.commentsOpenByPost[postId]) {
+      return;
+    }
+
+    if (this.commentsByPost[postId]) {
+      return;
+    }
+
+    this.loadingCommentsPostId = postId;
+    this.commentsService.findByPost(postId).subscribe({
+      next: (comments) => {
+        this.commentsByPost[postId] = comments;
+        this.loadingCommentsPostId = null;
+      },
+      error: () => {
+        this.commentsByPost[postId] = [];
+        this.loadingCommentsPostId = null;
+      }
+    });
+  }
+
+  isCommentsOpen(postId: number): boolean {
+    return Boolean(this.commentsOpenByPost[postId]);
+  }
+
+  canSubmitComment(postId: number): boolean {
+    const content = this.commentDraftByPost[postId];
+    return Boolean(content && content.trim());
+  }
+
+  createComment(postId: number): void {
+    if (!this.canSubmitComment(postId)) {
+      return;
+    }
+
+    this.savingCommentPostId = postId;
+    this.commentsService
+      .create(postId, {
+        content: this.commentDraftByPost[postId].trim()
+      })
+      .subscribe({
+        next: (comment) => {
+          this.savingCommentPostId = null;
+          const current = this.commentsByPost[postId] ?? [];
+          this.commentsByPost[postId] = [...current, comment];
+          this.commentDraftByPost[postId] = '';
+        },
+        error: () => {
+          this.savingCommentPostId = null;
+        }
+      });
+  }
+
+  postTypeClass(type: string): string {
+    if (type === 'AVISO') {
+      return 'bg-error-container text-on-error-container';
+    }
+    if (type === 'TAREA') {
+      return 'bg-primary-container text-on-primary';
+    }
+    if (type === 'EVALUACION') {
+      return 'bg-[#FEF08A] text-[#854D0E]';
+    }
+    return 'bg-surface-container-high text-on-surface-variant';
+  }
+
+  normalizeFilter(value: string | null): PostType | null {
+    return value && value !== '' ? (value as PostType) : null;
+  }
+
+  private loadCoursesAndPosts(): void {
     this.loading = true;
     this.error = '';
-    this.postsService.findByCourse(this.selectedCourseId).subscribe({
+
+    this.coursesService.findAll().subscribe({
+      next: (courses) => {
+        this.courses = courses;
+        if (!courses.length) {
+          this.loading = false;
+          return;
+        }
+
+        this.selectedCourseId = courses[0].id;
+        this.loadPosts(courses[0].id);
+      },
+      error: () => {
+        this.error = 'No fue posible cargar cursos para el muro.';
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadPosts(courseId: number): void {
+    this.loading = true;
+    this.error = '';
+    this.commentsOpenByPost = {};
+    this.commentsByPost = {};
+    this.commentDraftByPost = {};
+
+    this.postsService.findByCourse(courseId).subscribe({
       next: (posts) => {
         this.posts = posts;
         this.loading = false;
       },
       error: () => {
-        this.error = 'No fue posible cargar las publicaciones para este curso.';
+        this.error = 'No fue posible cargar publicaciones del curso.';
         this.loading = false;
       }
     });
+  }
+
+  private resetPostDraft(): void {
+    this.postDraft = {
+      title: '',
+      content: '',
+      type: 'AVISO',
+      commentsEnabled: true
+    };
   }
 }

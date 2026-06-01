@@ -1,0 +1,107 @@
+name: Backend AWS ECS Deploy
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "backend/aulafy-api-nest/**"
+      - ".github/workflows/backend-aws-ecs-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+  AWS_ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+  AWS_ECS_CLUSTER: ${{ vars.AWS_ECS_CLUSTER }}
+  AWS_ECS_SERVICE: ${{ vars.AWS_ECS_SERVICE }}
+  AWS_ECS_TASK_DEFINITION_FAMILY: ${{ vars.AWS_ECS_TASK_DEFINITION_FAMILY }}
+  AWS_ECS_CONTAINER_NAME: ${{ vars.AWS_ECS_CONTAINER_NAME }}
+
+jobs:
+  deploy:
+    name: Build and deploy backend to ECS
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/aulafy-api-nest/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend/aulafy-api-nest
+        run: npm ci
+
+      - name: Build backend
+        working-directory: backend/aulafy-api-nest
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: image
+        working-directory: backend/aulafy-api-nest
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${AWS_ECR_REPOSITORY}:${IMAGE_TAG}"
+          docker build -t "${IMAGE_URI}" .
+          docker push "${IMAGE_URI}"
+          echo "image_uri=${IMAGE_URI}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare task definition
+        env:
+          IMAGE_URI: ${{ steps.image.outputs.image_uri }}
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "${AWS_ECS_TASK_DEFINITION_FAMILY}" \
+            --query 'taskDefinition' > task-definition.json
+          jq \
+            --arg IMAGE "${IMAGE_URI}" \
+            --arg NAME "${AWS_ECS_CONTAINER_NAME}" \
+            '.containerDefinitions = (.containerDefinitions | map(if .name == $NAME then .image = $IMAGE else . end))
+            | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
+            task-definition.json > task-definition-rendered.json
+
+      - name: Register task definition
+        id: task-def
+        run: |
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://task-definition-rendered.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "task_definition_arn=${TASK_DEF_ARN}" >> "${GITHUB_OUTPUT}"
+
+      - name: Deploy to ECS service
+        run: |
+          aws ecs update-service \
+            --cluster "${AWS_ECS_CLUSTER}" \
+            --service "${AWS_ECS_SERVICE}" \
+            --task-definition "${{ steps.task-def.outputs.task_definition_arn }}" \
+            --force-new-deployment
+
+      - name: Wait for ECS stable service
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${AWS_ECS_CLUSTER}" \
+            --services "${AWS_ECS_SERVICE}"
