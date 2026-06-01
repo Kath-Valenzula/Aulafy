@@ -2,24 +2,24 @@
 
 ## Antes de crear recursos
 
-- [ ] Backend compila.
-- [ ] Frontend compila.
+- [x] Backend compila.
+- [x] Frontend compila.
 - [ ] Tests pasan.
 - [ ] README actualizado.
 - [ ] No hay secretos en el repositorio.
-- [ ] Scripts `infra/azure` revisados.
-- [ ] Costo de PostgreSQL y App Service autorizado por el equipo.
+- [x] Estrategia AWS definida (ECS Fargate + S3/CloudFront).
+- [ ] Costo estimado de RDS + compute autorizado por el equipo.
 
-## Azure
+## AWS
 
-- [x] Resource Group creado: `rg-aulafy-staging`.
-- [ ] PostgreSQL creado.
-- [ ] Base de datos creada.
-- [ ] App Service creado.
-- [ ] Static Web App creada.
-- [ ] Variables configuradas.
-- [ ] GitHub Secrets configurados.
-- [ ] Workflows ejecutados.
+- [ ] Cuenta y permisos del proyecto confirmados.
+- [ ] Repositorio ECR creado.
+- [ ] Cluster/servicio backend creado.
+- [ ] RDS MySQL staging creado.
+- [ ] Bucket S3 + CloudFront frontend creado.
+- [ ] Variables y secretos configurados en entorno.
+- [x] GitHub OIDC configurado para despliegue seguro (workflows preparados para `AWS_ROLE_TO_ASSUME`).
+- [ ] Workflows ejecutados y con evidencia.
 
 ## Validacion
 
@@ -32,8 +32,15 @@
 - [ ] Notas/asistencia funcionan.
 - [ ] Telegram probado o documentado como pendiente.
 
+## Pipeline del repositorio
+
+- [x] CI backend NestJS (`backend-nest-ci.yml`).
+- [x] CI frontend Angular (`frontend-angular-ci.yml`).
+- [x] Deploy backend AWS ECS (`backend-aws-ecs-deploy.yml`).
+- [x] Deploy frontend AWS S3/CloudFront (`frontend-aws-s3-deploy.yml`).
+
 ## Costos
 
-- [x] No se crearon PostgreSQL, App Service Plan ni App Service en esta iteracion.
-- [x] No se ejecutaron workflows de despliegue que requieran secretos reales.
-- [ ] Eliminar Resource Group si no se usara para evidencia o demo.
+- [ ] Presupuesto y alertas de costo configuradas.
+- [ ] Recursos no usados eliminados al cerrar validaciones.
+- [ ] Repositorio ECR y snapshots de RDS revisados para evitar costos pasivos.

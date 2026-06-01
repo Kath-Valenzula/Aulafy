@@ -1,0 +1,38 @@
+name: Frontend Angular CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "frontend/aulafy-web/**"
+      - ".github/workflows/frontend-angular-ci.yml"
+  pull_request:
+    paths:
+      - "frontend/aulafy-web/**"
+      - ".github/workflows/frontend-angular-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Angular frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/aulafy-web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/aulafy-web
+        run: npm ci
+
+      - name: Build staging
+        working-directory: frontend/aulafy-web
+        run: npm run build:staging

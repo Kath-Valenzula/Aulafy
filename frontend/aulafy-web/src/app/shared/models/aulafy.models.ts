@@ -3,6 +3,9 @@ export type PostType = 'AVISO' | 'TAREA' | 'EVALUACION' | 'REUNION' | 'MATERIAL'
 export type EventType = 'PRUEBA' | 'TAREA' | 'REUNION' | 'ACTIVIDAD' | 'COMUNICADO';
 export type AttendanceStatus = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATRASADO';
 export type EvaluationType = 'PRUEBA' | 'CONTROL' | 'TAREA' | 'TRABAJO' | 'PROYECTO';
+export type AnnotationType = 'ACADEMICA' | 'CONDUCTUAL' | 'COMUNICACION';
+export type AnnotationSeverity = 'LEVE' | 'MEDIA' | 'ALTA';
+export type AnnotationStatus = 'PENDIENTE' | 'LEIDA' | 'RESUELTA';
 
 export interface UserResponse {
   id: number;
@@ -29,6 +32,17 @@ export interface CourseResponse {
   active: boolean;
   studentCount: number;
   teacherCount: number;
+}
+
+export interface CourseStudentResponse {
+  id: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  levelName: string;
+  section: string;
+  guardianId: number | null;
+  studentUserId: number | null;
 }
 
 export interface SubjectResponse {
@@ -66,6 +80,15 @@ export interface PostResponse {
   type: PostType;
   pinned: boolean;
   commentsEnabled: boolean;
+  createdAt: string;
+}
+
+export interface CommentResponse {
+  id: number;
+  postId: number;
+  authorId: number;
+  authorName: string;
+  content: string;
   createdAt: string;
 }
 
@@ -134,5 +157,40 @@ export interface NotificationLogResponse {
   message: string;
   status: string;
   detail?: string | null;
+  createdAt: string;
+}
+
+export interface ChatRoomResponse {
+  id: number;
+  courseId: number;
+  courseName: string;
+  name: string;
+  createdAt: string;
+  latestMessage: string | null;
+  latestMessageAt: string | null;
+}
+
+export interface ChatMessageResponse {
+  id: number;
+  roomId: number;
+  authorId: number;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface AnnotationResponse {
+  id: number;
+  studentId: number;
+  studentName: string;
+  courseId: number;
+  courseName: string;
+  createdById: number;
+  createdByName: string;
+  type: AnnotationType;
+  severity: AnnotationSeverity;
+  status: AnnotationStatus;
+  title: string;
+  description: string;
   createdAt: string;
 }

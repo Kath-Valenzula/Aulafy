@@ -7,6 +7,12 @@ import { NotificationLogResponse } from '../../shared/models/aulafy.models';
 export class NotificationsService {
   private readonly http = inject(HttpClient);
 
+  logs(limit = 50) {
+    return this.http.get<NotificationLogResponse[]>(`${environment.apiUrl}/notifications/logs`, {
+      params: { limit }
+    });
+  }
+
   test() {
     return this.http.post<NotificationLogResponse>(`${environment.apiUrl}/notifications/telegram/test`, {});
   }

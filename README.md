@@ -1,6 +1,13 @@
 # Aulafy
 
-Aulafy es una plataforma web de comunicacion y gestion escolar para centralizar publicaciones, calendario academico, notas, asistencia y notificaciones por Telegram. El MVP esta construido como arquitectura monolitica modular cliente-servidor, con Spring Boot para la API, Angular para la interfaz y PostgreSQL como base de datos.
+Aulafy es una plataforma web de comunicacion y gestion escolar para centralizar publicaciones, calendario academico, notas, asistencia, anotaciones y chat interno integrado con Telegram.
+
+El proyecto migra su stack a arquitectura cliente-servidor con:
+
+- Backend NestJS.
+- Frontend Angular.
+- Base de datos MySQL.
+- Infraestructura AWS con CI/CD en GitHub Actions.
 
 ## Integrantes
 
@@ -11,34 +18,34 @@ Profesor: Alonso Esteban Castillo Pizarro
 
 ## Stack tecnico
 
-- Backend: Java 17, Spring Boot 3.5.14, Maven, Spring Web, Spring Data JPA, Spring Security, JWT, Bean Validation, PostgreSQL.
-- Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient, guards e interceptor JWT.
-- Base de datos: PostgreSQL 16 mediante Docker Compose.
-- Pruebas: JUnit 5, Mockito y Spring Boot Test.
+- Backend: NestJS, TypeScript, JWT, TypeORM, class-validator.
+- Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient.
+- Base de datos: MySQL 8 mediante Docker Compose.
+- Pruebas: en migracion a stack Node/Nest.
+- Integraciones: Telegram Bot API.
 
 ## Arquitectura
 
 El proyecto usa un monolito modular separado en cliente web y API REST:
 
 - `frontend/aulafy-web`: aplicacion Angular mobile-first.
-- `backend/aulafy-api`: API Spring Boot con modulos por dominio.
-- `database`: scripts SQL de esquema y datos demo.
+- `backend/aulafy-api-nest`: API NestJS con modulos por dominio.
+- `backend/aulafy-api`: backend legado Spring Boot (referencia temporal de migracion).
+- `database`: scripts SQL en transicion a MySQL.
 - `docs`: documentacion tecnica, casos de uso y plan de pruebas.
 
-No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo de despliegue y trazabilidad clara para una entrega academica. La separacion modular queda dentro del backend para poder crecer sin partir el sistema prematuramente.
+No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo y trazabilidad clara para entrega academica.
 
 ## Modulos principales
 
-- Autenticacion JWT y roles.
-- Administracion de usuarios.
-- Administracion de cursos.
-- Asignaturas y evaluaciones.
-- Muro de publicaciones y comentarios.
-- Calendario academico.
-- Seguimiento de notas y resumen academico.
-- Registro y resumen de asistencia.
-- Notificaciones Telegram preparadas por variables de entorno.
-- Seguridad backend por rol, curso, estudiante y vinculo apoderado-estudiante.
+- Auth y seguridad JWT.
+- Gestion de usuarios y roles.
+- Cursos, asignaturas y evaluaciones.
+- Feed academico tipo red social.
+- Calendario por curso.
+- Anotaciones/comunicaciones personales del estudiante.
+- Chat interno integrado con Telegram.
+- Asistencia y resumen academico.
 
 ## Roles
 
@@ -58,12 +65,14 @@ Base de datos:
 docker compose up -d
 ```
 
-Backend:
+Backend NestJS:
 
 ```bash
-cd backend/aulafy-api
-mvn clean test
-mvn spring-boot:run
+cd backend/aulafy-api-nest
+cp .env.example .env
+npm install
+npm run build
+npm run start:dev
 ```
 
 Frontend:
@@ -79,68 +88,24 @@ La interfaz queda disponible en `http://localhost:4200` y la API en `http://loca
 ## Variables de entorno
 
 ```bash
-DATABASE_URL=jdbc:postgresql://localhost:5432/aulafy_db
-DATABASE_USERNAME=aulafy_user
-DATABASE_PASSWORD=aulafy_pass
+NODE_ENV=development
+PORT=8080
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=aulafy_db
+DB_USER=aulafy_user
+DB_PASSWORD=aulafy_pass
+
 JWT_SECRET=definir-una-clave-larga-para-produccion
 TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-FRONTEND_URL=http://localhost:4200
-SPRING_PROFILES_ACTIVE=dev
 ```
 
-Si Telegram no esta configurado, la API registra el intento como `NO_CONFIGURADO` y la aplicacion sigue funcionando.
+## Documentacion de migracion
 
-## Despliegue en Azure
-
-El ambiente staging propuesto usa:
-
-- Azure Static Web Apps para `frontend/aulafy-web`.
-- Azure App Service para `backend/aulafy-api`.
-- Azure Database for PostgreSQL Flexible Server para `aulafy_db`.
-- GitHub Actions para construir y desplegar.
-- App Settings y GitHub Secrets para configuracion sensible.
-
-Documentacion paso a paso:
-
-- `docs/despliegue/azure-staging.md`
-- `docs/despliegue/checklist-staging.md`
-- `infra/azure/README.md`
-
-Build backend:
-
-```bash
-cd backend/aulafy-api
-mvn clean test
-mvn clean package
-java -jar target/*.jar
-```
-
-Build frontend staging:
-
-```bash
-cd frontend/aulafy-web
-npm install
-npm run build:staging
-```
-
-Variables requeridas para Azure App Service:
-
-```bash
-SPRING_PROFILES_ACTIVE=staging
-DATABASE_URL=jdbc:postgresql://psql-aulafy-staging.postgres.database.azure.com:5432/aulafy_db?sslmode=require
-DATABASE_USERNAME=<usuario-postgresql>
-DATABASE_PASSWORD=<password-postgresql>
-JWT_SECRET=<clave-larga-segura>
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-FRONTEND_URL=https://<url-static-web-app>
-PORT=8080
-```
-
-Estado actual: el repositorio queda preparado para staging con perfiles Spring Boot, environments Angular, workflows GitHub Actions y documentacion Azure. Falta crear los recursos en Azure Portal y configurar secrets reales fuera del repositorio.
-
-Control de costos: actualmente solo existe el Resource Group `rg-aulafy-staging` en `brazilsouth`. No se crearon PostgreSQL Flexible Server, App Service Plan ni App Service para evitar costos mensuales sin autorizacion.
+- `docs/arquitectura/arquitectura.md`
+- `docs/arquitectura/migracion-stack-nestjs-mysql-aws.md`
+- `docs/manuales/manual-instalacion.md`
 
 ## Credenciales demo
 
@@ -152,18 +117,15 @@ Control de costos: actualmente solo existe el Resource Group `rg-aulafy-staging`
 
 ## Estado actual del MVP
 
-- Backend compila y tiene 10 pruebas verdes entre unitarias e integracion.
-- Frontend compila y consume endpoints reales de la API.
-- Datos demo se cargan con `CommandLineRunner` cuando la base esta vacia.
-- Telegram queda integrado de forma modular sin credenciales en el repositorio.
-- La documentacion tecnica inicial esta disponible en `docs`.
-- Asignaturas, evaluaciones, notas y asistencia tienen base funcional.
-- El control de acceso no depende solo del frontend; backend valida rol y pertenencia.
+- Backend NestJS base creado con modulos iniciales (`auth`, `users`, `chat`, `calendar`, `annotations`, `health`).
+- Frontend Angular operativo y en proceso de adaptacion por fases.
+- Documentacion oficial actualizada al nuevo stack objetivo.
+- Backend Spring Boot queda como referencia temporal durante la migracion.
 
 ## Roadmap
 
-1. Crear PR de `feature/project-setup` hacia `develop`.
-2. Configurar GitHub Secrets cuando se autorice staging.
-3. Crear recursos pagados solo para validacion cloud o demo.
-4. Ejecutar workflows manuales y validar `/api/health`.
-5. Preparar evidencias finales y pulir UX mobile-first.
+1. Completar paridad funcional Auth/Users/Courses en NestJS.
+2. Migrar modulos academicos (feed, calendario, anotaciones, asistencia, notas).
+3. Implementar chat interno con integracion Telegram.
+4. Consolidar pipelines GitHub Actions para AWS.
+5. Retirar backend legado Spring al cumplir paridad y pruebas.

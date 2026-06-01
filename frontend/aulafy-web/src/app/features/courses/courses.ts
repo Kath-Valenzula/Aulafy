@@ -1,84 +1,76 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { CoursesService } from '../../core/services/courses.service';
 import { CourseResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-courses',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink],
   template: `
-    <section class="page-heading">
-      <div>
-        <span class="eyebrow">Administracion</span>
-        <h2>Cursos</h2>
-      </div>
+    <section class="mb-5">
+      <h2 class="text-2xl font-semibold text-on-background">Mis Cursos</h2>
+      <p class="text-sm text-on-surface-variant">Datos sincronizados desde el backend académico</p>
     </section>
 
-    <section class="work-area">
-      <h3>Crear curso</h3>
-      <form class="form-grid" [formGroup]="form" (ngSubmit)="create()">
-        <label>
-          Nombre
-          <input formControlName="name" />
-        </label>
-        <label>
-          Nivel
-          <input formControlName="level" />
-        </label>
-        <label>
-          Seccion
-          <input formControlName="section" />
-        </label>
-        <label>
-          Establecimiento
-          <input formControlName="schoolName" />
-        </label>
-        <button class="button primary" type="submit" [disabled]="form.invalid">Guardar</button>
-      </form>
+    <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+      Cargando cursos...
     </section>
 
-    <section class="course-grid">
-      <article class="course-card" *ngFor="let course of courses">
-        <h3>{{ course.name }}</h3>
-        <p>{{ course.schoolName }}</p>
-        <div>
-          <span>{{ course.level }}</span>
-          <span>Seccion {{ course.section }}</span>
-          <span>{{ course.studentCount }} estudiantes</span>
-          <span>{{ course.teacherCount }} docentes</span>
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm">
+      {{ error }}
+    </section>
+
+    <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+      No hay cursos visibles para tu perfil.
+    </section>
+
+    <section *ngIf="!loading && !error && courses.length" class="flex flex-col gap-4">
+      <article
+        *ngFor="let course of courses"
+        class="bg-surface rounded-xl border border-outline-variant shadow-sm p-5 relative overflow-hidden"
+      >
+        <div class="absolute top-0 left-0 h-1 w-full bg-primary"></div>
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-lg font-semibold">{{ course.name }}</h3>
+            <p class="text-sm text-on-surface-variant">{{ course.level }} {{ course.section }} · {{ course.schoolName }}</p>
+          </div>
+          <span class="bg-surface-container-high px-2 py-1 rounded-full text-xs">En curso</span>
+        </div>
+        <div class="bg-surface-container-low p-3 rounded-lg mb-4">
+          <p class="font-medium">{{ course.studentCount }} estudiante(s)</p>
+          <p class="text-sm text-on-surface-variant">{{ course.teacherCount }} profesor(es) asignado(s)</p>
+        </div>
+        <div class="flex gap-2">
+          <a routerLink="/app/feed" class="flex-1 border border-primary text-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
+            Muro
+          </a>
+          <a routerLink="/app/messages" class="flex-1 bg-primary-container text-on-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
+            Mensajes
+          </a>
         </div>
       </article>
     </section>
   `
 })
 export class CoursesComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
   private readonly coursesService = inject(CoursesService);
 
   courses: CourseResponse[] = [];
-  form = this.fb.nonNullable.group({
-    name: ['6 Basico B', [Validators.required]],
-    level: ['6 Basico', [Validators.required]],
-    section: ['B', [Validators.required]],
-    schoolName: ['Establecimiento Demo Aulafy', [Validators.required]]
-  });
+  loading = true;
+  error = '';
 
   ngOnInit(): void {
-    this.load();
-  }
-
-  create(): void {
-    if (this.form.invalid) {
-      return;
-    }
-    this.coursesService.create(this.form.getRawValue()).subscribe((course) => {
-      this.courses = [...this.courses, course];
-      this.form.reset({ name: '', level: '', section: '', schoolName: '' });
+    this.coursesService.findAll().subscribe({
+      next: (courses) => {
+        this.courses = courses;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No fue posible cargar los cursos.';
+        this.loading = false;
+      }
     });
-  }
-
-  private load(): void {
-    this.coursesService.findAll().subscribe((courses) => this.courses = courses);
   }
 }
