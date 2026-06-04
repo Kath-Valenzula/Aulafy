@@ -1,13 +1,20 @@
 # Base de datos
 
-El backend puede crear el esquema automaticamente con JPA usando `spring.jpa.hibernate.ddl-auto=update`. Los archivos `schema.sql` y `seed.sql` quedan como respaldo tecnico para revisar el modelo o cargar una base manualmente.
+La base de datos objetivo del proyecto es MySQL para el backend NestJS.
+
+Scripts activos de migracion:
+
+- `database/mysql/schema.sql`
+- `database/mysql/seed.sql`
+
+Los archivos `database/schema.sql` y `database/seed.sql` se mantienen como respaldo del backend legado en Spring/PostgreSQL.
 
 Comandos utiles:
 
 ```bash
 docker compose up -d
-psql -h localhost -U aulafy_user -d aulafy_db -f database/schema.sql
-psql -h localhost -U aulafy_user -d aulafy_db -f database/seed.sql
+mysql -h 127.0.0.1 -P 3306 -u root -p aulafy_db < database/mysql/schema.sql
+mysql -h 127.0.0.1 -P 3306 -u root -p aulafy_db < database/mysql/seed.sql
 ```
 
 Las contrasenas demo estan cifradas con BCrypt. Las credenciales reales de Telegram y base de datos deben configurarse por variables de entorno.

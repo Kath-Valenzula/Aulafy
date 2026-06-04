@@ -1,0 +1,8 @@
+export enum PostType {
+  AVISO = 'AVISO',
+  TAREA = 'TAREA',
+  EVALUACION = 'EVALUACION',
+  REUNION = 'REUNION',
+  MATERIAL = 'MATERIAL',
+  COMUNICADO = 'COMUNICADO'
+}

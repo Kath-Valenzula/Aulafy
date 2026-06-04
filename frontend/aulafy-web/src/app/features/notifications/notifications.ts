@@ -1,65 +1,182 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { NotificationLogResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-notifications',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <section class="page-heading">
-      <div>
-        <span class="eyebrow">Notificaciones</span>
-        <h2>Telegram</h2>
+    <section class="mb-5">
+      <h2 class="text-3xl font-bold text-primary">Centro de Mensajería</h2>
+      <p class="text-on-surface-variant">Gestión de envío Telegram con fallback cuando no está configurado.</p>
+    </section>
+
+    <section class="bg-surface rounded-xl border border-outline-variant p-5 mb-5">
+      <h3 class="text-lg font-semibold mb-4">Enviar notificación Telegram</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input [(ngModel)]="message" class="md:col-span-2 bg-surface-container border border-outline-variant rounded-lg px-3 py-2.5" placeholder="Mensaje" />
+        <input [(ngModel)]="chatId" class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2.5" placeholder="Chat ID (opcional)" />
       </div>
-      <button class="button secondary" type="button" (click)="test()">Mensaje de prueba</button>
+      <div class="flex flex-wrap gap-3 mt-4">
+        <button
+          (click)="sendTest()"
+          [disabled]="sendingTest"
+          class="px-4 py-2 bg-primary-container text-on-primary rounded-lg font-semibold disabled:opacity-50"
+        >
+          {{ sendingTest ? 'Probando...' : 'Probar Telegram' }}
+        </button>
+        <button
+          (click)="sendMessage()"
+          [disabled]="sendingMessage || !message.trim()"
+          class="px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold disabled:opacity-50"
+        >
+          {{ sendingMessage ? 'Enviando...' : 'Enviar mensaje' }}
+        </button>
+        <a routerLink="/app/chat-profesor" class="px-4 py-2 border border-primary text-primary rounded-lg font-semibold">
+          Abrir chat completo
+        </a>
+      </div>
     </section>
 
-    <section class="work-area">
-      <h3>Enviar mensaje</h3>
-      <form class="form-grid" [formGroup]="form" (ngSubmit)="send()">
-        <label>
-          Chat id
-          <input formControlName="chatId" />
-        </label>
-        <label class="wide">
-          Mensaje
-          <textarea rows="4" formControlName="message"></textarea>
-        </label>
-        <button class="button primary" type="submit" [disabled]="form.invalid">Enviar</button>
-      </form>
+    <section *ngIf="actionMessage" class="bg-secondary-container/30 border border-secondary/20 rounded-xl p-4 mb-5">
+      <p class="text-sm text-on-secondary-container">{{ actionMessage }}</p>
     </section>
 
-    <section class="work-area" *ngIf="lastLog">
-      <h3>Ultimo resultado</h3>
-      <div class="log-box">
-        <span class="status">{{ lastLog.status }}</span>
-        <p>{{ lastLog.message }}</p>
-        <small>{{ lastLog.detail || 'Sin detalle adicional' }}</small>
+    <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+      Cargando logs de notificación...
+    </section>
+
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm">
+      {{ error }}
+    </section>
+
+    <section *ngIf="!loading && !error" class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+      <div class="p-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="font-semibold">Bitácora de envíos</h3>
+        <button (click)="loadLogs()" class="text-sm text-primary font-semibold">Actualizar</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant/40">
+              <th class="p-3 text-left text-xs uppercase text-on-surface-variant">Fecha</th>
+              <th class="p-3 text-left text-xs uppercase text-on-surface-variant">Tipo</th>
+              <th class="p-3 text-left text-xs uppercase text-on-surface-variant">Destino</th>
+              <th class="p-3 text-left text-xs uppercase text-on-surface-variant">Estado</th>
+              <th class="p-3 text-left text-xs uppercase text-on-surface-variant">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="!logs.length">
+              <td colspan="5" class="p-4 text-sm text-on-surface-variant">Sin registros de notificaciones aún.</td>
+            </tr>
+            <tr *ngFor="let log of logs" class="border-b border-outline-variant/20">
+              <td class="p-3">{{ log.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="p-3">{{ log.type }}</td>
+              <td class="p-3">{{ log.recipient }}</td>
+              <td class="p-3">
+                <span class="text-xs px-2 py-1 rounded-full" [ngClass]="statusClass(log.status)">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td class="p-3 text-sm text-on-surface-variant">
+                <p>{{ log.detail || '-' }}</p>
+                <p class="text-xs mt-1">{{ log.message }}</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
   `
 })
-export class NotificationsComponent {
-  private readonly fb = inject(FormBuilder);
+export class NotificationsComponent implements OnInit {
   private readonly notificationsService = inject(NotificationsService);
 
-  lastLog?: NotificationLogResponse;
-  form = this.fb.nonNullable.group({
-    chatId: [''],
-    message: ['Recordatorio importante desde Aulafy.', [Validators.required]]
-  });
+  logs: NotificationLogResponse[] = [];
+  loading = true;
+  error = '';
+  actionMessage = '';
+  sendingTest = false;
+  sendingMessage = false;
+  message = 'Mensaje informativo desde Aulafy';
+  chatId = '';
 
-  test(): void {
-    this.notificationsService.test().subscribe((log) => this.lastLog = log);
+  ngOnInit(): void {
+    this.loadLogs();
   }
 
-  send(): void {
-    if (this.form.invalid) {
+  loadLogs(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.notificationsService.logs(100).subscribe({
+      next: (logs) => {
+        this.logs = logs;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No fue posible cargar la bitácora de notificaciones.';
+        this.loading = false;
+      }
+    });
+  }
+
+  sendTest(): void {
+    this.sendingTest = true;
+    this.actionMessage = '';
+
+    this.notificationsService.test().subscribe({
+      next: (result) => {
+        this.sendingTest = false;
+        this.actionMessage = `Prueba ejecutada con estado: ${result.status}.`;
+        this.loadLogs();
+      },
+      error: () => {
+        this.sendingTest = false;
+        this.actionMessage = 'No fue posible ejecutar la prueba Telegram.';
+      }
+    });
+  }
+
+  sendMessage(): void {
+    if (!this.message.trim()) {
       return;
     }
-    const value = this.form.getRawValue();
-    this.notificationsService.send(value.message, value.chatId || null).subscribe((log) => this.lastLog = log);
+
+    this.sendingMessage = true;
+    this.actionMessage = '';
+
+    this.notificationsService.send(this.message.trim(), this.chatId.trim() || null).subscribe({
+      next: (result) => {
+        this.sendingMessage = false;
+        this.actionMessage = `Mensaje procesado con estado: ${result.status}.`;
+        this.loadLogs();
+      },
+      error: () => {
+        this.sendingMessage = false;
+        this.actionMessage = 'No fue posible enviar el mensaje.';
+      }
+    });
+  }
+
+  statusClass(status: string): string {
+    // Estados funcionales para operacion real y modo degradado sin Telegram configurado.
+    if (status === 'SENT') {
+      return 'bg-secondary/10 text-secondary';
+    }
+    if (status === 'NOT_CONFIGURED') {
+      return 'bg-[#FEF08A] text-[#854D0E]';
+    }
+    if (status === 'NO_RECIPIENT') {
+      return 'bg-[#FEE2E2] text-[#991B1B]';
+    }
+    if (status === 'FAILED') {
+      return 'bg-error/10 text-error';
+    }
+    return 'bg-surface-variant text-on-surface-variant';
   }
 }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { CourseResponse } from '../../shared/models/aulafy.models';
+import { CourseResponse, CourseStudentResponse } from '../../shared/models/aulafy.models';
 
 interface CourseRequest {
   name: string;
@@ -20,5 +20,9 @@ export class CoursesService {
 
   create(request: CourseRequest) {
     return this.http.post<CourseResponse>(`${environment.apiUrl}/courses`, request);
+  }
+
+  students(courseId: number) {
+    return this.http.get<CourseStudentResponse[]>(`${environment.apiUrl}/courses/${courseId}/students`);
   }
 }
