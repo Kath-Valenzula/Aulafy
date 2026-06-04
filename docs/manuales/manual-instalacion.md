@@ -2,10 +2,9 @@
 
 ## Requisitos
 
-- Java 17.
-- Maven.
-- Node.js compatible con Angular.
-- Docker Desktop para PostgreSQL local.
+- Node.js 20 o superior.
+- npm 10 o superior.
+- Docker Desktop para MySQL local.
 - Git.
 
 ## Base de datos local
@@ -14,12 +13,14 @@
 docker compose up -d
 ```
 
-## Backend
+## Backend NestJS (objetivo)
 
 ```bash
-cd backend/aulafy-api
-mvn clean test
-mvn spring-boot:run
+cd backend/aulafy-api-nest
+cp .env.example .env
+npm install
+npm run build
+npm run start:dev
 ```
 
 API local:
@@ -48,6 +49,18 @@ Frontend local:
 http://localhost:4200
 ```
 
-## Staging Azure
+## Backend legado (solo referencia temporal)
 
-Revisar `docs/despliegue/azure-staging.md` e `infra/azure/README.md`. No crear recursos pagados sin autorizacion.
+Mientras la migracion no termina, el backend legado sigue disponible en:
+
+```bash
+cd backend/aulafy-api
+mvn clean test
+mvn spring-boot:run
+```
+
+No se deben agregar nuevas funcionalidades en el backend legado, salvo fixes criticos.
+
+## Staging AWS (objetivo)
+
+La configuracion de despliegue para AWS se documenta en las siguientes iteraciones de infraestructura.

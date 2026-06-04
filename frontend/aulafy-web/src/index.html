@@ -1,11 +1,75 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <title>Aulafy</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'surface-tint': '#455f88',
+            'on-background': '#0d1c2e',
+            'on-secondary-container': '#167249',
+            'outline-variant': '#c4c6cf',
+            'on-tertiary-fixed': '#331100',
+            'inverse-on-surface': '#eaf1ff',
+            'on-surface': '#0d1c2e',
+            'inverse-primary': '#adc7f7',
+            'surface-container': '#e5eeff',
+            'error-container': '#ffdad6',
+            'tertiary': '#3b1500',
+            'on-primary-fixed-variant': '#2d476f',
+            'on-error-container': '#93000a',
+            'on-primary': '#ffffff',
+            'secondary-fixed': '#9ff5c1',
+            'on-surface-variant': '#43474e',
+            'on-secondary-fixed': '#002111',
+            'on-secondary-fixed-variant': '#005231',
+            'primary': '#002045',
+            'surface-variant': '#d4e4fc',
+            'secondary-container': '#9ff5c1',
+            'secondary': '#0a6c44',
+            'on-secondary': '#ffffff',
+            'surface-container-highest': '#d4e4fc',
+            'primary-container': '#1a365d',
+            'surface-container-low': '#eff4ff',
+            'primary-fixed-dim': '#adc7f7',
+            outline: '#74777f',
+            error: '#ba1a1a',
+            'primary-fixed': '#d6e3ff',
+            'on-primary-fixed': '#001b3c',
+            'surface-bright': '#f8f9ff',
+            'inverse-surface': '#223144',
+            'surface-container-lowest': '#ffffff',
+            'tertiary-fixed': '#ffdbca',
+            'on-tertiary-fixed-variant': '#773200',
+            'on-error': '#ffffff',
+            background: '#f8f9ff',
+            'on-primary-container': '#86a0cd',
+            'tertiary-container': '#5d2500',
+            'on-tertiary-container': '#f57d32',
+            'secondary-fixed-dim': '#83d8a6',
+            'on-tertiary': '#ffffff',
+            'tertiary-fixed-dim': '#ffb68f',
+            'surface-container-high': '#dce9ff',
+            'surface-dim': '#ccdbf4',
+            surface: '#f8f9ff'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -33,6 +33,7 @@ import { AuthService } from '../../core/auth/auth.service';
           <div class="demo-users">
             <strong>Demo</strong>
             <span>admin@aulafy.cl / Admin1234</span>
+            <span>apoderado@aulafy.cl / Apoderado1234</span>
             <span>profesor@aulafy.cl / Profesor1234</span>
             <span>estudiante@aulafy.cl / Estudiante1234</span>
           </div>
@@ -60,7 +61,7 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     this.authService.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl('/app/dashboard'),
+      next: () => this.router.navigateByUrl('/app/home'),
       error: () => {
         this.error = 'No fue posible iniciar sesion. Revise las credenciales.';
         this.loading = false;

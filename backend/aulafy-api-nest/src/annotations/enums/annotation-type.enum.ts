@@ -1,0 +1,5 @@
+export enum AnnotationType {
+  ACADEMICA = 'ACADEMICA',
+  CONDUCTUAL = 'CONDUCTUAL',
+  COMUNICACION = 'COMUNICACION'
+}

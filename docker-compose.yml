@@ -1,16 +1,17 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: aulafy_postgres
+  mysql:
+    image: mysql:8.4
+    container_name: aulafy_mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: aulafy_db
-      POSTGRES_USER: aulafy_user
-      POSTGRES_PASSWORD: aulafy_pass
+      MYSQL_DATABASE: aulafy_db
+      MYSQL_USER: aulafy_user
+      MYSQL_PASSWORD: aulafy_pass
+      MYSQL_ROOT_PASSWORD: root_pass_dev
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - aulafy_postgres_data:/var/lib/postgresql/data
+      - aulafy_mysql_data:/var/lib/mysql
 
 volumes:
-  aulafy_postgres_data:
+  aulafy_mysql_data:
