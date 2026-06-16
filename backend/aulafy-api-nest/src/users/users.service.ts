@@ -1,12 +1,14 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
+import { JwtPayload } from '../common/auth/jwt-payload.interface';
 import { UserCreateDto } from './dto/user-create.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UserStatusDto } from './dto/user-status.dto';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { UserEntity } from './entities/user.entity';
+import { RoleName } from './enums/role-name.enum';
 import { toUserResponse } from './users.mapper';
 
 @Injectable()
@@ -23,8 +25,32 @@ export class UsersService {
     return users.map(toUserResponse);
   }
 
+  async findVisible(user: JwtPayload): Promise<UserResponseDto[]> {
+    if (user.role === RoleName.ADMIN) {
+      return this.findAll();
+    }
+
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role IN (:...roles)', {
+        roles: [RoleName.PROFESOR, RoleName.APODERADO, RoleName.ESTUDIANTE]
+      })
+      .orderBy('user.fullName', 'ASC')
+      .getMany();
+
+    return users.map(toUserResponse);
+  }
+
   async findById(id: number): Promise<UserResponseDto> {
     const user = await this.getEntityById(id);
+    return toUserResponse(user);
+  }
+
+  async findVisibleById(id: number, currentUser: JwtPayload): Promise<UserResponseDto> {
+    const user = await this.getEntityById(id);
+    if (currentUser.role === RoleName.COLEGIO && user.role === RoleName.ADMIN) {
+      throw new ForbiddenException('No tienes permisos para consultar este usuario');
+    }
     return toUserResponse(user);
   }
 

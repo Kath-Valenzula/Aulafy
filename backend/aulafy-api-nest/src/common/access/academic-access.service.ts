@@ -84,6 +84,27 @@ export class AcademicAccessService {
     return [...new Set(rows.map((row) => Number(row.courseId)))]
   }
 
+  async findVisibleStudentIds(user: JwtPayload): Promise<number[]> {
+    if (isAdminOrSchool(user.role)) {
+      return []
+    }
+
+    if (user.role === RoleName.PROFESOR) {
+      const rows = await this.courseStudentRepository
+        .createQueryBuilder('courseStudent')
+        .innerJoin(
+          CourseTeacherEntity,
+          'courseTeacher',
+          'courseTeacher.courseId = courseStudent.courseId'
+        )
+        .where('courseTeacher.teacherId = :teacherId', { teacherId: String(user.sub) })
+        .getMany()
+      return [...new Set(rows.map((row) => Number(row.studentId)))]
+    }
+
+    return this.findStudentsForUser(user)
+  }
+
   private async canViewCourse(user: JwtPayload, courseId: number): Promise<boolean> {
     if (isAdminOrSchool(user.role)) {
       return true

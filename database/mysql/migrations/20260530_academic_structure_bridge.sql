@@ -1,11 +1,11 @@
 -- ============================================================================
--- Aulafy | Migracion incremental hacia modelo academico base (childsafe)
+-- Aulafy | Ajuste incremental hacia modelo academico base
 -- Fecha: 2026-05-30
 --
 -- Objetivo:
--- - Agregar tablas levels/cycles/cycle_levels/students en una BD legacy ya creada.
+-- - Agregar tablas levels/cycles/cycle_levels/students en una BD existente.
 -- - Conectar courses con level_id/cycle_id.
--- - Migrar referencias de estudiante desde users -> students para:
+-- - Ajustar referencias de estudiante desde users -> students para:
 --   course_students, guardian_students, grades, attendance.
 -- - Mantener datos existentes sin recrear la base.
 -- ============================================================================

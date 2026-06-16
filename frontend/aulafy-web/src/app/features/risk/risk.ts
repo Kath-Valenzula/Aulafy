@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { RiskService } from '../../core/services/risk.service';
+import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-risk',
@@ -7,92 +9,174 @@ import { Component } from '@angular/core';
   template: `
     <section class="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold text-on-background">Reporte de Riesgo Académico</h2>
-        <p class="text-on-surface-variant">Análisis de rendimiento y asistencia bajo umbral.</p>
+        <h2 class="text-3xl font-bold text-on-background">Reporte de Riesgo Academico</h2>
+        <p class="text-on-surface-variant">
+          Calculo basado en notas y asistencia registradas en backend.
+        </p>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="px-4 py-2 rounded-lg border border-primary text-primary font-semibold">Exportar PDF</button>
-        <button class="px-4 py-2 rounded-lg bg-surface-container-high border border-outline-variant">Exportar Excel</button>
-      </div>
+      <button
+        (click)="loadRiskReport()"
+        [disabled]="loading"
+        class="px-4 py-2 rounded-lg bg-primary-container text-on-primary rounded-lg font-semibold disabled:opacity-50"
+      >
+        {{ loading ? 'Actualizando...' : 'Actualizar' }}
+      </button>
     </section>
 
-    <section class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant/50 flex flex-wrap gap-4 items-end mb-5">
-      <select class="h-10 rounded-lg border-outline-variant bg-surface text-sm px-3">
-        <option>Primer Semestre 2024</option>
-      </select>
-      <select class="h-10 rounded-lg border-outline-variant bg-surface text-sm px-3">
-        <option>Todos los niveles</option>
-      </select>
-      <select class="h-10 rounded-lg border-outline-variant bg-surface text-sm px-3">
-        <option>Cualquiera (Notas o Asistencia)</option>
-      </select>
-      <button class="h-10 px-6 bg-primary-container text-on-primary rounded-lg font-semibold">Aplicar filtros</button>
+    <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
+      Cargando reporte de riesgo...
     </section>
 
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-      <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
-        <p class="text-xs uppercase text-on-surface-variant">Alumnos en riesgo</p>
-        <p class="text-5xl font-bold text-error mt-2">42</p>
-      </article>
-      <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
-        <p class="text-xs uppercase text-on-surface-variant mb-3">Motivo principal</p>
-        <p class="text-sm">Rendimiento: <strong>28</strong></p>
-        <p class="text-sm">Asistencia: <strong>14</strong></p>
-      </article>
-      <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
-        <p class="text-xs uppercase text-on-surface-variant mb-3">Severidad</p>
-        <div class="flex gap-4">
-          <div class="text-center"><div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center font-bold">12</div><span class="text-xs">Crítico</span></div>
-          <div class="text-center"><div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center font-bold">30</div><span class="text-xs">Moderado</span></div>
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <span>{{ error }}</span>
+      <button (click)="loadRiskReport()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
+    </section>
+
+    <ng-container *ngIf="!loading && !error && report">
+      <section class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant/50 mb-5">
+        <p class="text-sm text-on-surface-variant">
+          Umbrales activos: promedio menor a
+          <strong>{{ report.thresholds.minimumAverage }}</strong>
+          o asistencia menor a
+          <strong>{{ report.thresholds.minimumAttendancePercentage }}%</strong>.
+        </p>
+      </section>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
+          <p class="text-xs uppercase text-on-surface-variant">Alumnos en riesgo</p>
+          <p class="text-5xl font-bold text-error mt-2">{{ report.summary.riskStudents }}</p>
+          <p class="text-xs text-on-surface-variant mt-2">
+            {{ report.summary.evaluatedStudents }} de {{ report.summary.totalStudents }} alumno(s) con datos evaluables.
+          </p>
+        </article>
+        <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
+          <p class="text-xs uppercase text-on-surface-variant mb-3">Motivo principal</p>
+          <p class="text-sm">Rendimiento: <strong>{{ report.summary.academicRisk }}</strong></p>
+          <p class="text-sm">Asistencia: <strong>{{ report.summary.attendanceRisk }}</strong></p>
+          <p class="text-sm">Combinado: <strong>{{ report.summary.combinedRisk }}</strong></p>
+        </article>
+        <article class="bg-surface rounded-xl p-6 border border-outline-variant/50">
+          <p class="text-xs uppercase text-on-surface-variant mb-3">Severidad</p>
+          <div class="flex gap-4">
+            <div class="text-center">
+              <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center font-bold">
+                {{ report.summary.criticalRisk }}
+              </div>
+              <span class="text-xs">Critico</span>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center font-bold">
+                {{ report.summary.moderateRisk }}
+              </div>
+              <span class="text-xs">Moderado</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section *ngIf="!report.items.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+        No hay alumnos en riesgo con los datos registrados.
+      </section>
+
+      <section *ngIf="report.items.length" class="bg-surface rounded-xl shadow-sm border border-outline-variant/50 overflow-hidden">
+        <div class="p-4 border-b border-outline-variant bg-surface-bright">
+          <h3 class="text-xl font-semibold">Lista priorizada de alumnos</h3>
         </div>
-      </article>
-    </section>
-
-    <section class="bg-surface rounded-xl shadow-sm border border-outline-variant/50 overflow-hidden">
-      <div class="p-4 border-b border-outline-variant bg-surface-bright">
-        <h3 class="text-xl font-semibold">Lista priorizada de alumnos</h3>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="bg-surface-container-low text-xs uppercase text-on-surface-variant">
-            <tr>
-              <th class="p-4 text-left">Estudiante</th>
-              <th class="p-4 text-left">Curso</th>
-              <th class="p-4 text-center">Promedio</th>
-              <th class="p-4 text-center">Asistencia</th>
-              <th class="p-4 text-left">Motivo</th>
-              <th class="p-4 text-left">Severidad</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-outline-variant/30">
-            <tr>
-              <td class="p-4 font-medium">Martina Vargas</td>
-              <td class="p-4">2º Medio A</td>
-              <td class="p-4 text-center text-error font-bold">2.8</td>
-              <td class="p-4 text-center">88%</td>
-              <td class="p-4">Rendimiento</td>
-              <td class="p-4"><span class="px-2 py-1 rounded-full text-xs bg-error-container text-on-error-container">Crítico</span></td>
-            </tr>
-            <tr class="bg-surface-bright">
-              <td class="p-4 font-medium">Tomás Sepúlveda</td>
-              <td class="p-4">3º Medio B</td>
-              <td class="p-4 text-center">4.2</td>
-              <td class="p-4 text-center text-error font-bold">71%</td>
-              <td class="p-4">Inasistencias continuas</td>
-              <td class="p-4"><span class="px-2 py-1 rounded-full text-xs bg-error-container text-on-error-container">Crítico</span></td>
-            </tr>
-            <tr>
-              <td class="p-4 font-medium">Camila Rojas</td>
-              <td class="p-4">1º Medio A</td>
-              <td class="p-4 text-center">3.8</td>
-              <td class="p-4 text-center">92%</td>
-              <td class="p-4">Rendimiento (Lenguaje)</td>
-              <td class="p-4"><span class="px-2 py-1 rounded-full text-xs bg-surface-variant text-on-surface-variant">Moderado</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-surface-container-low text-xs uppercase text-on-surface-variant">
+              <tr>
+                <th class="p-4 text-left">Estudiante</th>
+                <th class="p-4 text-left">Curso</th>
+                <th class="p-4 text-center">Promedio</th>
+                <th class="p-4 text-center">Asistencia</th>
+                <th class="p-4 text-left">Motivo</th>
+                <th class="p-4 text-left">Severidad</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/30">
+              <tr *ngFor="let item of report.items">
+                <td class="p-4 font-medium">{{ item.studentName }}</td>
+                <td class="p-4">{{ item.courseName }}</td>
+                <td class="p-4 text-center" [ngClass]="averageClass(item)">
+                  {{ item.averageScore ?? 'Sin notas' }}
+                </td>
+                <td class="p-4 text-center" [ngClass]="attendanceClass(item)">
+                  {{ item.attendancePercentage !== null ? item.attendancePercentage + '%' : 'Sin registros' }}
+                </td>
+                <td class="p-4">{{ reasonsLabel(item) }}</td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded-full text-xs" [ngClass]="severityClass(item)">
+                    {{ severityLabel(item) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ng-container>
   `
 })
-export class RiskComponent {}
+export class RiskComponent implements OnInit {
+  private readonly riskService = inject(RiskService);
+
+  report: RiskReportResponse | null = null;
+  loading = true;
+  error = '';
+
+  ngOnInit(): void {
+    this.loadRiskReport();
+  }
+
+  loadRiskReport(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.riskService.academicRisk().subscribe({
+      next: (report) => {
+        this.report = report;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar reporte de riesgo', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        this.loading = false;
+      }
+    });
+  }
+
+  averageClass(item: RiskStudentResponse): string {
+    if (item.averageScore !== null && this.report && item.averageScore < this.report.thresholds.minimumAverage) {
+      return 'text-error font-bold';
+    }
+    return '';
+  }
+
+  attendanceClass(item: RiskStudentResponse): string {
+    if (
+      item.attendancePercentage !== null &&
+      this.report &&
+      item.attendancePercentage < this.report.thresholds.minimumAttendancePercentage
+    ) {
+      return 'text-error font-bold';
+    }
+    return '';
+  }
+
+  severityClass(item: RiskStudentResponse): string {
+    if (item.severity === 'CRITICO') {
+      return 'bg-error-container text-on-error-container';
+    }
+    return 'bg-surface-variant text-on-surface-variant';
+  }
+
+  severityLabel(item: RiskStudentResponse): string {
+    return item.severity === 'CRITICO' ? 'Critico' : 'Moderado';
+  }
+
+  reasonsLabel(item: RiskStudentResponse): string {
+    return item.reasons.length ? item.reasons.join(' / ') : 'Sin motivo registrado';
+  }
+}

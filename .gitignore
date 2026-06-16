@@ -1,27 +1,37 @@
-# Java
-target/
-*.class
-*.jar
-
-# Node
+# Node / Angular / NestJS
 node_modules/
 dist/
 .angular/
+*.tsbuildinfo
 npm-debug.log*
+
+# Build legacy o generado
+target/
+graphify-out/
 
 # Entorno local
 .env
 .env.*
+.env.local
 !.env.example
 application-local.properties
 application-local.yml
 variables.local.ps1
+
+# Logs
+logs/
+*.log
+
+# Temporales de documentos
+~$*.docx
 
 # IDE y sistema operativo
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
+Desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+*.tmp
+*.swp

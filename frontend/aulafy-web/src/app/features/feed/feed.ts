@@ -19,8 +19,9 @@ import { CommentResponse, CourseResponse, PostResponse, PostType } from '../../s
       Cargando publicaciones...
     </section>
 
-    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm">
-      {{ error }}
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <span>{{ error }}</span>
+      <button (click)="loadCoursesAndPosts()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
     </section>
 
     <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
@@ -179,7 +180,7 @@ export class FeedComponent implements OnInit {
   };
 
   get canCreatePost(): boolean {
-    return this.auth.hasAnyRole(['ADMIN', 'COLEGIO', 'PROFESOR']);
+    return this.auth.hasAnyRole(['COLEGIO', 'PROFESOR']);
   }
 
   get canSubmitPost(): boolean {
@@ -230,9 +231,10 @@ export class FeedComponent implements OnInit {
           this.resetPostDraft();
           this.loadPosts(this.selectedCourseId!);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al crear publicacion', error);
           this.savingPost = false;
-          this.actionMessage = 'No fue posible crear la publicación.';
+          this.actionMessage = 'No fue posible crear la publicacion.';
         }
       });
   }
@@ -253,9 +255,11 @@ export class FeedComponent implements OnInit {
         this.commentsByPost[postId] = comments;
         this.loadingCommentsPostId = null;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error al cargar comentarios', error);
         this.commentsByPost[postId] = [];
         this.loadingCommentsPostId = null;
+        this.actionMessage = 'No fue posible cargar los comentarios.';
       }
     });
   }
@@ -286,8 +290,10 @@ export class FeedComponent implements OnInit {
           this.commentsByPost[postId] = [...current, comment];
           this.commentDraftByPost[postId] = '';
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al crear comentario', error);
           this.savingCommentPostId = null;
+          this.actionMessage = 'No fue posible registrar el comentario.';
         }
       });
   }
@@ -309,7 +315,7 @@ export class FeedComponent implements OnInit {
     return value && value !== '' ? (value as PostType) : null;
   }
 
-  private loadCoursesAndPosts(): void {
+  loadCoursesAndPosts(): void {
     this.loading = true;
     this.error = '';
 
@@ -324,8 +330,9 @@ export class FeedComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadPosts(courses[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar cursos para el muro.';
+      error: (error) => {
+        console.error('Error al cargar cursos para muro', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -343,8 +350,9 @@ export class FeedComponent implements OnInit {
         this.posts = posts;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar publicaciones del curso.';
+      error: (error) => {
+        console.error('Error al cargar publicaciones', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });

@@ -1,13 +1,18 @@
 # Aulafy
 
-Aulafy es una plataforma web de comunicacion y gestion escolar para centralizar publicaciones, calendario academico, notas, asistencia, anotaciones y chat interno integrado con Telegram.
+Aulafy es un MVP academico de plataforma web para comunicacion y gestion escolar. Centraliza publicaciones, calendario academico, notas, asistencia y anotaciones para mejorar la coordinacion entre colegio, profesores, estudiantes y apoderados.
 
-El proyecto migra su stack a arquitectura cliente-servidor con:
+El stack oficial vigente es:
 
-- Backend NestJS.
-- Frontend Angular.
-- Base de datos MySQL.
-- Infraestructura AWS con CI/CD en GitHub Actions.
+- Frontend Angular 21 con TypeScript.
+- Backend NestJS con Node.js y TypeScript.
+- Base de datos MySQL 8.x.
+- ORM TypeORM.
+- Entorno local con Docker Compose.
+- Pruebas con Jest como estandar definido para el stack Node.
+- Control de versiones en GitHub y seguimiento mediante GitHub Issues.
+- Telegram Bot API solo como integracion opcional para notificaciones externas.
+- AWS como staging futuro controlado, sujeto a autorizacion previa.
 
 ## Integrantes
 
@@ -18,11 +23,11 @@ Profesor: Alonso Esteban Castillo Pizarro
 
 ## Stack tecnico
 
-- Backend: NestJS, TypeScript, JWT, TypeORM, class-validator.
+- Backend: NestJS, Node.js, TypeScript, JWT, TypeORM, class-validator.
 - Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient.
 - Base de datos: MySQL 8 mediante Docker Compose.
-- Pruebas: en migracion a stack Node/Nest.
-- Integraciones: Telegram Bot API.
+- Pruebas: Jest como herramienta objetivo del proyecto.
+- Integraciones: Telegram Bot API para avisos externos opcionales.
 
 ## Arquitectura
 
@@ -30,9 +35,9 @@ El proyecto usa un monolito modular separado en cliente web y API REST:
 
 - `frontend/aulafy-web`: aplicacion Angular mobile-first.
 - `backend/aulafy-api-nest`: API NestJS con modulos por dominio.
-- `backend/aulafy-api`: backend legado Spring Boot (referencia temporal de migracion).
-- `database`: scripts SQL en transicion a MySQL.
-- `docs`: documentacion tecnica, casos de uso y plan de pruebas.
+- `database/mysql`: scripts oficiales de esquema y datos demo en MySQL.
+- `docs`: documentacion academica final e imagenes de evidencia.
+- `.github/workflows`: integracion continua y flujos manuales para staging futuro.
 
 No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo y trazabilidad clara para entrega academica.
 
@@ -44,8 +49,9 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 - Feed academico tipo red social.
 - Calendario por curso.
 - Anotaciones/comunicaciones personales del estudiante.
-- Chat interno integrado con Telegram.
 - Asistencia y resumen academico.
+- Chat interno: modulo experimental/post-MVP presente en el codigo, no tratado como alcance principal validado.
+- Notificaciones externas opcionales mediante Telegram.
 
 ## Roles
 
@@ -62,8 +68,11 @@ Para el MVP cada usuario tiene un rol principal. La estructura queda preparada p
 Base de datos:
 
 ```bash
+docker compose down -v
 docker compose up -d
 ```
+
+El reinicio con `down -v` elimina el volumen local de MySQL y fuerza la carga automatica de `database/mysql/schema.sql` y `database/mysql/seed.sql` desde `/docker-entrypoint-initdb.d/`.
 
 Backend NestJS:
 
@@ -93,19 +102,20 @@ PORT=8080
 
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=aulafy_db
-DB_USER=aulafy_user
+DB_DATABASE=aulafy_db
+DB_USERNAME=aulafy_user
 DB_PASSWORD=aulafy_pass
 
-JWT_SECRET=definir-una-clave-larga-para-produccion
+JWT_SECRET=clave-demo-local-cambiar-en-produccion
+FRONTEND_URL=http://localhost:4200
+
 TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 ```
 
-## Documentacion de migracion
+## Staging futuro
 
-- `docs/arquitectura/arquitectura.md`
-- `docs/arquitectura/migracion-stack-nestjs-mysql-aws.md`
-- `docs/manuales/manual-instalacion.md`
+AWS queda reservado como staging futuro controlado. Los flujos de despliegue se deben ejecutar manualmente y solo con autorizacion, variables configuradas y revision previa de costos. El entorno local con Docker Compose es el entorno operativo actual para desarrollo y demostracion.
 
 ## Credenciales demo
 
@@ -117,15 +127,15 @@ TELEGRAM_BOT_TOKEN=
 
 ## Estado actual del MVP
 
-- Backend NestJS base creado con modulos iniciales (`auth`, `users`, `chat`, `calendar`, `annotations`, `health`).
-- Frontend Angular operativo y en proceso de adaptacion por fases.
-- Documentacion oficial actualizada al nuevo stack objetivo.
-- Backend Spring Boot queda como referencia temporal durante la migracion.
+- Backend NestJS con modulos por dominio para autenticacion, usuarios, cursos, calendario, publicaciones, evaluaciones, asistencia, anotaciones y notificaciones.
+- Frontend Angular operativo con rutas protegidas y pantallas principales del MVP.
+- Base de datos MySQL con esquema y seed demo en `database/mysql`.
+- Documentacion academica final disponible en `docs`.
+- Chat interno presente como modulo experimental/post-MVP.
 
 ## Roadmap
 
-1. Completar paridad funcional Auth/Users/Courses en NestJS.
-2. Migrar modulos academicos (feed, calendario, anotaciones, asistencia, notas).
-3. Implementar chat interno con integracion Telegram.
-4. Consolidar pipelines GitHub Actions para AWS.
-5. Retirar backend legado Spring al cumplir paridad y pruebas.
+1. Consolidar pruebas automatizadas del stack NestJS/Angular.
+2. Completar evidencias de QA y trazabilidad con GitHub Issues.
+3. Validar el modulo de chat antes de moverlo al alcance principal.
+4. Preparar staging AWS solo si existe autorizacion academica y control de costos.

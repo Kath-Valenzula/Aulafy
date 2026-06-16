@@ -241,12 +241,17 @@ export class CoursesService {
       return []
     }
 
+    const visibleStudents = this.filterStudentsByUser(students, user)
+    if (!visibleStudents.length) {
+      return []
+    }
+
     const levels = await this.levelRepository.find({
-      where: [...new Set(students.map((student) => student.levelId))].map((id) => ({ id }))
+      where: [...new Set(visibleStudents.map((student) => student.levelId))].map((id) => ({ id }))
     })
     const levelsMap = new Map(levels.map((level) => [level.id, level]))
 
-    return students.map((student) => ({
+    return visibleStudents.map((student) => ({
       id: Number(student.id),
       firstName: student.firstName,
       lastName: student.lastName,
@@ -401,5 +406,17 @@ export class CoursesService {
     if (!exists) {
       throw new NotFoundException(`Alumno ${studentId} no encontrado`)
     }
+  }
+
+  private filterStudentsByUser(students: StudentEntity[], user: JwtPayload): StudentEntity[] {
+    if (user.role === RoleName.APODERADO) {
+      return students.filter((student) => student.guardianId === String(user.sub))
+    }
+
+    if (user.role === RoleName.ESTUDIANTE) {
+      return students.filter((student) => student.studentUserId === String(user.sub))
+    }
+
+    return students
   }
 }

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { FindOptionsWhere, Repository } from 'typeorm'
 import { StudentEntity } from '../academic-structure/entities/student.entity'
 import { JwtPayload } from '../common/auth/jwt-payload.interface'
 import { AcademicAccessService } from '../common/access/academic-access.service'
@@ -8,6 +8,7 @@ import { CourseEntity } from '../courses/entities/course.entity'
 import { CourseStudentEntity } from '../courses/entities/course-student.entity'
 import { NotificationsService } from '../notifications/notifications.service'
 import { UserEntity } from '../users/entities/user.entity'
+import { RoleName } from '../users/enums/role-name.enum'
 import { AnnotationsQueryDto } from './dto/annotations-query.dto'
 import { CreateAnnotationDto } from './dto/create-annotation.dto'
 import { StudentAnnotationEntity } from './entities/student-annotation.entity'
@@ -47,14 +48,9 @@ export class AnnotationsService {
   ) {}
 
   async list(query: AnnotationsQueryDto, user: JwtPayload): Promise<AnnotationResponse[]> {
-    const where: Partial<StudentAnnotationEntity> = { active: true }
-    if (query.courseId) {
-      await this.accessService.assertCanViewCourse(user, query.courseId)
-      where.courseId = String(query.courseId)
-    }
-    if (query.studentId) {
-      await this.accessService.assertCanViewStudent(user, query.studentId)
-      where.studentId = String(query.studentId)
+    const where = await this.buildListWhere(query, user)
+    if (!where.length) {
+      return []
     }
 
     const annotations = await this.annotationRepository.find({
@@ -169,6 +165,41 @@ export class AnnotationsService {
       `Titulo: ${annotation.title}`,
       `Descripcion: ${annotation.description}`
     ].join('\n')
+  }
+
+  private async buildListWhere(
+    query: AnnotationsQueryDto,
+    user: JwtPayload
+  ): Promise<FindOptionsWhere<StudentAnnotationEntity>[]> {
+    const base: FindOptionsWhere<StudentAnnotationEntity> = { active: true }
+
+    if (query.courseId) {
+      await this.accessService.assertCanViewCourse(user, query.courseId)
+      base.courseId = String(query.courseId)
+    }
+
+    if (query.studentId) {
+      await this.accessService.assertCanViewStudent(user, query.studentId)
+      base.studentId = String(query.studentId)
+    }
+
+    if (query.courseId || query.studentId || user.role === RoleName.ADMIN || user.role === RoleName.COLEGIO) {
+      return [base]
+    }
+
+    if (user.role === RoleName.PROFESOR) {
+      const courseIds = await this.accessService.findVisibleCourseIds(user)
+      return courseIds.map((courseId) => ({
+        ...base,
+        courseId: String(courseId)
+      }))
+    }
+
+    const studentIds = await this.accessService.findVisibleStudentIds(user)
+    return studentIds.map((studentId) => ({
+      ...base,
+      studentId: String(studentId)
+    }))
   }
 
   private async mapAnnotations(annotations: StudentAnnotationEntity[]): Promise<AnnotationResponse[]> {

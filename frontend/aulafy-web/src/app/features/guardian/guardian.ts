@@ -1,72 +1,102 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+
+interface FamilyAction {
+  label: string;
+  description: string;
+  icon: string;
+  path: string;
+}
 
 @Component({
   selector: 'app-guardian',
   imports: [CommonModule, RouterLink],
   template: `
-    <section class="bg-error-container rounded-xl p-4 flex items-start gap-3 border border-[#ffb4ab] mb-6">
-      <span class="material-symbols-outlined text-on-error-container mt-0.5">error</span>
-      <div>
-        <h2 class="text-sm font-semibold text-on-error-container">Próxima reunión de apoderados</h2>
-        <p class="text-sm text-on-error-container/90">Mañana 18:00 hrs. Asistencia obligatoria.</p>
-      </div>
+    <section class="mb-6">
+      <p class="text-sm text-on-surface-variant">{{ roleLabel }}</p>
+      <h2 class="text-2xl font-bold text-primary">{{ title }}</h2>
+      <p class="text-sm text-on-surface-variant mt-1">{{ subtitle }}</p>
     </section>
 
-    <section class="mb-6">
-      <h2 class="text-xl font-semibold text-primary mb-3">Acciones rápidas</h2>
-      <div class="grid grid-cols-4 gap-3">
-        <a routerLink="/app/calendar" class="flex flex-col items-center justify-center p-3 bg-surface-container-low rounded-xl border border-outline-variant">
-          <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary mb-2">
-            <span class="material-symbols-outlined">calendar_month</span>
-          </div>
-          <span class="text-xs text-on-surface">Calendario</span>
-        </a>
-        <a routerLink="/app/academic" class="flex flex-col items-center justify-center p-3 bg-surface-container-low rounded-xl border border-outline-variant">
-          <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary mb-2">
-            <span class="material-symbols-outlined">grade</span>
-          </div>
-          <span class="text-xs text-on-surface">Notas</span>
-        </a>
-        <a routerLink="/app/messages" class="flex flex-col items-center justify-center p-3 bg-surface-container-low rounded-xl border border-outline-variant">
-          <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary mb-2">
-            <span class="material-symbols-outlined">chat</span>
-          </div>
-          <span class="text-xs text-on-surface">Chat</span>
-        </a>
-        <a routerLink="/app/attendance" class="flex flex-col items-center justify-center p-3 bg-surface-container-low rounded-xl border border-outline-variant">
-          <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary mb-2">
-            <span class="material-symbols-outlined">how_to_reg</span>
-          </div>
-          <span class="text-xs text-on-surface">Asistencia</span>
-        </a>
+    <section class="bg-surface rounded-xl border border-outline-variant p-5 mb-6">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined">account_circle</span>
+        </div>
+        <div>
+          <h3 class="font-semibold text-primary">{{ auth.currentUser?.fullName }}</h3>
+          <p class="text-sm text-on-surface-variant">{{ summaryText }}</p>
+        </div>
       </div>
     </section>
 
     <section>
-      <h2 class="text-xl font-semibold text-primary mb-4">Resumen semanal</h2>
-      <div class="flex flex-col gap-4">
-        <article class="bg-surface rounded-xl p-5 border border-outline-variant shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="material-symbols-outlined text-primary">assignment</span>
-            <h3 class="font-semibold">Próximas evaluaciones</h3>
+      <h3 class="text-lg font-semibold text-primary mb-4">Accesos principales</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <a
+          *ngFor="let action of actions"
+          [routerLink]="action.path"
+          class="bg-surface-container-low rounded-xl border border-outline-variant p-4 min-h-32 flex flex-col"
+        >
+          <div class="w-11 h-11 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-3">
+            <span class="material-symbols-outlined">{{ action.icon }}</span>
           </div>
-          <p class="text-sm text-on-surface-variant">Matemáticas - Viernes 12: Prueba de Álgebra.</p>
-        </article>
-        <article class="bg-surface rounded-xl p-5 border border-outline-variant shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="material-symbols-outlined text-secondary">how_to_reg</span>
-            <h3 class="font-semibold">Asistencia mensual</h3>
-          </div>
-          <p class="text-3xl font-bold text-primary">95%</p>
-          <div class="w-full bg-surface-variant rounded-full h-2 mt-3">
-            <div class="bg-secondary h-2 rounded-full w-[95%]"></div>
-          </div>
-        </article>
+          <span class="font-semibold text-sm text-primary">{{ action.label }}</span>
+          <span class="text-xs text-on-surface-variant mt-1">{{ action.description }}</span>
+        </a>
       </div>
     </section>
   `
 })
 export class GuardianComponent {
+  readonly auth = inject(AuthService);
+
+  get isStudent(): boolean {
+    return this.auth.hasAnyRole(['ESTUDIANTE']);
+  }
+
+  get roleLabel(): string {
+    return this.isStudent ? 'Vista estudiante' : 'Vista familia';
+  }
+
+  get title(): string {
+    return this.isStudent ? 'Dashboard estudiante' : 'Dashboard familia';
+  }
+
+  get subtitle(): string {
+    return this.isStudent
+      ? 'Acceso a comunicados, calendario, notas, asistencia y perfil propio.'
+      : 'Seguimiento de estudiantes vinculados, comunicados, calendario y alertas.';
+  }
+
+  get summaryText(): string {
+    return this.isStudent
+      ? 'La informacion visible debe corresponder solo al usuario estudiante autenticado.'
+      : 'La informacion visible debe corresponder solo a estudiantes vinculados al apoderado.';
+  }
+
+  get actions(): FamilyAction[] {
+    if (this.isStudent) {
+      return [
+        { label: 'Muro academico', description: 'Comunicados del curso.', icon: 'dynamic_feed', path: '/app/feed' },
+        { label: 'Calendario', description: 'Eventos y evaluaciones.', icon: 'calendar_month', path: '/app/calendar' },
+        { label: 'Mis notas', description: 'Calificaciones propias.', icon: 'grade', path: '/app/academic' },
+        { label: 'Mi asistencia', description: 'Registro personal.', icon: 'event_available', path: '/app/attendance' },
+        { label: 'Notificaciones', description: 'Avisos disponibles.', icon: 'notifications', path: '/app/messages' },
+        { label: 'Perfil', description: 'Datos de cuenta.', icon: 'person', path: '/app/profile' }
+      ];
+    }
+
+    return [
+      { label: 'Estudiantes', description: 'Seguimiento de vinculados.', icon: 'groups', path: '/app/guardian/students' },
+      { label: 'Muro', description: 'Comunicados del curso.', icon: 'dynamic_feed', path: '/app/feed' },
+      { label: 'Calendario', description: 'Eventos academicos.', icon: 'calendar_month', path: '/app/calendar' },
+      { label: 'Notas', description: 'Calificaciones por estudiante.', icon: 'grade', path: '/app/academic' },
+      { label: 'Asistencia', description: 'Registro de asistencia.', icon: 'event_available', path: '/app/attendance' },
+      { label: 'Alertas', description: 'Avisos relevantes.', icon: 'notifications', path: '/app/messages' },
+      { label: 'Perfil', description: 'Datos de cuenta.', icon: 'person', path: '/app/profile' }
+    ];
+  }
 }

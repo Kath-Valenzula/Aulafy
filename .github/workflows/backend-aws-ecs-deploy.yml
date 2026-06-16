@@ -1,12 +1,6 @@
-name: Backend AWS ECS Deploy
+name: Backend AWS ECS Deploy Manual
 
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - "backend/aulafy-api-nest/**"
-      - ".github/workflows/backend-aws-ecs-deploy.yml"
   workflow_dispatch:
 
 permissions:
@@ -24,7 +18,7 @@ env:
 
 jobs:
   deploy:
-    name: Build and deploy backend to ECS
+    name: Build and deploy backend to ECS manually
     runs-on: ubuntu-latest
     environment: staging
 

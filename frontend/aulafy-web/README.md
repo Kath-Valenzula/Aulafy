@@ -1,6 +1,6 @@
 # Aulafy Web
 
-Aplicacion Angular del MVP Aulafy. Incluye login, layout protegido, rutas por rol, interceptor JWT y pantallas para muro, calendario, notas, asistencia, usuarios, cursos y Telegram.
+Aplicacion Angular del MVP Aulafy. Incluye login, layout protegido, rutas por rol, interceptor JWT y pantallas para muro, calendario, notas, asistencia, usuarios, cursos y notificaciones.
 
 ## Comandos
 

@@ -1,6 +1,6 @@
 # Aulafy API NestJS
 
-Backend en NestJS para la migracion de stack de Aulafy.
+Backend oficial de Aulafy construido con NestJS, TypeScript, TypeORM y MySQL.
 
 ## Ejecutar en local
 
@@ -26,9 +26,9 @@ La API queda en `http://localhost:8080/api`.
 
 ## Estado actual
 
-- Estructura modular base creada: `auth`, `users`, `chat`, `calendar`, `annotations`, `health`.
-- Conexion MySQL configurada con `@nestjs/typeorm`.
-- Endpoints migrados en funcionamiento:
+- Backend modular con `auth`, `users`, `courses`, `academic-structure`, `academic`, `attendance`, `calendar`, `feed`, `annotations`, `notifications`, `risk`, `chat` y `health`.
+- Conexion MySQL configurada con TypeORM.
+- Endpoints disponibles:
   - `POST /api/auth/login`
   - `GET /api/auth/me`
   - `GET /api/users`
@@ -36,4 +36,10 @@ La API queda en `http://localhost:8080/api`.
   - `POST /api/users`
   - `PUT /api/users/:id`
   - `PATCH /api/users/:id/status`
-- Modulos `chat`, `calendar` y `annotations` siguen en version inicial.
+  - `GET /api/courses`
+  - `GET /api/academic`
+  - `GET /api/attendance`
+  - `GET /api/annotations`
+  - `GET /api/notifications/logs`
+  - `GET /api/risk/academic`
+- Modulo `chat` presente como funcionalidad experimental/post-MVP.

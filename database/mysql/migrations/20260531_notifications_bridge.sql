@@ -1,5 +1,5 @@
 -- ============================================================================
--- Aulafy | Notificaciones Telegram (migracion incremental)
+-- Aulafy | Notificaciones Telegram opcionales (ajuste incremental)
 -- Fecha: 2026-05-31
 -- ============================================================================
 

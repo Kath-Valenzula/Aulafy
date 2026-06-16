@@ -3,103 +3,109 @@ import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
+interface DashboardAction {
+  label: string;
+  description: string;
+  icon: string;
+  path: string;
+}
+
+interface DashboardContext {
+  title: string;
+  subtitle: string;
+  focus: string;
+  actions: DashboardAction[];
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule, RouterLink],
   template: `
     <section class="mb-6">
-      <h1 class="text-3xl font-bold text-primary">Bienvenido, {{ auth.currentUser?.fullName || 'Profesor' }}</h1>
-      <p class="text-on-surface-variant mt-1">Resumen operativo para hoy</p>
+      <h1 class="text-3xl font-bold text-primary">{{ context.title }}</h1>
+      <p class="text-on-surface-variant mt-1">{{ context.subtitle }}</p>
     </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      <div class="xl:col-span-2 flex flex-col gap-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <article class="bg-surface rounded-xl border border-outline-variant p-6 flex items-center justify-between">
-            <div>
-              <p class="text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Promedio general curso</p>
-              <p class="text-4xl font-bold text-primary mt-1">5.8</p>
-            </div>
-            <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary-container">
-              <span class="material-symbols-outlined text-3xl">trending_up</span>
-            </div>
-          </article>
-          <article class="bg-surface rounded-xl border border-outline-variant p-6 flex items-center justify-between">
-            <div>
-              <p class="text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Asistencia hoy</p>
-              <p class="text-4xl font-bold text-primary mt-1">92%</p>
-            </div>
-            <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-              <span class="material-symbols-outlined text-3xl">group</span>
-            </div>
-          </article>
+    <section class="bg-surface rounded-xl border border-outline-variant p-6 mb-6">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined">verified_user</span>
         </div>
-
-        <article class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
-          <div class="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-bright">
-            <h3 class="text-xl font-semibold text-primary flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary-container">fact_check</span>
-              Tareas pendientes del día
-            </h3>
-            <span class="bg-error-container text-on-error-container text-xs px-2 py-1 rounded-full font-semibold">3 pendientes</span>
-          </div>
-          <ul class="p-6 space-y-3">
-            <li class="p-3 rounded-lg border border-outline-variant/40">
-              <strong>Toma de asistencia 7mo A</strong>
-              <p class="text-sm text-on-surface-variant">Bloque 1 - 08:00 AM</p>
-            </li>
-            <li class="p-3 rounded-lg border border-outline-variant/40">
-              <strong>Cargar notas ensayo SIMCE</strong>
-              <p class="text-sm text-on-surface-variant">Sistema de evaluación - Lenguaje</p>
-            </li>
-            <li class="p-3 rounded-lg border border-outline-variant/40">
-              <strong>Revisar 3 chats nuevos</strong>
-              <p class="text-sm text-on-surface-variant">Mensajes de apoderados 8vo B</p>
-            </li>
-          </ul>
-        </article>
+        <div>
+          <p class="text-sm uppercase tracking-wider text-on-surface-variant font-semibold">Perfil activo</p>
+          <h2 class="text-xl font-semibold text-primary mt-1">{{ auth.currentUser?.fullName }}</h2>
+          <p class="text-sm text-on-surface-variant mt-1">{{ context.focus }}</p>
+        </div>
       </div>
+    </section>
 
-      <aside class="flex flex-col gap-6">
-        <article class="bg-surface rounded-xl border border-outline-variant p-6">
-          <h3 class="text-xl font-semibold text-primary mb-4">Agenda semanal</h3>
-          <div class="space-y-3">
-            <div class="border-l-4 border-primary bg-primary-fixed/40 p-3 rounded-r-lg">
-              <p class="text-sm text-primary-container font-semibold">08:00 - 09:30</p>
-              <p class="text-sm font-medium">Matemáticas 7mo A</p>
-            </div>
-            <div class="border-l-4 border-outline bg-surface-container-high p-3 rounded-r-lg">
-              <p class="text-sm text-on-surface-variant font-semibold">09:45 - 11:15</p>
-              <p class="text-sm font-medium">Reunión de departamento</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="bg-surface rounded-xl border border-outline-variant p-6">
-          <h3 class="text-xl font-semibold text-primary mb-4">Acciones rápidas</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <a routerLink="/app/attendance" class="p-4 rounded-lg bg-surface-container-low border border-outline-variant text-center">
-              <span class="material-symbols-outlined text-primary block mb-2">event_available</span>
-              <span class="text-sm font-medium">Asistencia</span>
-            </a>
-            <a routerLink="/app/academic" class="p-4 rounded-lg bg-surface-container-low border border-outline-variant text-center">
-              <span class="material-symbols-outlined text-primary block mb-2">grade</span>
-              <span class="text-sm font-medium">Notas</span>
-            </a>
-            <a routerLink="/app/annotations" class="p-4 rounded-lg bg-surface-container-low border border-outline-variant text-center">
-              <span class="material-symbols-outlined text-primary block mb-2">assignment_late</span>
-              <span class="text-sm font-medium">Anotaciones</span>
-            </a>
-            <a routerLink="/app/notifications" class="p-4 rounded-lg bg-surface-container-low border border-outline-variant text-center">
-              <span class="material-symbols-outlined text-primary block mb-2">chat</span>
-              <span class="text-sm font-medium">Mensajes</span>
-            </a>
-          </div>
-        </article>
-      </aside>
-    </div>
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <a
+        *ngFor="let action of context.actions"
+        [routerLink]="action.path"
+        class="bg-surface rounded-xl border border-outline-variant p-5 hover:bg-surface-container-low transition-colors"
+      >
+        <div class="w-11 h-11 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">{{ action.icon }}</span>
+        </div>
+        <h3 class="text-lg font-semibold text-primary">{{ action.label }}</h3>
+        <p class="text-sm text-on-surface-variant mt-2">{{ action.description }}</p>
+      </a>
+    </section>
   `
 })
 export class DashboardComponent {
   readonly auth = inject(AuthService);
+
+  get context(): DashboardContext {
+    const role = this.auth.currentUser?.role;
+    if (role === 'ADMIN') {
+      return {
+        title: 'Dashboard administrativo',
+        subtitle: 'Control general de usuarios, estructura academica y seguimiento institucional.',
+        focus: 'Acceso administrativo para mantener la configuracion base del MVP.',
+        actions: [
+          { label: 'Usuarios', description: 'Gestionar cuentas y roles principales.', icon: 'manage_accounts', path: '/app/users' },
+          { label: 'Estudiantes', description: 'Revisar cuentas de estudiantes registradas.', icon: 'groups', path: '/app/users/students' },
+          { label: 'Profesores', description: 'Revisar cuentas docentes disponibles.', icon: 'co_present', path: '/app/users/teachers' },
+          { label: 'Apoderados', description: 'Revisar cuentas familiares vinculables.', icon: 'supervisor_account', path: '/app/users/guardians' },
+          { label: 'Cursos', description: 'Administrar estructura de cursos.', icon: 'school', path: '/app/courses' },
+          { label: 'Asignaturas', description: 'Consultar asignaturas por curso.', icon: 'menu_book', path: '/app/subjects' },
+          { label: 'Reportes y riesgo', description: 'Acceder a reportes institucionales.', icon: 'analytics', path: '/app/risk' },
+          { label: 'Notificaciones', description: 'Revisar bitacora de notificaciones externas.', icon: 'notifications_active', path: '/app/notifications' }
+        ]
+      };
+    }
+
+    if (role === 'COLEGIO') {
+      return {
+        title: 'Dashboard institucional',
+        subtitle: 'Vista de coordinacion para cursos, comunicados, usuarios academicos y reportes.',
+        focus: 'Acceso institucional para coordinar la operacion academica del colegio.',
+        actions: [
+          { label: 'Cursos', description: 'Revisar cursos visibles para la institucion.', icon: 'school', path: '/app/courses' },
+          { label: 'Comunicados', description: 'Publicar y revisar avisos por curso.', icon: 'campaign', path: '/app/feed' },
+          { label: 'Calendario institucional', description: 'Consultar eventos academicos.', icon: 'event_note', path: '/app/calendar' },
+          { label: 'Usuarios academicos', description: 'Gestionar usuarios del entorno escolar.', icon: 'badge', path: '/app/users/academic' },
+          { label: 'Reportes', description: 'Revisar indicadores de riesgo.', icon: 'analytics', path: '/app/risk' },
+          { label: 'Notificaciones', description: 'Gestionar avisos externos opcionales.', icon: 'notifications_active', path: '/app/notifications' }
+        ]
+      };
+    }
+
+    return {
+      title: 'Dashboard docente',
+      subtitle: 'Acceso operativo a cursos asignados, evaluaciones, asistencia y comunicaciones.',
+      focus: 'Acceso docente para trabajar con cursos y estudiantes autorizados.',
+      actions: [
+        { label: 'Cursos asignados', description: 'Consultar cursos visibles para el docente.', icon: 'school', path: '/app/courses' },
+        { label: 'Muro academico', description: 'Publicar y revisar comunicaciones del curso.', icon: 'dynamic_feed', path: '/app/feed' },
+        { label: 'Calendario', description: 'Revisar eventos y evaluaciones programadas.', icon: 'calendar_month', path: '/app/calendar' },
+        { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar calificaciones.', icon: 'grade', path: '/app/academic' },
+        { label: 'Asistencia', description: 'Registrar y consultar asistencia.', icon: 'event_available', path: '/app/attendance' },
+        { label: 'Anotaciones', description: 'Registrar observaciones academicas o conductuales.', icon: 'assignment_late', path: '/app/annotations' },
+        { label: 'Notificaciones', description: 'Revisar bitacora de avisos externos.', icon: 'notifications_active', path: '/app/notifications' }
+      ]
+    };
+  }
 }

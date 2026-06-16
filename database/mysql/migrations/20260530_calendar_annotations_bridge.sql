@@ -1,5 +1,5 @@
 -- ============================================================================
--- Aulafy | Calendario + Anotaciones (migracion incremental)
+-- Aulafy | Calendario + Anotaciones (ajuste incremental)
 -- Fecha: 2026-05-30
 -- ============================================================================
 
