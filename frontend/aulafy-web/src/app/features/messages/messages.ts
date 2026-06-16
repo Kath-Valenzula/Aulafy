@@ -1,95 +1,66 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ChatService } from '../../core/services/chat.service';
-import { ChatRoomResponse } from '../../shared/models/aulafy.models';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-messages',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   template: `
     <section class="mb-5">
-      <h2 class="text-2xl font-semibold text-on-background">Mensajes</h2>
-      <p class="text-sm text-on-surface-variant">Tus conversaciones recientes</p>
+      <h2 class="text-2xl font-semibold text-on-background">{{ title }}</h2>
+      <p class="text-sm text-on-surface-variant">{{ subtitle }}</p>
     </section>
 
-    <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
-      Cargando conversaciones...
-    </section>
-
-    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm mb-4">
-      {{ error }}
-    </section>
-
-    <div class="relative mb-5">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-      <input
-        [(ngModel)]="searchTerm"
-        class="w-full bg-surface-container-low rounded-xl py-3 pl-10 pr-4 border-none"
-        placeholder="Buscar mensajes..."
-      />
-    </div>
-
-    <section *ngIf="!loading && !error" class="flex flex-col gap-2">
-      <a
-        *ngFor="let room of filteredRooms()"
-        [routerLink]="['/app/chat-profesor']"
-        [queryParams]="{ roomId: room.id }"
-        class="flex items-center gap-3 p-3 rounded-xl bg-surface shadow-sm border border-outline-variant"
-      >
-        <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-semibold">
-          {{ initials(room.name) }}
+    <section class="bg-surface rounded-xl border border-outline-variant p-5 mb-5">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined">notifications</span>
         </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex justify-between items-center gap-3">
-            <h4 class="font-semibold truncate">{{ room.name }}</h4>
-            <span class="text-xs text-primary">{{ room.latestMessageAt ? (room.latestMessageAt | date: 'HH:mm') : '--:--' }}</span>
-          </div>
-          <p class="text-sm truncate">{{ room.latestMessage || 'Sin mensajes por ahora.' }}</p>
-          <p class="text-xs text-on-surface-variant truncate mt-1">{{ room.courseName }}</p>
+        <div>
+          <h3 class="font-semibold text-primary">Sin avisos nuevos</h3>
+          <p class="text-sm text-on-surface-variant mt-1">
+            Las alertas visibles para este perfil se deben alimentar desde los modulos academicos y las notificaciones externas configuradas.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-3">
+      <a routerLink="/app/feed" class="bg-surface-container-low rounded-xl border border-outline-variant p-4 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">dynamic_feed</span>
+        <div>
+          <h4 class="font-semibold">Revisar comunicados</h4>
+          <p class="text-sm text-on-surface-variant">Consulta publicaciones del curso.</p>
         </div>
       </a>
-
-      <article *ngIf="!filteredRooms().length" class="p-4 rounded-xl bg-surface border border-outline-variant text-sm text-on-surface-variant">
-        No tienes conversaciones disponibles todavía.
-      </article>
+      <a routerLink="/app/calendar" class="bg-surface-container-low rounded-xl border border-outline-variant p-4 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">calendar_month</span>
+        <div>
+          <h4 class="font-semibold">Revisar calendario</h4>
+          <p class="text-sm text-on-surface-variant">Consulta eventos y evaluaciones programadas.</p>
+        </div>
+      </a>
+      <a routerLink="/app/profile" class="bg-surface-container-low rounded-xl border border-outline-variant p-4 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">person</span>
+        <div>
+          <h4 class="font-semibold">Perfil</h4>
+          <p class="text-sm text-on-surface-variant">Revisa los datos visibles de tu cuenta.</p>
+        </div>
+      </a>
     </section>
   `
 })
-export class MessagesComponent implements OnInit {
-  private readonly chatService = inject(ChatService);
+export class MessagesComponent {
+  private readonly auth = inject(AuthService);
 
-  rooms: ChatRoomResponse[] = [];
-  loading = true;
-  error = '';
-  searchTerm = '';
-
-  ngOnInit(): void {
-    this.chatService.rooms().subscribe({
-      next: (rooms) => {
-        this.rooms = rooms;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'No fue posible cargar tus conversaciones.';
-        this.loading = false;
-      }
-    });
+  get title(): string {
+    return this.auth.hasAnyRole(['ESTUDIANTE']) ? 'Mis notificaciones' : 'Alertas y notificaciones';
   }
 
-  filteredRooms(): ChatRoomResponse[] {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) {
-      return this.rooms;
-    }
-    return this.rooms.filter((room) =>
-      [room.name, room.courseName, room.latestMessage || ''].join(' ').toLowerCase().includes(term)
-    );
-  }
-
-  initials(value: string): string {
-    const tokens = value.trim().split(/\s+/).slice(0, 2);
-    return tokens.map((token) => token.charAt(0).toUpperCase()).join('');
+  get subtitle(): string {
+    return this.auth.hasAnyRole(['ESTUDIANTE'])
+      ? 'Avisos asociados a tu cuenta de estudiante.'
+      : 'Avisos asociados a estudiantes vinculados.';
   }
 }

@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { CurrentUser } from '../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../common/auth/jwt-auth.guard';
+import { JwtPayload } from '../common/auth/jwt-payload.interface';
 import { Roles } from '../common/auth/roles.decorator';
 import { RolesGuard } from '../common/auth/roles.guard';
 import { UserCreateDto } from './dto/user-create.dto';
@@ -16,21 +18,26 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll(): Promise<UserResponseDto[]> {
-    return this.usersService.findAll();
+  findAll(@CurrentUser() user: JwtPayload): Promise<UserResponseDto[]> {
+    return this.usersService.findVisible(user);
   }
 
   @Get(':id')
-  findById(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto> {
-    return this.usersService.findById(id);
+  findById(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload
+  ): Promise<UserResponseDto> {
+    return this.usersService.findVisibleById(id, user);
   }
 
   @Post()
+  @Roles(RoleName.ADMIN)
   create(@Body() request: UserCreateDto): Promise<UserResponseDto> {
     return this.usersService.create(request);
   }
 
   @Put(':id')
+  @Roles(RoleName.ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() request: UserUpdateDto
@@ -39,6 +46,7 @@ export class UsersController {
   }
 
   @Patch(':id/status')
+  @Roles(RoleName.ADMIN)
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() request: UserStatusDto

@@ -29,12 +29,13 @@ import {
         Cargando información académica...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !students.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
-        No hay alumnos asociados para mostrar notas.
+        No existen estudiantes asociados para este perfil.
       </section>
 
       <ng-container *ngIf="!loading && !error && students.length">
@@ -105,8 +106,9 @@ import {
         Cargando cursos y evaluaciones...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
@@ -399,6 +401,14 @@ export class AcademicComponent implements OnInit {
     this.loadBackofficeAcademicData();
   }
 
+  retryLoad(): void {
+    if (this.isFamiliesExperience) {
+      this.loadFamiliesAcademicData();
+      return;
+    }
+    this.loadBackofficeAcademicData();
+  }
+
   selectStudent(studentId: number): void {
     if (this.selectedStudentId === studentId) {
       return;
@@ -445,9 +455,10 @@ export class AcademicComponent implements OnInit {
           this.resetEvaluationDraft();
           this.fetchCourseAcademic(this.selectedCourseId!);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al crear evaluacion', error);
           this.savingEvaluation = false;
-          this.actionMessage = 'No fue posible crear la evaluación.';
+          this.actionMessage = 'No fue posible crear la evaluacion.';
         }
       });
   }
@@ -474,7 +485,8 @@ export class AcademicComponent implements OnInit {
           this.actionMessage = 'Nota registrada correctamente.';
           this.resetGradeDraft();
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al registrar nota', error);
           this.savingGrade = false;
           this.actionMessage = 'No fue posible registrar la nota.';
         }
@@ -504,8 +516,9 @@ export class AcademicComponent implements OnInit {
         this.selectedStudentId = students[0].id;
         this.fetchStudentAcademic(students[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar los alumnos asociados.';
+      error: (error) => {
+        console.error('Error al cargar alumnos asociados', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -524,8 +537,9 @@ export class AcademicComponent implements OnInit {
         this.grades = grades;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar las notas del alumno seleccionado.';
+      error: (error) => {
+        console.error('Error al cargar notas del alumno', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -546,8 +560,9 @@ export class AcademicComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.fetchCourseAcademic(courses[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar los cursos disponibles.';
+      error: (error) => {
+        console.error('Error al cargar cursos para notas', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -571,8 +586,9 @@ export class AcademicComponent implements OnInit {
         this.resetEvaluationDraft();
         this.resetGradeDraft();
       },
-      error: () => {
-        this.error = 'No fue posible cargar evaluaciones del curso seleccionado.';
+      error: (error) => {
+        console.error('Error al cargar evaluaciones del curso', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });

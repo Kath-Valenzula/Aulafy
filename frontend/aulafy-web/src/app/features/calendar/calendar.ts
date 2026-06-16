@@ -26,12 +26,13 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
         Cargando eventos...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !events.length" class="bg-surface rounded-xl p-4 border border-outline-variant mb-5 text-sm text-on-surface-variant">
-        No hay eventos para este curso.
+        Sin eventos registrados para este curso.
       </section>
 
       <section *ngIf="!loading && !error && events.length" class="bg-surface rounded-xl p-4 border border-outline-variant mb-5">
@@ -69,8 +70,9 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
         Cargando calendario...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl p-4 border border-outline-variant mb-5 text-sm text-on-surface-variant">
@@ -140,7 +142,7 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
               </thead>
               <tbody>
                 <tr *ngIf="!filteredEvents.length" class="border-b border-outline-variant/20">
-                  <td colspan="4" class="p-4 text-sm text-on-surface-variant">No hay eventos para la fecha seleccionada.</td>
+                  <td colspan="4" class="p-4 text-sm text-on-surface-variant">Sin eventos registrados para la fecha seleccionada.</td>
                 </tr>
                 <tr *ngFor="let event of filteredEvents" class="border-b border-outline-variant/20">
                   <td class="p-3">
@@ -212,6 +214,14 @@ export class CalendarComponent implements OnInit {
     this.loadCoursesAndEvents();
   }
 
+  retryLoad(): void {
+    if (this.selectedCourseId) {
+      this.loadEvents(this.selectedCourseId);
+      return;
+    }
+    this.loadCoursesAndEvents();
+  }
+
   onCourseChange(value: number | string): void {
     const normalized = Number(value);
     if (!normalized || this.selectedCourseId === normalized) {
@@ -246,7 +256,8 @@ export class CalendarComponent implements OnInit {
           this.resetEventDraft();
           this.loadEvents(this.selectedCourseId!);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al crear evento', error);
           this.saving = false;
           this.actionMessage = 'No fue posible crear el evento.';
         }
@@ -280,8 +291,9 @@ export class CalendarComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadEvents(courses[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar cursos para calendario.';
+      error: (error) => {
+        console.error('Error al cargar cursos para calendario', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -296,8 +308,9 @@ export class CalendarComponent implements OnInit {
         this.events = events;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar eventos del curso.';
+      error: (error) => {
+        console.error('Error al cargar eventos del curso', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });

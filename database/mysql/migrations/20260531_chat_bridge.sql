@@ -1,5 +1,5 @@
 -- ============================================================================
--- Aulafy | Chat interno (migracion incremental)
+-- Aulafy | Chat interno experimental/post-MVP (ajuste incremental)
 -- Fecha: 2026-05-31
 -- ============================================================================
 

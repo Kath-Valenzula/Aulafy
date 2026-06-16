@@ -31,12 +31,13 @@ interface StudentOption {
         Cargando asistencia...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-4 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !students.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
-        No hay alumnos asociados para mostrar asistencia.
+        No existen estudiantes asociados para este perfil.
       </section>
 
       <ng-container *ngIf="!loading && !error && students.length">
@@ -117,8 +118,9 @@ interface StudentOption {
         Cargando asistencia...
       </section>
 
-      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm">
-        {{ error }}
+      <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <span>{{ error }}</span>
+        <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
       </section>
 
       <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
@@ -255,6 +257,14 @@ export class AttendanceComponent implements OnInit {
     this.loadBackofficeCourses();
   }
 
+  retryLoad(): void {
+    if (this.isFamiliesExperience) {
+      this.loadFamilyStudents();
+      return;
+    }
+    this.loadBackofficeCourses();
+  }
+
   selectStudent(studentId: number): void {
     if (this.selectedStudentId === studentId) {
       return;
@@ -305,7 +315,8 @@ export class AttendanceComponent implements OnInit {
           this.attendanceDraft.comment = '';
           this.fetchAttendance(this.selectedStudentId!);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al registrar asistencia', error);
           this.savingAttendance = false;
           this.actionMessage = 'No fue posible registrar la asistencia.';
         }
@@ -340,8 +351,9 @@ export class AttendanceComponent implements OnInit {
         this.selectedStudentId = this.students[0].id;
         this.fetchAttendance(this.students[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar los alumnos vinculados.';
+      error: (error) => {
+        console.error('Error al cargar alumnos vinculados', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -362,8 +374,9 @@ export class AttendanceComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadBackofficeStudentsByCourse(courses[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar cursos para asistencia.';
+      error: (error) => {
+        console.error('Error al cargar cursos para asistencia', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -387,8 +400,9 @@ export class AttendanceComponent implements OnInit {
         this.selectedStudentId = this.students[0].id;
         this.fetchAttendance(this.students[0].id);
       },
-      error: () => {
-        this.error = 'No fue posible cargar alumnos del curso seleccionado.';
+      error: (error) => {
+        console.error('Error al cargar alumnos del curso', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -407,8 +421,9 @@ export class AttendanceComponent implements OnInit {
         this.summary = summary;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar la asistencia del alumno seleccionado.';
+      error: (error) => {
+        console.error('Error al cargar asistencia del alumno', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });

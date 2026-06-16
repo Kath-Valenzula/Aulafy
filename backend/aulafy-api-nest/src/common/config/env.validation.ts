@@ -32,11 +32,11 @@ class EnvSchema {
 
   @IsString()
   @IsNotEmpty()
-  DB_NAME!: string;
+  DB_DATABASE!: string;
 
   @IsString()
   @IsNotEmpty()
-  DB_USER!: string;
+  DB_USERNAME!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -48,7 +48,15 @@ class EnvSchema {
 
   @IsOptional()
   @IsString()
+  FRONTEND_URL?: string;
+
+  @IsOptional()
+  @IsString()
   TELEGRAM_BOT_TOKEN?: string;
+
+  @IsOptional()
+  @IsString()
+  TELEGRAM_CHAT_ID?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvSchema {

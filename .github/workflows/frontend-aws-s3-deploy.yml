@@ -1,12 +1,6 @@
-name: Frontend AWS S3 Deploy
+name: Frontend AWS S3 Deploy Manual
 
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - "frontend/aulafy-web/**"
-      - ".github/workflows/frontend-aws-s3-deploy.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +15,7 @@ env:
 
 jobs:
   deploy:
-    name: Build and deploy frontend to S3
+    name: Build and deploy frontend to S3 manually
     runs-on: ubuntu-latest
     environment: staging
 

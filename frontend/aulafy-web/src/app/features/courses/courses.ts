@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { CourseResponse } from '../../shared/models/aulafy.models';
 
@@ -9,16 +10,17 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
   imports: [CommonModule, RouterLink],
   template: `
     <section class="mb-5">
-      <h2 class="text-2xl font-semibold text-on-background">Mis Cursos</h2>
-      <p class="text-sm text-on-surface-variant">Datos sincronizados desde el backend académico</p>
+      <h2 class="text-2xl font-semibold text-on-background">{{ title }}</h2>
+      <p class="text-sm text-on-surface-variant">{{ description }}</p>
     </section>
 
     <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
       Cargando cursos...
     </section>
 
-    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm">
-      {{ error }}
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <span>{{ error }}</span>
+      <button (click)="loadCourses()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
     </section>
 
     <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
@@ -43,11 +45,14 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
           <p class="text-sm text-on-surface-variant">{{ course.teacherCount }} profesor(es) asignado(s)</p>
         </div>
         <div class="flex gap-2">
-          <a routerLink="/app/feed" class="flex-1 border border-primary text-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
+          <a *ngIf="canOpenFeed" routerLink="/app/feed" class="flex-1 border border-primary text-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
             Muro
           </a>
-          <a routerLink="/app/messages" class="flex-1 bg-primary-container text-on-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
-            Mensajes
+          <a *ngIf="canOpenAcademic" routerLink="/app/academic" class="flex-1 bg-primary-container text-on-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
+            Evaluaciones
+          </a>
+          <a *ngIf="canOpenSubjects" routerLink="/app/subjects" class="flex-1 bg-primary-container text-on-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
+            Asignaturas
           </a>
         </div>
       </article>
@@ -56,19 +61,54 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
 })
 export class CoursesComponent implements OnInit {
   private readonly coursesService = inject(CoursesService);
+  private readonly auth = inject(AuthService);
 
   courses: CourseResponse[] = [];
   loading = true;
   error = '';
 
+  get title(): string {
+    if (this.auth.hasAnyRole(['ADMIN', 'COLEGIO'])) {
+      return 'Cursos';
+    }
+    return 'Cursos asignados';
+  }
+
+  get description(): string {
+    if (this.auth.hasAnyRole(['ADMIN', 'COLEGIO'])) {
+      return 'Cursos visibles segun el alcance institucional del perfil.';
+    }
+    return 'Cursos disponibles para gestion docente.';
+  }
+
+  get canOpenFeed(): boolean {
+    return this.auth.hasAnyRole(['COLEGIO', 'PROFESOR']);
+  }
+
+  get canOpenAcademic(): boolean {
+    return this.auth.hasAnyRole(['PROFESOR']);
+  }
+
+  get canOpenSubjects(): boolean {
+    return this.auth.hasAnyRole(['ADMIN']);
+  }
+
   ngOnInit(): void {
+    this.loadCourses();
+  }
+
+  loadCourses(): void {
+    this.loading = true;
+    this.error = '';
+
     this.coursesService.findAll().subscribe({
       next: (courses) => {
         this.courses = courses;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar los cursos.';
+      error: (error) => {
+        console.error('Error al cargar cursos', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });

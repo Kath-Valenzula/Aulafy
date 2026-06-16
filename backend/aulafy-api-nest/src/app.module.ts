@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { FeedModule } from './feed/feed.module';
 import { HealthModule } from './health/health.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RiskModule } from './risk/risk.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -34,7 +35,8 @@ import { UsersModule } from './users/users.module';
     ChatModule,
     CalendarModule,
     AnnotationsModule,
-    NotificationsModule
+    NotificationsModule,
+    RiskModule
   ]
 })
 export class AppModule {}

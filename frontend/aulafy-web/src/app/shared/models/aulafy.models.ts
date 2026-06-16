@@ -6,6 +6,8 @@ export type EvaluationType = 'PRUEBA' | 'CONTROL' | 'TAREA' | 'TRABAJO' | 'PROYE
 export type AnnotationType = 'ACADEMICA' | 'CONDUCTUAL' | 'COMUNICACION';
 export type AnnotationSeverity = 'LEVE' | 'MEDIA' | 'ALTA';
 export type AnnotationStatus = 'PENDIENTE' | 'LEIDA' | 'RESUELTA';
+export type RiskType = 'ACADEMICO' | 'ASISTENCIA' | 'COMBINADO';
+export type RiskSeverity = 'MODERADO' | 'CRITICO';
 
 export interface UserResponse {
   id: number;
@@ -193,4 +195,39 @@ export interface AnnotationResponse {
   title: string;
   description: string;
   createdAt: string;
+}
+
+export interface RiskStudentResponse {
+  studentId: number;
+  studentName: string;
+  courseId: number;
+  courseName: string;
+  levelName: string;
+  gradeCount: number;
+  averageScore: number | null;
+  attendanceRecords: number;
+  absentRecords: number;
+  attendancePercentage: number | null;
+  riskType: RiskType;
+  severity: RiskSeverity;
+  reasons: string[];
+}
+
+export interface RiskReportResponse {
+  generatedAt: string;
+  thresholds: {
+    minimumAverage: number;
+    minimumAttendancePercentage: number;
+  };
+  summary: {
+    totalStudents: number;
+    evaluatedStudents: number;
+    riskStudents: number;
+    academicRisk: number;
+    attendanceRisk: number;
+    combinedRisk: number;
+    criticalRisk: number;
+    moderateRisk: number;
+  };
+  items: RiskStudentResponse[];
 }

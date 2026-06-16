@@ -1,21 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { NotificationLogResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-notifications',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="mb-5">
-      <h2 class="text-3xl font-bold text-primary">Centro de Mensajería</h2>
-      <p class="text-on-surface-variant">Gestión de envío Telegram con fallback cuando no está configurado.</p>
+      <h2 class="text-3xl font-bold text-primary">Notificaciones externas</h2>
+      <p class="text-on-surface-variant">Envio opcional por Telegram con fallback controlado cuando no esta configurado.</p>
     </section>
 
     <section class="bg-surface rounded-xl border border-outline-variant p-5 mb-5">
-      <h3 class="text-lg font-semibold mb-4">Enviar notificación Telegram</h3>
+      <h3 class="text-lg font-semibold mb-4">Enviar notificacion Telegram</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <input [(ngModel)]="message" class="md:col-span-2 bg-surface-container border border-outline-variant rounded-lg px-3 py-2.5" placeholder="Mensaje" />
         <input [(ngModel)]="chatId" class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2.5" placeholder="Chat ID (opcional)" />
@@ -35,9 +34,6 @@ import { NotificationLogResponse } from '../../shared/models/aulafy.models';
         >
           {{ sendingMessage ? 'Enviando...' : 'Enviar mensaje' }}
         </button>
-        <a routerLink="/app/chat-profesor" class="px-4 py-2 border border-primary text-primary rounded-lg font-semibold">
-          Abrir chat completo
-        </a>
       </div>
     </section>
 
@@ -49,8 +45,9 @@ import { NotificationLogResponse } from '../../shared/models/aulafy.models';
       Cargando logs de notificación...
     </section>
 
-    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm">
-      {{ error }}
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <span>{{ error }}</span>
+      <button (click)="loadLogs()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
     </section>
 
     <section *ngIf="!loading && !error" class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
@@ -118,8 +115,9 @@ export class NotificationsComponent implements OnInit {
         this.logs = logs;
         this.loading = false;
       },
-      error: () => {
-        this.error = 'No fue posible cargar la bitácora de notificaciones.';
+      error: (error) => {
+        console.error('Error al cargar notificaciones', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -135,7 +133,8 @@ export class NotificationsComponent implements OnInit {
         this.actionMessage = `Prueba ejecutada con estado: ${result.status}.`;
         this.loadLogs();
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error al probar Telegram', error);
         this.sendingTest = false;
         this.actionMessage = 'No fue posible ejecutar la prueba Telegram.';
       }
@@ -156,7 +155,8 @@ export class NotificationsComponent implements OnInit {
         this.actionMessage = `Mensaje procesado con estado: ${result.status}.`;
         this.loadLogs();
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error al enviar notificacion', error);
         this.sendingMessage = false;
         this.actionMessage = 'No fue posible enviar el mensaje.';
       }

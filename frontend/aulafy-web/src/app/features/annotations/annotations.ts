@@ -26,8 +26,9 @@ import {
       Cargando anotaciones...
     </section>
 
-    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm">
-      {{ error }}
+    <section *ngIf="!loading && error" class="bg-error-container text-on-error-container rounded-xl p-4 mb-5 text-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <span>{{ error }}</span>
+      <button (click)="retryLoad()" class="px-3 py-2 rounded-lg bg-surface text-primary font-semibold">Reintentar</button>
     </section>
 
     <section *ngIf="!loading && !error && !courses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
@@ -133,7 +134,7 @@ import {
             </thead>
             <tbody class="divide-y divide-outline-variant/20">
               <tr *ngIf="!filteredAnnotations.length">
-                <td colspan="6" class="px-6 py-4 text-sm text-on-surface-variant">No hay anotaciones para los filtros seleccionados.</td>
+                <td colspan="6" class="px-6 py-4 text-sm text-on-surface-variant">Sin anotaciones registradas para los filtros seleccionados.</td>
               </tr>
               <tr *ngFor="let annotation of filteredAnnotations" class="hover:bg-surface-container-low/50">
                 <td class="px-6 py-4 text-sm text-on-surface-variant">{{ annotation.createdAt | date: 'dd/MM/yyyy' }}</td>
@@ -201,6 +202,14 @@ export class AnnotationsComponent implements OnInit {
     this.loadCourses();
   }
 
+  retryLoad(): void {
+    if (this.selectedCourseId) {
+      this.loadStudentsAndAnnotations();
+      return;
+    }
+    this.loadCourses();
+  }
+
   onCourseChange(value: number | string): void {
     const normalized = Number(value);
     if (!normalized || this.selectedCourseId === normalized) {
@@ -242,9 +251,10 @@ export class AnnotationsComponent implements OnInit {
           this.resetDraft();
           this.loadAnnotations();
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error al registrar anotacion', error);
           this.saving = false;
-          this.actionMessage = 'No fue posible registrar la anotación.';
+          this.actionMessage = 'No fue posible registrar la anotacion.';
         }
       });
   }
@@ -285,8 +295,9 @@ export class AnnotationsComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadStudentsAndAnnotations();
       },
-      error: () => {
-        this.error = 'No fue posible cargar cursos para anotaciones.';
+      error: (error) => {
+        console.error('Error al cargar cursos para anotaciones', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -306,8 +317,9 @@ export class AnnotationsComponent implements OnInit {
         this.annotationDraft.studentId = students[0]?.id ?? null;
         this.loadAnnotations();
       },
-      error: () => {
-        this.error = 'No fue posible cargar alumnos del curso seleccionado.';
+      error: (error) => {
+        console.error('Error al cargar alumnos para anotaciones', error);
+        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
     });
@@ -331,8 +343,9 @@ export class AnnotationsComponent implements OnInit {
           this.annotations = annotations;
           this.loading = false;
         },
-        error: () => {
-          this.error = 'No fue posible cargar las anotaciones.';
+        error: (error) => {
+          console.error('Error al cargar anotaciones', error);
+          this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
           this.loading = false;
         }
       });

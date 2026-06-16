@@ -10,8 +10,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         type: 'mysql',
         host: configService.getOrThrow<string>('DB_HOST'),
         port: configService.getOrThrow<number>('DB_PORT'),
-        database: configService.getOrThrow<string>('DB_NAME'),
-        username: configService.getOrThrow<string>('DB_USER'),
+        database: configService.getOrThrow<string>('DB_DATABASE'),
+        username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         autoLoadEntities: true,
         synchronize: false
