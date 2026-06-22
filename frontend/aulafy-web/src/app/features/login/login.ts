@@ -11,8 +11,7 @@ import { AuthService } from '../../core/auth/auth.service';
     <main class="login-page">
       <section class="login-panel">
         <div class="login-copy">
-          <span class="brand-mark large">A</span>
-          <h1>Aulafy</h1>
+          <img src="/aulafy-logo.png" alt="Aulafy" style="height:220px;width:auto;" />
           <p>Comunicacion escolar, calendario, notas y asistencia en una sola plataforma.</p>
         </div>
 

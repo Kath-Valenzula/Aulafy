@@ -133,6 +133,41 @@ AWS queda reservado como staging futuro controlado. Los flujos de despliegue se 
 - Documentacion academica final disponible en `docs`.
 - Chat interno presente como modulo experimental/post-MVP.
 
+## Avance Semana 5
+
+- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> — rama activa: `develop`.
+- **Arquitectura real:** cliente-servidor / monolito modular. Un proceso NestJS expone la API REST bajo `/api`; un proceso Angular la consume por HTTP. No hay microservicios ni gateways de mensajeria adicionales.
+- **Funcionalidades disponibles:** autenticacion JWT, roles (ADMIN, COLEGIO, PROFESOR, APODERADO, ESTUDIANTE), feed con publicaciones y comentarios, calendario por curso, evaluaciones y notas con calculo de promedio, asistencia con resumen porcentual, anotaciones de estudiante, reporte de riesgo academico, notificaciones externas opcionales por Telegram.
+- **Levantar el sistema localmente:**
+
+```bash
+# Base de datos
+docker compose up -d
+
+# Backend
+cd backend/aulafy-api-nest
+cp .env.example .env
+npm install
+npm run start:dev
+
+# Frontend (con proxy para demo publica)
+cd frontend/aulafy-web
+npm install
+npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
+```
+
+- **Pruebas backend:** `cd backend/aulafy-api-nest && npm test`
+- **Acceso mediante link temporal:** se genera con `cloudflared tunnel --url http://localhost:4200` o `npx localtunnel --port 4200`. El link se comunica al momento de la revision; no es persistente entre reinicios del tunel.
+
+## Limitaciones conocidas
+
+- Chat interno experimental: persiste mensajes via REST, sin tiempo real (sin WebSocket).
+- Frontend no implementa todo el CRUD disponible en backend: cursos y usuarios son de solo lectura en la interfaz.
+- Logout solo en cliente: el JWT sigue siendo valido en el servidor hasta su expiracion de 2h.
+- Telegram es opcional: si no hay credenciales, el sistema degrada a modo `NOT_CONFIGURED` sin fallar.
+- Dashboard por rol sin indicadores (KPIs) de negocio reales: muestra navegacion por modulos.
+- Staging AWS sujeto a autorizacion previa y control de costos; no esta activo.
+
 ## Roadmap
 
 1. Consolidar pruebas automatizadas del stack NestJS/Angular.

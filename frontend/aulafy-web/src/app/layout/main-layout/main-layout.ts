@@ -11,7 +11,7 @@ import { RoleNavigationItem, navigationForRole } from '../../core/navigation/rol
     <div class="bg-background text-on-background min-h-screen font-inter" *ngIf="!isFamiliesExperience(); else familiesLayout">
       <nav class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant py-6 pr-4 z-40">
         <div class="px-6 mb-8 flex items-center gap-4">
-          <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold">A</div>
+          <img src="/aulafy-icon.png" alt="Aulafy" class="h-14 w-auto" />
           <div>
             <h2 class="font-semibold text-primary">{{ workspaceTitle }}</h2>
             <p class="text-xs text-on-surface-variant">{{ workspaceSubtitle }}</p>
@@ -48,7 +48,7 @@ import { RoleNavigationItem, navigationForRole } from '../../core/navigation/rol
       <div class="bg-background text-on-background min-h-screen font-inter">
         <header class="fixed top-0 left-0 right-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-4 py-3">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-sm font-bold">A</div>
+            <img src="/aulafy-icon.png" alt="Aulafy" class="h-10 w-auto" />
             <h1 class="font-semibold text-primary">{{ workspaceTitle }}</h1>
           </div>
           <a routerLink="/app/messages" class="text-on-surface-variant">

@@ -2,6 +2,7 @@
 node_modules/
 dist/
 .angular/
+coverage/
 *.tsbuildinfo
 npm-debug.log*
 
@@ -22,15 +23,28 @@ variables.local.ps1
 logs/
 *.log
 
+# Temporales y paquetes locales
+tmp/
+temp/
+*.zip
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
 # Temporales de documentos
 ~$*.docx
 
 # IDE y sistema operativo
 .idea/
 .vscode/
+.cursor/
+.claude/
 .DS_Store
 Thumbs.db
 Desktop.ini
+NUL
 ehthumbs.db
 $RECYCLE.BIN/
 *.tmp
