@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RiskReportResponse } from '../../shared/models/aulafy.models';
 
@@ -7,7 +8,7 @@ import { RiskReportResponse } from '../../shared/models/aulafy.models';
 export class RiskService {
   private readonly http = inject(HttpClient);
 
-  academicRisk() {
+  academicRisk(): Observable<RiskReportResponse> {
     return this.http.get<RiskReportResponse>(`${environment.apiUrl}/risk/academic`);
   }
 }

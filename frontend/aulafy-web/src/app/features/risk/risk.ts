@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { catchError, finalize, of, timeout } from 'rxjs';
 import { RiskService } from '../../core/services/risk.service';
 import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aulafy.models';
+
+const RISK_REPORT_TIMEOUT_MS = 12000;
 
 @Component({
   selector: 'app-risk',
@@ -75,7 +78,11 @@ import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aul
         </article>
       </section>
 
-      <section *ngIf="!report.items.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+      <section *ngIf="hasInsufficientData" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+        No hay datos suficientes para generar el reporte de riesgo académico.
+      </section>
+
+      <section *ngIf="hasNoRiskStudents" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
         No hay alumnos en riesgo con los datos registrados.
       </section>
 
@@ -123,7 +130,7 @@ export class RiskComponent implements OnInit {
   private readonly riskService = inject(RiskService);
 
   report: RiskReportResponse | null = null;
-  loading = true;
+  loading = false;
   error = '';
 
   ngOnInit(): void {
@@ -134,17 +141,40 @@ export class RiskComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.riskService.academicRisk().subscribe({
-      next: (report) => {
-        this.report = report;
-        this.loading = false;
-      },
-      error: (error) => {
+    this.riskService.academicRisk().pipe(
+      timeout(RISK_REPORT_TIMEOUT_MS),
+      catchError((error) => {
         console.error('Error al cargar reporte de riesgo', error);
-        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        this.report = null;
+        this.error = 'No fue posible cargar el reporte de riesgo en este momento.';
+        return of(null);
+      }),
+      finalize(() => {
         this.loading = false;
+      })
+    ).subscribe({
+      next: (report) => {
+        if (report) {
+          this.report = this.normalizeReport(report);
+        }
       }
     });
+  }
+
+  get hasInsufficientData(): boolean {
+    if (!this.report) {
+      return false;
+    }
+
+    return this.report.summary.totalStudents === 0 || this.report.summary.evaluatedStudents === 0;
+  }
+
+  get hasNoRiskStudents(): boolean {
+    if (!this.report || this.hasInsufficientData) {
+      return false;
+    }
+
+    return !this.report.items.length;
   }
 
   averageClass(item: RiskStudentResponse): string {
@@ -178,5 +208,26 @@ export class RiskComponent implements OnInit {
 
   reasonsLabel(item: RiskStudentResponse): string {
     return item.reasons.length ? item.reasons.join(' / ') : 'Sin motivo registrado';
+  }
+
+  private normalizeReport(report: RiskReportResponse): RiskReportResponse {
+    return {
+      generatedAt: report.generatedAt ?? new Date().toISOString(),
+      thresholds: {
+        minimumAverage: report.thresholds?.minimumAverage ?? 4,
+        minimumAttendancePercentage: report.thresholds?.minimumAttendancePercentage ?? 85
+      },
+      summary: {
+        totalStudents: report.summary?.totalStudents ?? 0,
+        evaluatedStudents: report.summary?.evaluatedStudents ?? 0,
+        riskStudents: report.summary?.riskStudents ?? 0,
+        academicRisk: report.summary?.academicRisk ?? 0,
+        attendanceRisk: report.summary?.attendanceRisk ?? 0,
+        combinedRisk: report.summary?.combinedRisk ?? 0,
+        criticalRisk: report.summary?.criticalRisk ?? 0,
+        moderateRisk: report.summary?.moderateRisk ?? 0
+      },
+      items: Array.isArray(report.items) ? report.items : []
+    };
   }
 }
