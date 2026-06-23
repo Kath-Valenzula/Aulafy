@@ -12,7 +12,7 @@ El stack oficial vigente es:
 - Pruebas con Jest como estandar definido para el stack Node.
 - Control de versiones en GitHub y seguimiento mediante GitHub Issues.
 - Telegram Bot API solo como integracion opcional para notificaciones externas.
-- AWS como staging futuro controlado, sujeto a autorizacion previa.
+- AWS como entorno de demostracion academica: frontend en Amazon S3, backend en Elastic Beanstalk y base de datos MySQL en Amazon RDS.
 
 ## Integrantes
 
@@ -25,7 +25,7 @@ Profesor: Alonso Esteban Castillo Pizarro
 
 - Backend: NestJS, Node.js, TypeScript, JWT, TypeORM, class-validator.
 - Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient.
-- Base de datos: MySQL 8 mediante Docker Compose.
+- Base de datos: MySQL 8 mediante Docker Compose en local y Amazon RDS en AWS.
 - Pruebas: Jest como herramienta objetivo del proyecto.
 - Integraciones: Telegram Bot API para avisos externos opcionales.
 
@@ -37,7 +37,7 @@ El proyecto usa un monolito modular separado en cliente web y API REST:
 - `backend/aulafy-api-nest`: API NestJS con modulos por dominio.
 - `database/mysql`: scripts oficiales de esquema y datos demo en MySQL.
 - `docs`: documentacion academica final e imagenes de evidencia.
-- `.github/workflows`: integracion continua y flujos manuales para staging futuro.
+- `.github/workflows`: integracion continua y flujos manuales de despliegue AWS.
 
 No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo y trazabilidad clara para entrega academica.
 
@@ -113,9 +113,22 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
 
-## Staging futuro
+## Entornos disponibles
 
-AWS queda reservado como staging futuro controlado. Los flujos de despliegue se deben ejecutar manualmente y solo con autorizacion, variables configuradas y revision previa de costos. El entorno local con Docker Compose es el entorno operativo actual para desarrollo y demostracion.
+Entorno local:
+
+- Frontend: `http://localhost:4200`
+- Backend/API: `http://localhost:8080/api`
+- Base de datos: MySQL 8.x en Docker Compose.
+
+Entorno AWS de demostracion academica:
+
+- Frontend S3: <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com>
+- Backend Elastic Beanstalk: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api>
+- Health backend: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
+- Base de datos: MySQL en Amazon RDS.
+
+El entorno AWS se mantiene como instancia de revision academica controlada. Cualquier cambio de infraestructura debe revisarse antes de ejecutarse para evitar costos innecesarios y no exponer secretos.
 
 ## Credenciales demo
 
@@ -133,11 +146,13 @@ AWS queda reservado como staging futuro controlado. Los flujos de despliegue se 
 - Documentacion academica final disponible en `docs`.
 - Chat interno presente como modulo experimental/post-MVP.
 
-## Avance Semana 5
+## Entrega Semana 5
 
-- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> — rama activa: `develop`.
+- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> - rama activa: `develop`.
 - **Arquitectura real:** cliente-servidor / monolito modular. Un proceso NestJS expone la API REST bajo `/api`; un proceso Angular la consume por HTTP. No hay microservicios ni gateways de mensajeria adicionales.
 - **Funcionalidades disponibles:** autenticacion JWT, roles (ADMIN, COLEGIO, PROFESOR, APODERADO, ESTUDIANTE), feed con publicaciones y comentarios, calendario por curso, evaluaciones y notas con calculo de promedio, asistencia con resumen porcentual, anotaciones de estudiante, reporte de riesgo academico, notificaciones externas opcionales por Telegram.
+- **Despliegue AWS:** frontend publicado en Amazon S3, backend NestJS publicado en Elastic Beanstalk y base MySQL en Amazon RDS.
+- **Correccion reciente:** el modulo `Reportes y riesgo` maneja errores, timeouts y respuestas vacias sin quedar en carga infinita.
 - **Levantar el sistema localmente:**
 
 ```bash
@@ -150,14 +165,15 @@ cp .env.example .env
 npm install
 npm run start:dev
 
-# Frontend (con proxy para demo publica)
+# Frontend (con proxy local hacia backend)
 cd frontend/aulafy-web
 npm install
 npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 ```
 
+- **Build frontend:** `cd frontend/aulafy-web && npm run build`
+- **Build frontend staging:** `cd frontend/aulafy-web && npm run build:staging`
 - **Pruebas backend:** `cd backend/aulafy-api-nest && npm test`
-- **Acceso mediante link temporal:** se genera con `cloudflared tunnel --url http://localhost:4200` o `npx localtunnel --port 4200`. El link se comunica al momento de la revision; no es persistente entre reinicios del tunel.
 
 ## Limitaciones conocidas
 
@@ -166,11 +182,11 @@ npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 - Logout solo en cliente: el JWT sigue siendo valido en el servidor hasta su expiracion de 2h.
 - Telegram es opcional: si no hay credenciales, el sistema degrada a modo `NOT_CONFIGURED` sin fallar.
 - Dashboard por rol sin indicadores (KPIs) de negocio reales: muestra navegacion por modulos.
-- Staging AWS sujeto a autorizacion previa y control de costos; no esta activo.
+- Entorno AWS activo para revision academica; debe mantenerse controlado para evitar costos innecesarios.
 
 ## Roadmap
 
 1. Consolidar pruebas automatizadas del stack NestJS/Angular.
 2. Completar evidencias de QA y trazabilidad con GitHub Issues.
 3. Validar el modulo de chat antes de moverlo al alcance principal.
-4. Preparar staging AWS solo si existe autorizacion academica y control de costos.
+4. Mantener el despliegue AWS con monitoreo basico, variables seguras y control de costos.
