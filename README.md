@@ -8,8 +8,8 @@ El stack oficial vigente es:
 - Backend NestJS con Node.js y TypeScript.
 - Base de datos MySQL 8.x.
 - ORM TypeORM.
-- Entorno local con Docker Compose.
-- Pruebas con Jest como estandar definido para el stack Node.
+- Docker Compose para base de datos local.
+- Pruebas backend automatizadas con Jest.
 - Control de versiones en GitHub y seguimiento mediante GitHub Issues.
 - Telegram Bot API solo como integracion opcional para notificaciones externas.
 - AWS como entorno de demostracion academica: frontend en Amazon S3, backend en Elastic Beanstalk y base de datos MySQL en Amazon RDS.
@@ -26,7 +26,7 @@ Profesor: Alonso Esteban Castillo Pizarro
 - Backend: NestJS, Node.js, TypeScript, JWT, TypeORM, class-validator.
 - Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient.
 - Base de datos: MySQL 8 mediante Docker Compose en local y Amazon RDS en AWS.
-- Pruebas: Jest como herramienta objetivo del proyecto.
+- Pruebas: Jest en backend con suites unitarias y de permisos.
 - Integraciones: Telegram Bot API para avisos externos opcionales.
 
 ## Arquitectura
@@ -63,7 +63,20 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 
 Para el MVP cada usuario tiene un rol principal. La estructura queda preparada para extender permisos si luego se requiere un modelo de multiples roles.
 
-## Ejecucion
+## Entorno de revision AWS
+
+El entorno principal para revision academica esta publicado en AWS:
+
+- Frontend S3: <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com>
+- Backend Elastic Beanstalk: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api>
+- Health backend: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
+- Base de datos: MySQL en Amazon RDS.
+
+El entorno AWS se mantiene como instancia de revision academica controlada. Cualquier cambio de infraestructura debe revisarse antes de ejecutarse para evitar costos innecesarios y no exponer secretos.
+
+## Ejecucion local para desarrollo
+
+La ejecucion local se conserva para desarrollo, pruebas y correcciones. No reemplaza al entorno AWS de revision.
 
 Base de datos:
 
@@ -89,12 +102,12 @@ Frontend:
 ```bash
 cd frontend/aulafy-web
 npm install
-npm start
+npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 ```
 
-La interfaz queda disponible en `http://localhost:4200` y la API en `http://localhost:8080/api`.
+La interfaz queda disponible en `http://localhost:4200` y el proxy local redirige `/api` hacia `http://localhost:8080/api`.
 
-## Variables de entorno
+## Variables de entorno local
 
 ```bash
 NODE_ENV=development
@@ -112,23 +125,6 @@ FRONTEND_URL=http://localhost:4200
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
-
-## Entornos disponibles
-
-Entorno local:
-
-- Frontend: `http://localhost:4200`
-- Backend/API: `http://localhost:8080/api`
-- Base de datos: MySQL 8.x en Docker Compose.
-
-Entorno AWS de demostracion academica:
-
-- Frontend S3: <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com>
-- Backend Elastic Beanstalk: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api>
-- Health backend: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
-- Base de datos: MySQL en Amazon RDS.
-
-El entorno AWS se mantiene como instancia de revision academica controlada. Cualquier cambio de infraestructura debe revisarse antes de ejecutarse para evitar costos innecesarios y no exponer secretos.
 
 ## Credenciales demo
 
