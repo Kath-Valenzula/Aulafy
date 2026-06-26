@@ -7,5 +7,6 @@ module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }]
   },
-  clearMocks: true
+  clearMocks: true,
+  coverageDirectory: 'coverage'
 }

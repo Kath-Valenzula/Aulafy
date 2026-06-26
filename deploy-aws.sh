@@ -9,12 +9,12 @@ DEPLOY_BUCKET="aulafy-deploys-${ACCOUNT_ID}"
 DB_ID="aulafy-mysql"
 DB_NAME="aulafy_db"
 DB_USER="aulafyadmin"
-DB_PASS="AulafyAWS$(date +%Y)X"
+DB_PASS="${DB_PASS:-AulafyAWS$(openssl rand -hex 16)}"
 JWT=$(openssl rand -hex 32)
 
 echo ""
 echo "=== AULAFY AWS DEPLOY | Account: $ACCOUNT_ID | Region: $REGION ==="
-echo "DB_PASS que debes guardar: $DB_PASS"
+echo "DB_PASS generado para el despliegue. No se imprime en consola."
 echo ""
 
 # ── 1. mysql client ─────────────────────────────────────────
@@ -65,9 +65,18 @@ RDS_SG=$(aws ec2 create-security-group \
   --query "SecurityGroups[0].GroupId" --output text --region $REGION)
 echo "SG RDS: $RDS_SG"
 
-aws ec2 authorize-security-group-ingress \
-  --group-id $RDS_SG --protocol tcp --port 3306 \
-  --cidr 0.0.0.0/0 --region $REGION 2>/dev/null || true
+# Seguridad: no abrir MySQL a Internet (0.0.0.0/0).
+# TODO: para una recreacion productiva, resolver el Security Group del backend
+# Elastic Beanstalk y permitir MySQL solo desde ese origen.
+# La RDS publica se uso solo como demo academica y debe cerrarse en produccion.
+if [ -n "${BACKEND_SG:-}" ]; then
+  aws ec2 authorize-security-group-ingress \
+    --group-id "$RDS_SG" \
+    --ip-permissions "IpProtocol=tcp,FromPort=3306,ToPort=3306,UserIdGroupPairs=[{GroupId=${BACKEND_SG}}]" \
+    --region "$REGION" 2>/dev/null || true
+else
+  echo "BACKEND_SG no definido; no se abre acceso entrante a MySQL."
+fi
 
 SUBNETS=$(aws ec2 describe-subnets \
   --filters "Name=vpc-id,Values=$VPC_ID" "Name=default-for-az,Values=true" \
@@ -88,7 +97,7 @@ aws rds create-db-instance \
   --db-name $DB_NAME \
   --vpc-security-group-ids $RDS_SG \
   --db-subnet-group-name aulafy-subnets \
-  --publicly-accessible --no-multi-az \
+  --no-publicly-accessible --no-multi-az \
   --storage-type gp2 --backup-retention-period 0 \
   --no-deletion-protection \
   --region $REGION 2>/dev/null || echo "RDS ya existia, continuando..."
@@ -177,7 +186,7 @@ aws elasticbeanstalk create-environment \
     "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_USERNAME,Value=${DB_USER}" \
     "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${DB_PASS}" \
     "Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET,Value=${JWT}" \
-    "Namespace=aws:elasticbeanstalk:application:environment,OptionName=FRONTEND_URL,Value=https://lemon-wave-02f2acd0f.7.azurestaticapps.net" \
+    "Namespace=aws:elasticbeanstalk:application:environment,OptionName=FRONTEND_URL,Value=http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com" \
   --version-label "v1" --region $REGION
 
 echo "Esperando EB environment (~5 min)..."
@@ -199,8 +208,7 @@ echo "=================================================="
 echo "  Backend : http://${EB_CNAME}"
 echo "  Health  : http://${EB_CNAME}/api/health"
 echo "  DB Host : ${DB_HOST}"
-echo "  DB Pass : ${DB_PASS}"
 echo ""
-echo "  >>> COPIA ESTA LINEA Y ENVIASELA A CLAUDE:"
+echo "  Variables de despliegue:"
 echo "  EB_URL=http://${EB_CNAME}"
 echo "=================================================="
