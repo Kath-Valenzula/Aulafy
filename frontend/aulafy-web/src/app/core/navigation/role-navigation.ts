@@ -44,6 +44,7 @@ export const ROLE_NAVIGATION_ITEMS: RoleNavigationItem[] = [
   { label: 'Evaluaciones y notas', path: '/app/academic', icon: 'grade', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Asistencia', path: '/app/attendance', icon: 'event_available', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Anotaciones', path: '/app/annotations', icon: 'assignment_late', roles: ['PROFESOR'], layout: 'backoffice' },
+  { label: 'Mensajes del curso', path: '/app/chat', icon: 'chat', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Notificaciones', path: '/app/notifications', icon: 'notifications_active', roles: ['PROFESOR'], layout: 'backoffice' },
 
   { label: 'Dashboard', path: '/app/guardian', icon: 'home', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },
@@ -52,8 +53,7 @@ export const ROLE_NAVIGATION_ITEMS: RoleNavigationItem[] = [
   { label: 'Calendario', path: '/app/calendar', icon: 'calendar_month', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },
   { label: 'Notas', path: '/app/academic', icon: 'grade', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },
   { label: 'Asistencia', path: '/app/attendance', icon: 'event_available', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },
-  { label: 'Alertas', path: '/app/messages', icon: 'notifications', roles: ['APODERADO'], layout: 'family' },
-  { label: 'Notificaciones', path: '/app/messages', icon: 'notifications', roles: ['ESTUDIANTE'], layout: 'family' },
+  { label: 'Mensajes del curso', path: '/app/chat', icon: 'chat', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },
   { label: 'Perfil', path: '/app/profile', icon: 'person', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' }
 ];
 

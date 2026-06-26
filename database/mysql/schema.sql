@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS course_students (
 CREATE TABLE IF NOT EXISTS course_teachers (
   course_id BIGINT UNSIGNED NOT NULL,
   teacher_id BIGINT UNSIGNED NOT NULL,
+  role_in_course VARCHAR(30) NOT NULL DEFAULT 'SUBJECT_TEACHER',
   PRIMARY KEY (course_id, teacher_id),
   CONSTRAINT fk_course_teachers_course FOREIGN KEY (course_id) REFERENCES courses(id),
   CONSTRAINT fk_course_teachers_teacher FOREIGN KEY (teacher_id) REFERENCES users(id)

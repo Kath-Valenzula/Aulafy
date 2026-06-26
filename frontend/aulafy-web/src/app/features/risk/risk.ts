@@ -14,7 +14,7 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
       <div>
         <h2 class="text-3xl font-bold text-on-background">Reporte de Riesgo Academico</h2>
         <p class="text-on-surface-variant">
-          Calculo basado en notas y asistencia registradas en backend.
+          Identifica estudiantes con promedio menor a 4.0 o asistencia menor al 85% segun los registros del curso.
         </p>
       </div>
       <button
