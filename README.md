@@ -45,13 +45,14 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 
 - Auth y seguridad JWT.
 - Gestion de usuarios y roles.
-- Cursos, asignaturas y evaluaciones.
+- Cursos, asignaturas y evaluaciones. Profesor jefe formalizado con campo `role_in_course` en `course_teachers`.
 - Feed academico tipo red social.
 - Calendario por curso.
 - Anotaciones/comunicaciones personales del estudiante.
 - Asistencia y resumen academico.
-- Chat interno: modulo experimental/post-MVP presente en el codigo, no tratado como alcance principal validado.
-- Notificaciones externas opcionales mediante Telegram.
+- Reporte de riesgo academico: identifica estudiantes con promedio menor a 4.0 o asistencia menor al 85%. Solo visible para ADMIN y COLEGIO.
+- Chat interno por curso ("Mensajes del curso"): mensajeria entre profesor, apoderado y estudiante dentro de cada curso. Funcionalidad MVP.
+- Notificaciones externas opcionales mediante Telegram (solo canal de aviso externo, no es el chat principal).
 
 ## Roles
 
@@ -136,11 +137,15 @@ TELEGRAM_CHAT_ID=
 
 ## Estado actual del MVP
 
-- Backend NestJS con modulos por dominio para autenticacion, usuarios, cursos, calendario, publicaciones, evaluaciones, asistencia, anotaciones y notificaciones.
+- Backend NestJS con modulos por dominio para autenticacion, usuarios, cursos, calendario, publicaciones, evaluaciones, asistencia, anotaciones, chat y notificaciones.
 - Frontend Angular operativo con rutas protegidas y pantallas principales del MVP.
-- Base de datos MySQL con esquema y seed demo en `database/mysql`.
+- Base de datos MySQL con esquema y seed demo en `database/mysql`. Seed incluye 3 estudiantes demo con diferentes perfiles de riesgo academico.
+- Chat interno por curso activo para PROFESOR, APODERADO y ESTUDIANTE. Telegram solo envia avisos externos opcionales.
+- Profesor jefe formalizado: campo `role_in_course` en tabla `course_teachers`. El profesor demo figura como `HEAD_TEACHER`.
+- Reporte de riesgo academico con umbrales configurados: promedio < 4.0 y asistencia < 85%. Acceso exclusivo para ADMIN y COLEGIO.
+- Matriz de casos de prueba disponible en `docs/semana-8/matriz-casos-prueba.md`.
+- Decisiones de alcance documentadas en `docs/semana-8/decisiones-alcance-mvp.md`.
 - Documentacion academica final disponible en `docs`.
-- Chat interno presente como modulo experimental/post-MVP.
 
 ## Entrega Semana 5
 
@@ -222,18 +227,20 @@ npm run build          # build de produccion
 
 ## Limitaciones conocidas
 
-- Chat interno experimental: persiste mensajes via REST, sin tiempo real (sin WebSocket).
+- Chat interno por curso: persiste mensajes via REST, sin tiempo real (sin WebSocket). La pantalla no se actualiza automaticamente; hay que recargar para ver mensajes nuevos.
+- Profesor jefe: `role_in_course` ya esta implementado como dato. Los permisos aun no estan diferenciados por rol del docente; todos los docentes del curso tienen igual nivel de acceso en el MVP actual.
+- Reporte de riesgo: los umbrales (promedio < 4.0, asistencia < 85%) estan fijados en el codigo backend. No son configurables por la interfaz.
 - Frontend no implementa todo el CRUD disponible en backend: cursos y usuarios son de solo lectura en la interfaz.
 - Logout solo en cliente: el JWT sigue siendo valido en el servidor hasta su expiracion de 2h.
 - Telegram es opcional: si no hay credenciales, el sistema degrada a modo `NOT_CONFIGURED` sin fallar.
 - Dashboard por rol sin indicadores (KPIs) de negocio reales: muestra navegacion por modulos.
-- Entorno AWS activo para revision academica; debe mantenerse controlado para evitar costos innecesarios.
+- Entorno AWS activo para revision academica de alcance academico. No es produccion final. HTTPS no esta activo; el frontend se sirve por HTTP desde S3 Static Website.
 
 ## Roadmap
 
 1. Consolidar pruebas automatizadas del stack NestJS/Angular.
 2. Completar evidencias de QA y trazabilidad con GitHub Issues.
-3. Validar el modulo de chat antes de moverlo al alcance principal.
+3. Completar cobertura de pruebas para el modulo de chat.
 4. Mantener el despliegue AWS con monitoreo basico, variables seguras y control de costos.
 5. Activar CloudFront con HTTPS para el frontend.
 6. Configurar AWS Budget mensual para control de costos del staging.
