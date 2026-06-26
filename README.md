@@ -17,7 +17,7 @@ El stack oficial vigente es:
 ## Integrantes
 
 - Katherine Gisselle Valenzuela Moreno
-- Sebastian Alberto Briceno Inostroza
+- Sebastián Alberto Briceño Inostroza
 
 Profesor: Alonso Esteban Castillo Pizarro
 
@@ -117,9 +117,9 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=aulafy_db
 DB_USERNAME=aulafy_user
-DB_PASSWORD=aulafy_pass
+DB_PASSWORD=CAMBIAR_POR_PASSWORD_LOCAL
 
-JWT_SECRET=clave-demo-local-cambiar-en-produccion
+JWT_SECRET=CAMBIAR_POR_SECRETO_SEGURO_DE_64_CARACTERES
 FRONTEND_URL=http://localhost:4200
 
 TELEGRAM_BOT_TOKEN=
@@ -171,6 +171,55 @@ npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 - **Build frontend staging:** `cd frontend/aulafy-web && npm run build:staging`
 - **Pruebas backend:** `cd backend/aulafy-api-nest && npm test`
 
+## Entrega Semana 6
+
+- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> — rama activa: `develop`.
+- **Frontend AWS S3 Static Website:** <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com> (HTTP, staging académico).
+- **Backend AWS Elastic Beanstalk health:** <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
+- **Tipo de entorno:** demostración académica. No es producción final. Los recursos AWS están activos únicamente para revisión y se mantienen controlados para evitar costos innecesarios.
+
+### Mejoras técnicas aplicadas en Semana 6
+
+**Seguridad mínima:**
+
+- CORS restringido: se reemplazó `cors: true` abierto por una lista explícita de orígenes permitidos (localhost de desarrollo, frontend AWS, variable `FRONTEND_URL`).
+- Helmet agregado: cabeceras HTTP de seguridad configuradas con modo conservador para API REST (`contentSecurityPolicy: false`, `crossOriginEmbedderPolicy: false`).
+- `.env.example` actualizado con placeholders seguros; sin contraseñas reales en el repositorio.
+- `deploy-aws.sh` ajustado para no imprimir credenciales en consola y no dejar MySQL abierto a `0.0.0.0/0` en futuras recreaciones.
+
+**Calidad:**
+
+- `test:coverage` agregado con Jest. Resultados de la línea base medida:
+  - Statements: 61.45% / Branches: 39.42% / Functions: 47.85% / Lines: 59.50%
+- Backend: 7 suites, 27 tests, todos pasando.
+- `sonar-project.properties` preparado para integración futura con SonarQube/SonarCloud, sin tokens ni credenciales.
+- Google Fonts eliminado del frontend: el build Angular ya no depende de `fonts.googleapis.com`. Tipografía base en fuentes del sistema (`system-ui`, `Segoe UI`, `sans-serif`).
+- `npm audit` ejecutado y vulnerabilidades documentadas. No se aplicó `audit fix --force` para evitar cambios no controlados en dependencias críticas.
+
+**Mejoras de despliegue proyectadas (no activas actualmente):**
+
+- CloudFront para servir el frontend con HTTPS.
+- AWS Certificate Manager (ACM) para certificado HTTPS si se dispone de dominio propio.
+- AWS Budget mensual para control de costos del staging.
+- Secretos migrados a AWS SSM Parameter Store o Secrets Manager.
+- RDS MySQL restringida a acceso privado desde el backend (sin acceso público a Internet).
+
+Los scripts base para estas mejoras están disponibles en `scripts/aws/`.
+
+### Comandos de validación Semana 6
+
+```bash
+# Backend
+cd backend/aulafy-api-nest
+npm run build          # compilar TypeScript
+npm test               # 7 suites, 27 tests
+npm run test:coverage  # cobertura Jest
+
+# Frontend
+cd frontend/aulafy-web
+npm run build          # build de produccion
+```
+
 ## Limitaciones conocidas
 
 - Chat interno experimental: persiste mensajes via REST, sin tiempo real (sin WebSocket).
@@ -186,3 +235,7 @@ npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 2. Completar evidencias de QA y trazabilidad con GitHub Issues.
 3. Validar el modulo de chat antes de moverlo al alcance principal.
 4. Mantener el despliegue AWS con monitoreo basico, variables seguras y control de costos.
+5. Activar CloudFront con HTTPS para el frontend.
+6. Configurar AWS Budget mensual para control de costos del staging.
+7. Migrar secretos a AWS SSM Parameter Store o Secrets Manager.
+8. Restringir RDS a acceso privado desde el backend, eliminando la apertura publica usada en el entorno de demo academica.
