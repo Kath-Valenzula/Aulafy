@@ -11,16 +11,20 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
   imports: [CommonModule, FormsModule],
   template: `
     <section class="mb-4">
-      <h2 class="text-xl font-semibold text-on-background">{{ selectedRoom?.name || 'Chat del curso' }}</h2>
-      <p class="text-sm text-on-surface-variant">{{ selectedRoom?.courseName || 'Selecciona una conversación' }}</p>
+      <h2 class="text-xl font-semibold text-on-background">{{ selectedRoom?.name || 'Mensajes del curso' }}</h2>
+      <p class="text-sm text-on-surface-variant">{{ selectedRoom?.courseName || 'Mensajería entre profesor y familia del curso' }}</p>
     </section>
 
     <section *ngIf="loadingRooms" class="bg-surface rounded-xl border border-outline-variant p-3 text-sm text-on-surface-variant mb-4">
-      Cargando salas...
+      Cargando conversaciones...
+    </section>
+
+    <section *ngIf="!loadingRooms && !rooms.length && !roomError" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
+      No hay conversaciones activas para tu cuenta.
     </section>
 
     <section *ngIf="!loadingRooms && rooms.length" class="mb-4">
-      <label class="block text-sm text-on-surface-variant mb-2">Sala</label>
+      <label class="block text-sm text-on-surface-variant mb-2">Conversación</label>
       <select
         [ngModel]="selectedRoomId"
         (ngModelChange)="onRoomChange($event)"
@@ -56,29 +60,31 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
       </article>
 
       <article *ngIf="!loadingMessages && !messages.length" class="text-sm text-on-surface-variant">
-        Esta sala no tiene mensajes todavía.
+        Aún no hay mensajes en esta conversación.
       </article>
     </section>
 
-    <section class="mt-6 p-2 bg-surface-container-low rounded-xl border border-outline-variant flex items-end gap-2">
-      <textarea
-        [(ngModel)]="draftMessage"
-        class="flex-1 bg-transparent border-none resize-none"
-        rows="2"
-        placeholder="Escribe un mensaje..."
-      ></textarea>
-      <button
-        class="p-3 bg-primary text-on-primary rounded-lg disabled:opacity-60"
-        (click)="sendMessage()"
-        [disabled]="sending || !draftMessage.trim() || !selectedRoomId"
-      >
-        <span class="material-symbols-outlined">{{ sending ? 'hourglass_top' : 'send' }}</span>
-      </button>
-    </section>
+    <ng-container *ngIf="rooms.length && selectedRoomId">
+      <section class="mt-6 p-2 bg-surface-container-low rounded-xl border border-outline-variant flex items-end gap-2">
+        <textarea
+          [(ngModel)]="draftMessage"
+          class="flex-1 bg-transparent border-none resize-none"
+          rows="2"
+          placeholder="Escribe un mensaje..."
+        ></textarea>
+        <button
+          class="p-3 bg-primary text-on-primary rounded-lg disabled:opacity-60"
+          (click)="sendMessage()"
+          [disabled]="sending || !draftMessage.trim()"
+        >
+          <span class="material-symbols-outlined">{{ sending ? 'hourglass_top' : 'send' }}</span>
+        </button>
+      </section>
 
-    <section *ngIf="messageError" class="mt-3 bg-error-container text-on-error-container rounded-xl p-3 text-sm">
-      {{ messageError }}
-    </section>
+      <section *ngIf="messageError" class="mt-3 bg-error-container text-on-error-container rounded-xl p-3 text-sm">
+        {{ messageError }}
+      </section>
+    </ng-container>
   `
 })
 export class ChatComponent implements OnInit {

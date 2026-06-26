@@ -25,13 +25,13 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: npm
           cache-dependency-path: frontend/aulafy-web/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend/aulafy-web
-        run: npm ci
+        run: npm install
 
       - name: Build staging
         working-directory: frontend/aulafy-web

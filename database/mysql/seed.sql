@@ -52,7 +52,9 @@ ON DUPLICATE KEY UPDATE level_id = VALUES(level_id);
 
 INSERT INTO students (id, first_name, last_name, level_id, section, guardian_id, student_user_id, notes, active)
 VALUES
-  (1, 'Estudiante', 'Demo', 6, 'B', 4, 5, 'Alumno inicial vinculado al modelo academico base.', 1)
+  (1, 'Estudiante', 'Demo', 6, 'B', 4, 5, 'Alumno inicial vinculado al modelo academico base.', 1),
+  (2, 'Ana', 'Gomez', 6, 'B', 4, NULL, 'Alumna demo con riesgo academico por promedio bajo.', 1),
+  (3, 'Carlos', 'Perez', 6, 'B', 4, NULL, 'Alumno demo con riesgo de asistencia.', 1)
 ON DUPLICATE KEY UPDATE
   first_name = VALUES(first_name),
   last_name = VALUES(last_name),
@@ -72,10 +74,13 @@ ON DUPLICATE KEY UPDATE
   level_id = VALUES(level_id),
   cycle_id = VALUES(cycle_id);
 
-INSERT INTO course_teachers (course_id, teacher_id) VALUES (1, 3)
-ON DUPLICATE KEY UPDATE teacher_id = VALUES(teacher_id);
+INSERT INTO course_teachers (course_id, teacher_id, role_in_course) VALUES (1, 3, 'HEAD_TEACHER')
+ON DUPLICATE KEY UPDATE teacher_id = VALUES(teacher_id), role_in_course = VALUES(role_in_course);
 
-INSERT INTO course_students (course_id, student_id) VALUES (1, 1)
+INSERT INTO course_students (course_id, student_id) VALUES
+  (1, 1),
+  (1, 2),
+  (1, 3)
 ON DUPLICATE KEY UPDATE student_id = VALUES(student_id);
 
 INSERT INTO subjects (id, name, course_id, teacher_id, active) VALUES
@@ -136,22 +141,12 @@ INSERT INTO grades (
   observation
 )
 VALUES
-  (
-    1,
-    1,
-    1,
-    6.50,
-    7.00,
-    'Buen dominio de operatoria y resolucion de problemas.'
-  ),
-  (
-    2,
-    1,
-    2,
-    5.80,
-    7.00,
-    'Debe reforzar inferencias y justificacion de respuestas.'
-  )
+  (1, 1, 1, 6.50, 7.00, 'Buen dominio de operatoria y resolucion de problemas.'),
+  (2, 1, 2, 5.80, 7.00, 'Debe reforzar inferencias y justificacion de respuestas.'),
+  (3, 2, 1, 3.20, 7.00, 'Presenta dificultades en operatoria basica. Requiere refuerzo urgente.'),
+  (4, 2, 2, 3.50, 7.00, 'Nivel de comprension lectora bajo. Se recomienda apoyo adicional.'),
+  (5, 3, 1, 5.50, 7.00, 'Buen rendimiento cuando asiste a clases.'),
+  (6, 3, 2, 6.00, 7.00, 'Comprension lectora en nivel esperado para el curso.')
 ON DUPLICATE KEY UPDATE
   student_id = VALUES(student_id),
   evaluation_id = VALUES(evaluation_id),
@@ -168,30 +163,18 @@ INSERT INTO attendance (
   comment
 )
 VALUES
-  (
-    1,
-    1,
-    1,
-    '2026-06-03',
-    'PRESENTE',
-    'Asiste a jornada completa.'
-  ),
-  (
-    2,
-    1,
-    1,
-    '2026-06-04',
-    'ATRASADO',
-    'Ingreso con 10 minutos de retraso.'
-  ),
-  (
-    3,
-    1,
-    1,
-    '2026-06-05',
-    'PRESENTE',
-    'Participa en evaluacion programada.'
-  )
+  (1,  1, 1, '2026-06-03', 'PRESENTE', 'Asiste a jornada completa.'),
+  (2,  1, 1, '2026-06-04', 'ATRASADO', 'Ingreso con 10 minutos de retraso.'),
+  (3,  1, 1, '2026-06-05', 'PRESENTE', 'Participa en evaluacion programada.'),
+  (4,  2, 1, '2026-06-03', 'PRESENTE', ''),
+  (5,  2, 1, '2026-06-04', 'PRESENTE', ''),
+  (6,  2, 1, '2026-06-05', 'PRESENTE', ''),
+  (7,  3, 1, '2026-06-03', 'PRESENTE', ''),
+  (8,  3, 1, '2026-06-04', 'AUSENTE',  'Sin justificacion presentada.'),
+  (9,  3, 1, '2026-06-05', 'PRESENTE', ''),
+  (10, 3, 1, '2026-06-06', 'AUSENTE',  'Sin justificacion presentada.'),
+  (11, 3, 1, '2026-06-09', 'PRESENTE', ''),
+  (12, 3, 1, '2026-06-10', 'AUSENTE',  'Sin justificacion presentada.')
 ON DUPLICATE KEY UPDATE
   student_id = VALUES(student_id),
   course_id = VALUES(course_id),
@@ -204,7 +187,10 @@ VALUES (1, 5, 1, '11.111.111-1', 'Apoderada Demo')
 ON DUPLICATE KEY UPDATE emergency_contact = VALUES(emergency_contact);
 
 INSERT INTO guardian_students (id, guardian_id, student_id, relationship)
-VALUES (1, 4, 1, 'Apoderado titular')
+VALUES
+  (1, 4, 1, 'Apoderado titular'),
+  (2, 4, 2, 'Apoderado titular'),
+  (3, 4, 3, 'Apoderado titular')
 ON DUPLICATE KEY UPDATE relationship = VALUES(relationship);
 
 INSERT INTO calendar_events (

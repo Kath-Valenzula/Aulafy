@@ -149,17 +149,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/risk/risk').then((m) => m.RiskComponent)
       },
       {
-        path: 'messages',
+        path: 'chat',
         canActivate: [roleGuard],
-        data: { roles: ['APODERADO', 'ESTUDIANTE'] },
-        loadComponent: () => import('./features/messages/messages').then((m) => m.MessagesComponent)
-      },
-      {
-        path: 'chat-profesor',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'COLEGIO', 'PROFESOR', 'APODERADO', 'ESTUDIANTE'], experimental: true },
+        data: { roles: ['ADMIN', 'COLEGIO', 'PROFESOR', 'APODERADO', 'ESTUDIANTE'] },
         loadComponent: () => import('./features/chat/chat').then((m) => m.ChatComponent)
       },
+      { path: 'chat-profesor', redirectTo: 'chat' },
+      { path: 'messages', redirectTo: 'chat' },
       {
         path: 'profile',
         canActivate: [roleGuard],
