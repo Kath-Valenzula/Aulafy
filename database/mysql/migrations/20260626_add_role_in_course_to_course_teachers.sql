@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Aulafy | Agregar role_in_course a course_teachers
 -- Fecha: 2026-06-26
--- Semana: 8
+-- Semana: 6
 -- ============================================================================
 -- Valores soportados: HEAD_TEACHER, SUBJECT_TEACHER, ASSISTANT
 -- Valor por defecto: SUBJECT_TEACHER
