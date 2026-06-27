@@ -31,12 +31,14 @@ Profesor: Alonso Esteban Castillo Pizarro
 
 ## Arquitectura
 
-El proyecto usa un monolito modular separado en cliente web y API REST:
+El proyecto sigue una arquitectura cliente-servidor. El backend NestJS modular expone una API REST bajo `/api`; el frontend Angular la consume por HTTP. La base de datos es MySQL gestionada con TypeORM. El despliegue se realiza en AWS.
+
+Estructura del repositorio:
 
 - `frontend/aulafy-web`: aplicacion Angular mobile-first.
 - `backend/aulafy-api-nest`: API NestJS con modulos por dominio.
 - `database/mysql`: scripts oficiales de esquema y datos demo en MySQL.
-- `docs`: documentacion academica final e imagenes de evidencia.
+- `docs`: documentacion academica del proyecto, avances semanales e imagenes de evidencia.
 - `.github/workflows`: integracion continua y flujos manuales de despliegue AWS.
 
 No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo y trazabilidad clara para entrega academica.
@@ -45,13 +47,13 @@ No se usan microservicios porque el MVP requiere simplicidad operativa, menor co
 
 - Auth y seguridad JWT.
 - Gestion de usuarios y roles.
-- Cursos, asignaturas y evaluaciones. Profesor jefe formalizado con campo `role_in_course` en `course_teachers`.
+- Cursos, asignaturas y evaluaciones. Profesor jefe formalizado con campo `role_in_course` en `course_teachers`. Los valores considerados son `HEAD_TEACHER`, `SUBJECT_TEACHER` y `ASSISTANT`. En el MVP todos los profesores asignados a un curso mantienen permisos operativos completos; la diferenciacion fina de permisos segun `role_in_course` queda como mejora futura.
 - Feed academico tipo red social.
 - Calendario por curso.
 - Anotaciones/comunicaciones personales del estudiante.
 - Asistencia y resumen academico.
-- Reporte de riesgo academico: identifica estudiantes con promedio menor a 4.0 o asistencia menor al 85%. Solo visible para ADMIN y COLEGIO.
-- Chat interno por curso ("Mensajes del curso"): mensajeria entre profesor, apoderado y estudiante dentro de cada curso. Funcionalidad MVP.
+- Modulo de riesgo academico (`risk`): identifica estudiantes con bajo rendimiento (promedio inferior a 4.0) o baja asistencia (inferior al 85%). No corresponde a riesgo conductual ni disciplinario. Acceso restringido a los roles ADMIN y COLEGIO.
+- Chat interno por curso ("Mensajes del curso"): comunicacion interna entre PROFESOR, APODERADO y ESTUDIANTE dentro de cada curso. Disponible en frontend mediante la ruta `/app/chat`, implementado en backend mediante el modulo `chat` via API REST. La mensajeria en tiempo real con WebSocket queda como mejora futura.
 - Notificaciones externas opcionales mediante Telegram (solo canal de aviso externo, no es el chat principal).
 
 ## Roles
@@ -143,9 +145,7 @@ TELEGRAM_CHAT_ID=
 - Chat interno por curso activo para PROFESOR, APODERADO y ESTUDIANTE. Telegram solo envia avisos externos opcionales.
 - Profesor jefe formalizado: campo `role_in_course` en tabla `course_teachers`. El profesor demo figura como `HEAD_TEACHER`.
 - Reporte de riesgo academico con umbrales configurados: promedio < 4.0 y asistencia < 85%. Acceso exclusivo para ADMIN y COLEGIO.
-- Matriz de casos de prueba disponible en `docs/semana-8/matriz-casos-prueba.md`.
-- Decisiones de alcance documentadas en `docs/semana-8/decisiones-alcance-mvp.md`.
-- Documentacion academica final disponible en `docs`.
+- Documentacion academica y evidencias disponibles en la carpeta `docs`, organizadas por semana de avance.
 
 ## Entrega Semana 5
 
@@ -198,7 +198,7 @@ npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
   - Statements: 61.45% / Branches: 39.42% / Functions: 47.85% / Lines: 59.50%
 - Backend: 7 suites, 27 tests, todos pasando.
 - `sonar-project.properties` preparado para integración futura con SonarQube/SonarCloud, sin tokens ni credenciales.
-- Google Fonts eliminado del frontend: el build Angular ya no depende de `fonts.googleapis.com`. Tipografía base en fuentes del sistema (`system-ui`, `Segoe UI`, `sans-serif`).
+- Se eliminó la dependencia de Google Fonts para la tipografía general del sistema. La interfaz utiliza fuentes del sistema (`system-ui`, `Segoe UI`, `sans-serif`), manteniendo únicamente Material Symbols Outlined para la representación de íconos del menú y acciones visuales.
 - `npm audit` ejecutado y vulnerabilidades documentadas. No se aplicó `audit fix --force` para evitar cambios no controlados en dependencias críticas.
 
 **Mejoras de despliegue proyectadas (no activas actualmente):**
