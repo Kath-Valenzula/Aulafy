@@ -118,7 +118,7 @@ node scripts/semana-7-browser-tests.mjs
 
 ## Pendiente para entrega final
 
-- [x] Captura GitHub rama develop (`1_GitHub_rama_develop_semana7.png`)
+- [x] Captura GitHub rama Semana 7 (`1_GitHub_rama_semana7_documentacion_cierre.png`)
 - [x] Pruebas caja negra/gris en **AWS** (capturas en `evidencias/aws/`)
 - [x] **Frontend Vercel** con fix UI — https://aulafy-web.vercel.app (capturas en `evidencias/vercel/`)
 - [x] Matriz pruebas negras (`7_Matriz_pruebas_negras.png`) y build frontend (`8_Build_frontend_OK.png`)
@@ -171,4 +171,4 @@ Luego ejecutar manualmente **Frontend AWS S3 Deploy Manual** sobre la rama `feat
 bash scripts/aws/deploy-frontend-s3.sh
 ```
 
-**GitHub:** `1_GitHub_rama_develop_semana7.png` — rama `develop`, 33 commits, repositorio Kath-Valenzula/Aulafy.
+**GitHub:** `1_GitHub_rama_semana7_documentacion_cierre.png` — rama `feature/semana-7-documentacion-cierre`, repositorio Kath-Valenzula/Aulafy.

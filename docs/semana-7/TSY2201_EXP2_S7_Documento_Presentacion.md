@@ -48,8 +48,8 @@ El proyecto Aulafy se encuentra versionado en GitHub en un repositorio público 
 
 Los avances de Semana 7 se respaldan en la rama **`develop`**, con trazabilidad mediante commits incrementales y GitHub Issues. La organización del repositorio separa responsabilidades por capa: frontend, backend, base de datos, documentación, CI/CD y scripts de infraestructura.
 
-**Rama activa de revisión:** `develop`  
-**Rama de trabajo Semana 7:** `feature/semana-7-documentacion-cierre`
+**Rama activa de revisión:** `feature/semana-7-documentacion-cierre`  
+**Rama base:** `develop`
 
 ---
 
@@ -396,7 +396,7 @@ Capturas de pantalla en `docs/semana-7/evidencias/`:
 
 | # | Archivo | Descripción | Estado |
 |---|---------|-------------|--------|
-| 1 | `1_GitHub_rama_develop_semana7.png` | Repositorio y rama develop | ✅ |
+| 1 | `1_GitHub_rama_semana7_documentacion_cierre.png` | Repositorio y rama Semana 7 | ✅ |
 | 2 | `2_Frontend_Vercel_login.png` / `2_Frontend_AWS_login.png` | Login en nube | ✅ |
 | 3 | `3_Chat_apoderado_funcionando.png` / `vercel/7_Vercel_apoderado_chat_funcionando.png` | Chat apoderado | ✅ |
 | 4 | `4_Riesgo_academico_colegio.png` / `vercel/6_Vercel_colegio_riesgo_academico.png` | Reporte de riesgo | ✅ |

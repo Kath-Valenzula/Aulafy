@@ -171,7 +171,7 @@ Capturas requeridas en `docs/semana-7/evidencias/`:
 
 | # | Archivo sugerido | Contenido |
 |---|------------------|-----------|
-| 1 | `1_GitHub_rama_develop_semana7.png` | Repositorio y rama develop |
+| 1 | `1_GitHub_rama_semana7_documentacion_cierre.png` | Repositorio y rama `feature/semana-7-documentacion-cierre` |
 | 2 | `2_Frontend_AWS_login.png` | Pantalla login en AWS |
 | 3 | `3_Chat_apoderado_funcionando.png` | Chat accesible para apoderado |
 | 4 | `4_Riesgo_academico_colegio.png` | Reporte con estudiantes en riesgo |
