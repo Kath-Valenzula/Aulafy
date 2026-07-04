@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
@@ -91,6 +91,7 @@ export class ChatComponent implements OnInit {
   private readonly chatService = inject(ChatService);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   rooms: ChatRoomResponse[] = [];
   messages: ChatMessageResponse[] = [];
@@ -122,6 +123,7 @@ export class ChatComponent implements OnInit {
         if (!rooms.length) {
           this.selectedRoomId = null;
           this.messages = [];
+          this.cdr.markForCheck();
           return;
         }
 
@@ -130,10 +132,12 @@ export class ChatComponent implements OnInit {
           ? roomIdParam
           : rooms[0].id;
         this.onRoomChange(initialRoomId);
+        this.cdr.markForCheck();
       },
       error: () => {
         this.loadingRooms = false;
         this.roomError = 'No fue posible cargar las salas de chat.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -151,10 +155,12 @@ export class ChatComponent implements OnInit {
       next: (messages) => {
         this.messages = messages;
         this.loadingMessages = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.loadingMessages = false;
         this.messageError = 'No fue posible cargar los mensajes de la sala.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -173,10 +179,12 @@ export class ChatComponent implements OnInit {
         this.sending = false;
         this.draftMessage = '';
         this.messages = [...this.messages, message];
+        this.cdr.markForCheck();
       },
       error: () => {
         this.sending = false;
         this.messageError = 'No fue posible enviar el mensaje.';
+        this.cdr.markForCheck();
       }
     });
   }
