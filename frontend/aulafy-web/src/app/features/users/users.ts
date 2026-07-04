@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { UsersService } from '../../core/services/users.service';
 import { RoleName, UserResponse } from '../../shared/models/aulafy.models';
@@ -77,6 +77,7 @@ interface UsersPageConfig {
 export class UsersComponent implements OnInit {
   private readonly usersService = inject(UsersService);
   private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   users: UserResponse[] = [];
   loading = true;
@@ -130,11 +131,13 @@ export class UsersComponent implements OnInit {
       next: (users) => {
         this.users = users;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error al cargar usuarios', error);
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }

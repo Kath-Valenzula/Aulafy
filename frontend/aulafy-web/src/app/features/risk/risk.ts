@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { catchError, finalize, of, timeout } from 'rxjs';
 import { RiskService } from '../../core/services/risk.service';
 import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aulafy.models';
@@ -128,6 +128,7 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
 })
 export class RiskComponent implements OnInit {
   private readonly riskService = inject(RiskService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   report: RiskReportResponse | null = null;
   loading = false;
@@ -151,12 +152,14 @@ export class RiskComponent implements OnInit {
       }),
       finalize(() => {
         this.loading = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: (report) => {
         if (report) {
           this.report = this.normalizeReport(report);
         }
+        this.cdr.markForCheck();
       }
     });
   }
