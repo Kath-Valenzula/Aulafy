@@ -49,7 +49,7 @@
 
 | # | Archivo local | Archivo AWS |
 |---|---------------|-------------|
-| 1 | — | `../1_GitHub_rama_develop_semana7.png` |
+| 1 | `1_GitHub_rama_semana7_documentacion_cierre.png` | Repositorio y rama `feature/semana-7-documentacion-cierre` |
 | 2 | `2_Frontend_local_login.png` | `../2_Frontend_AWS_login.png` |
 | 3 | `3_Chat_apoderado_funcionando.png` | `../3_Chat_apoderado_funcionando_AWS.png` |
 | 4 | `4_Riesgo_academico_colegio.png` | `../4_Riesgo_academico_colegio_AWS.png` |

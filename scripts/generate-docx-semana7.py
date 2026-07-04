@@ -97,7 +97,7 @@ def main() -> None:
         "Chat sin tiempo real; permisos role_in_course no diferenciados en UI; umbrales de riesgo fijos; logout solo cliente; HTTP en S3; redeploy frontend S3 pendiente de credenciales AWS en GitHub Actions.",
         "",
         "9. EVIDENCIAS (docs/semana-7/evidencias/)",
-        "1_GitHub_rama_develop_semana7.png; 6_Cobertura_tests_backend.png; 7_Matriz_pruebas_negras.png; 8_Build_frontend_OK.png;",
+        "1_GitHub_rama_semana7_documentacion_cierre.png; 6_Cobertura_tests_backend.png; 7_Matriz_pruebas_negras.png; 8_Build_frontend_OK.png;",
         "3_Chat_apoderado_funcionando.png; 4_Riesgo_academico_colegio.png; carpeta vercel/ (chat y riesgo en nube actualizada); carpeta aws/.",
     ]
 
@@ -108,7 +108,7 @@ def main() -> None:
     doc.add_page_break()
     doc.add_paragraph("EVIDENCIAS — CAPTURAS SEMANA 7")
     images = [
-        ("1_GitHub_rama_develop_semana7.png", "Repositorio GitHub — rama develop"),
+        ("1_GitHub_rama_semana7_documentacion_cierre.png", "GitHub — rama feature/semana-7-documentacion-cierre"),
         ("6_Cobertura_tests_backend.png", "Cobertura tests backend Jest"),
         ("7_Matriz_pruebas_negras.png", "Matriz pruebas caja negra y gris"),
         ("8_Build_frontend_OK.png", "Build frontend exitoso"),
