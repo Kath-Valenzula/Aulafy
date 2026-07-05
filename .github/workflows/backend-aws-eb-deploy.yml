@@ -1,0 +1,100 @@
+name: Backend AWS Elastic Beanstalk Deploy Manual
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+  AWS_EB_APPLICATION: ${{ vars.AWS_EB_APPLICATION }}
+  AWS_EB_ENVIRONMENT: ${{ vars.AWS_EB_ENVIRONMENT }}
+  AWS_EB_DEPLOY_BUCKET: ${{ vars.AWS_EB_DEPLOY_BUCKET }}
+
+jobs:
+  deploy:
+    name: Build and deploy backend to Elastic Beanstalk
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+          cache-dependency-path: backend/aulafy-api-nest/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend/aulafy-api-nest
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend/aulafy-api-nest
+        run: npm test
+
+      - name: Build backend
+        working-directory: backend/aulafy-api-nest
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+
+      - name: Create Procfile
+        working-directory: backend/aulafy-api-nest
+        run: |
+          echo "web: node dist/main.js" > Procfile
+
+      - name: Package application for Elastic Beanstalk
+        working-directory: backend/aulafy-api-nest
+        env:
+          VERSION_LABEL: ${{ github.sha }}
+        run: |
+          zip -r "deploy-${VERSION_LABEL}.zip" \
+            dist/ \
+            package.json \
+            package-lock.json \
+            Procfile
+
+      - name: Upload artifact to S3
+        working-directory: backend/aulafy-api-nest
+        env:
+          VERSION_LABEL: ${{ github.sha }}
+        run: |
+          aws s3 cp \
+            "deploy-${VERSION_LABEL}.zip" \
+            "s3://${AWS_EB_DEPLOY_BUCKET}/aulafy-api/${VERSION_LABEL}.zip"
+
+      - name: Create Elastic Beanstalk application version
+        env:
+          VERSION_LABEL: ${{ github.sha }}
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${AWS_EB_APPLICATION}" \
+            --version-label "${VERSION_LABEL}" \
+            --source-bundle "S3Bucket=${AWS_EB_DEPLOY_BUCKET},S3Key=aulafy-api/${VERSION_LABEL}.zip" \
+            --no-auto-create-application
+
+      - name: Deploy to Elastic Beanstalk environment
+        env:
+          VERSION_LABEL: ${{ github.sha }}
+        run: |
+          aws elasticbeanstalk update-environment \
+            --application-name "${AWS_EB_APPLICATION}" \
+            --environment-name "${AWS_EB_ENVIRONMENT}" \
+            --version-label "${VERSION_LABEL}"
+
+      - name: Wait for environment to become healthy
+        run: |
+          aws elasticbeanstalk wait environment-updated \
+            --application-name "${AWS_EB_APPLICATION}" \
+            --environment-names "${AWS_EB_ENVIRONMENT}"

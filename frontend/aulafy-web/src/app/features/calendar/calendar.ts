@@ -95,6 +95,10 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
 
         <section class="bg-surface rounded-xl border border-outline-variant shadow-sm p-5 mb-5">
           <h3 class="font-semibold text-primary mb-4">Crear nuevo evento</h3>
+          <div *ngIf="isRestrictedTeacher" class="mb-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+            <span class="font-bold mt-0.5">!</span>
+            <span>Los eventos de tipo REUNION, ACTIVIDAD y COMUNICADO son exclusivos del profesor jefe. Puedes crear eventos de tipo PRUEBA y TAREA.</span>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input [(ngModel)]="eventDraft.title" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5" placeholder="Título" />
             <select
@@ -102,7 +106,7 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
               (ngModelChange)="eventDraft.type = $event"
               class="bg-background border border-outline-variant rounded-lg px-3 py-2.5"
             >
-              <option *ngFor="let type of eventTypes" [value]="type">{{ type }}</option>
+              <option *ngFor="let type of visibleEventTypes" [value]="type">{{ type }}</option>
             </select>
             <input [(ngModel)]="eventDraft.startAt" type="datetime-local" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5" />
             <input [(ngModel)]="eventDraft.endAt" type="datetime-local" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5" />
@@ -174,7 +178,24 @@ export class CalendarComponent implements OnInit {
   error = '';
   actionMessage = '';
   saving = false;
-  eventTypes: EventType[] = ['PRUEBA', 'TAREA', 'REUNION', 'ACTIVIDAD', 'COMUNICADO'];
+  readonly eventTypes: EventType[] = ['PRUEBA', 'TAREA', 'REUNION', 'ACTIVIDAD', 'COMUNICADO'];
+  private readonly generalEventTypes = ['REUNION', 'ACTIVIDAD', 'COMUNICADO'];
+
+  get selectedCourseRole(): string | null {
+    if (!this.selectedCourseId) return null;
+    return this.courses.find(c => c.id === this.selectedCourseId)?.myRoleInCourse ?? null;
+  }
+
+  get isRestrictedTeacher(): boolean {
+    const role = this.selectedCourseRole;
+    return role === 'SUBJECT_TEACHER' || role === 'ASSISTANT';
+  }
+
+  get visibleEventTypes(): EventType[] {
+    return this.isRestrictedTeacher
+      ? ['PRUEBA', 'TAREA']
+      : this.eventTypes;
+  }
   eventDraft: {
     title: string;
     description: string;
@@ -207,6 +228,7 @@ export class CalendarComponent implements OnInit {
   }
 
   get canCreateEvent(): boolean {
+    if (this.isRestrictedTeacher && this.generalEventTypes.includes(this.eventDraft.type)) return false;
     return Boolean(this.selectedCourseId && this.eventDraft.title.trim() && this.eventDraft.description.trim() && this.eventDraft.startAt);
   }
 
@@ -228,6 +250,9 @@ export class CalendarComponent implements OnInit {
       return;
     }
     this.selectedCourseId = normalized;
+    if (this.isRestrictedTeacher && this.generalEventTypes.includes(this.eventDraft.type)) {
+      this.eventDraft.type = 'PRUEBA';
+    }
     this.actionMessage = '';
     this.loadEvents(normalized);
   }

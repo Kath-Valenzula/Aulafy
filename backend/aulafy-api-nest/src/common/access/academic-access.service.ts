@@ -61,6 +61,20 @@ export class AcademicAccessService {
     throw new ForbiddenException('No tienes permiso para registrar informacion academica de este estudiante')
   }
 
+  async assertTeacherCourseRole(
+    user: JwtPayload,
+    courseId: number,
+    allowedRoles: string[]
+  ): Promise<void> {
+    if (isAdminOrSchool(user.role)) {
+      return
+    }
+    const roleInCourse = await this.getTeacherRoleInCourse(courseId, user.sub)
+    if (!roleInCourse || !allowedRoles.includes(roleInCourse)) {
+      throw new ForbiddenException('No tienes permiso para esta accion en el curso')
+    }
+  }
+
   async findVisibleCourseIds(user: JwtPayload): Promise<number[]> {
     if (isAdminOrSchool(user.role)) {
       return []
@@ -162,6 +176,13 @@ export class AcademicAccessService {
     }
 
     return false
+  }
+
+  private async getTeacherRoleInCourse(courseId: number, teacherId: number): Promise<string | null> {
+    const record = await this.courseTeacherRepository.findOne({
+      where: { courseId: String(courseId), teacherId: String(teacherId) }
+    })
+    return record?.roleInCourse ?? null
   }
 
   private async existsTeacherInCourse(courseId: number, teacherId: number): Promise<boolean> {

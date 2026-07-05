@@ -35,6 +35,8 @@ import { AuthService } from '../../core/auth/auth.service';
             <span>colegio@aulafy.cl / Colegio1234</span>
             <span>apoderado@aulafy.cl / Apoderado1234</span>
             <span>profesor@aulafy.cl / Profesor1234</span>
+            <span>profesor.jefe@aulafy.cl / ProfesorJefe1234</span>
+            <span>profesor.asignatura@aulafy.cl / ProfesorAsignatura1234</span>
             <span>estudiante@aulafy.cl / Estudiante1234</span>
           </div>
         </form>

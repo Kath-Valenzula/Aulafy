@@ -9,8 +9,11 @@ import { CourseStudentEntity } from '../courses/entities/course-student.entity'
 import { CourseTeacherEntity } from '../courses/entities/course-teacher.entity'
 import { NotificationsService } from '../notifications/notifications.service'
 import { UserEntity } from '../users/entities/user.entity'
+import { RoleName } from '../users/enums/role-name.enum'
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto'
 import { CalendarEventEntity } from './entities/calendar-event.entity'
+
+const GENERAL_EVENT_TYPES: string[] = ['REUNION', 'ACTIVIDAD', 'COMUNICADO']
 
 interface CalendarEventResponse {
   id: number
@@ -66,6 +69,9 @@ export class CalendarService {
 
   async create(courseId: number, request: CreateCalendarEventDto, user: JwtPayload): Promise<CalendarEventResponse> {
     await this.accessService.assertCanManageCourse(user, courseId)
+    if (GENERAL_EVENT_TYPES.includes(request.type) && user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
+    }
     const course = await this.findCourseOrFail(courseId)
     const author = await this.findUserOrFail(user.sub)
 

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AcademicStructureModule } from './academic-structure/academic-structure.module';
 import { AcademicModule } from './academic/academic.module';
 import { AnnotationsModule } from './annotations/annotations.module';
@@ -23,6 +25,10 @@ import { UsersModule } from './users/users.module';
       cache: true,
       validate: validateEnv
     }),
+    ThrottlerModule.forRoot([
+      { name: 'global', ttl: 60_000, limit: 120 },
+      { name: 'login', ttl: 60_000, limit: 10 }
+    ]),
     DatabaseModule,
     HealthModule,
     AuthModule,
@@ -37,6 +43,7 @@ import { UsersModule } from './users/users.module';
     AnnotationsModule,
     NotificationsModule,
     RiskModule
-  ]
+  ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }]
 })
 export class AppModule {}
