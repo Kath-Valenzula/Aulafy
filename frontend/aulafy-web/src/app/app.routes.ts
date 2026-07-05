@@ -145,7 +145,7 @@ export const routes: Routes = [
       {
         path: 'risk',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'COLEGIO'] },
+        data: { roles: ['ADMIN', 'COLEGIO', 'PROFESOR'] },
         loadComponent: () => import('./features/risk/risk').then((m) => m.RiskComponent)
       },
       {

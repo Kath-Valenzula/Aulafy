@@ -7,22 +7,22 @@ import { RolesGuard } from '../../src/common/auth/roles.guard'
 import { RoleName } from '../../src/users/enums/role-name.enum'
 
 describe('RiskController permissions', () => {
-  it('declara acceso a riesgo academico solo para ADMIN y COLEGIO', () => {
+  it('declara acceso a riesgo academico para ADMIN, COLEGIO y PROFESOR', () => {
     const roles = Reflect.getMetadata(ROLES_KEY, RiskController.prototype.academicRisk)
 
-    expect(roles).toEqual([RoleName.ADMIN, RoleName.COLEGIO])
+    expect(roles).toEqual([RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR])
   })
 
-  it.each([RoleName.ADMIN, RoleName.COLEGIO])('permite %s en RolesGuard', (role) => {
-    const guard = buildGuard([RoleName.ADMIN, RoleName.COLEGIO])
+  it.each([RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR])('permite %s en RolesGuard', (role) => {
+    const guard = buildGuard([RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR])
 
     expect(guard.canActivate(contextFor(role))).toBe(true)
   })
 
-  it.each([RoleName.PROFESOR, RoleName.APODERADO, RoleName.ESTUDIANTE])(
+  it.each([RoleName.APODERADO, RoleName.ESTUDIANTE])(
     'deniega %s en RolesGuard',
     (role) => {
-      const guard = buildGuard([RoleName.ADMIN, RoleName.COLEGIO])
+      const guard = buildGuard([RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR])
 
       expect(() => guard.canActivate(contextFor(role))).toThrow(ForbiddenException)
     }

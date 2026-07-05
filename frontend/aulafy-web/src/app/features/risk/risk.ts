@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { catchError, finalize, of, timeout } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { RiskService } from '../../core/services/risk.service';
 import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aulafy.models';
 
@@ -12,9 +13,16 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
   template: `
     <section class="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold text-on-background">Reporte de Riesgo Academico</h2>
+        <h2 class="text-3xl font-bold text-on-background">
+          {{ isProfesor ? 'Alertas de riesgo de mis cursos' : 'Reporte de Riesgo Academico' }}
+        </h2>
         <p class="text-on-surface-variant">
-          Identifica estudiantes con promedio menor a 4.0 o asistencia menor al 85% segun los registros del curso.
+          <ng-container *ngIf="isProfesor">
+            Visualiza los estudiantes en situacion de riesgo academico o de asistencia en los cursos que tienes asignados.
+          </ng-container>
+          <ng-container *ngIf="!isProfesor">
+            Identifica estudiantes con promedio menor a 4.0 o asistencia menor al 85% segun los registros del curso.
+          </ng-container>
         </p>
       </div>
       <button
@@ -129,6 +137,11 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
 export class RiskComponent implements OnInit {
   private readonly riskService = inject(RiskService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly authService = inject(AuthService);
+
+  get isProfesor(): boolean {
+    return this.authService.currentUser?.role === 'PROFESOR';
+  }
 
   report: RiskReportResponse | null = null;
   loading = false;

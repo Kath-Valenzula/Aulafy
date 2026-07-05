@@ -13,7 +13,7 @@ export class RiskController {
   constructor(private readonly riskService: RiskService) {}
 
   @Get('academic')
-  @Roles(RoleName.ADMIN, RoleName.COLEGIO)
+  @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
   academicRisk(@CurrentUser() user: JwtPayload) {
     return this.riskService.academicRisk(user)
   }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -46,6 +46,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   loading = false;
   error = '';
@@ -66,6 +67,7 @@ export class LoginComponent {
         console.error('Error al iniciar sesion', error);
         this.error = 'Credenciales invalidas o servicio no disponible. Intenta nuevamente.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
