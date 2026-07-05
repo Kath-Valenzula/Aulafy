@@ -68,6 +68,15 @@ export class CoursesController {
     return this.coursesService.findStudentsByCourse(courseId, user)
   }
 
+  @Get('courses/:courseId/teachers')
+  @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
+  findTeachersByCourse(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @CurrentUser() user: JwtPayload
+  ) {
+    return this.coursesService.findTeachersByCourse(courseId, user)
+  }
+
   @Post('subjects')
   @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
   createSubject(@Body() request: CreateSubjectDto, @CurrentUser() user: JwtPayload) {

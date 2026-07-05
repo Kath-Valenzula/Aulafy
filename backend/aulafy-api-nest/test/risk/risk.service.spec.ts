@@ -166,6 +166,45 @@ describe('RiskService', () => {
     })
     expect(result.items).toEqual([])
   })
+
+  describe('PROFESOR - acceso filtrado por cursos asignados', () => {
+    const profesor = { sub: 5, email: 'profesor@aulafy.cl', role: RoleName.PROFESOR }
+
+    it('delega la resolucion de cursos visibles a accessService', async () => {
+      const { service, repositories } = buildRiskService({})
+
+      await service.academicRisk(profesor)
+
+      expect(repositories.accessService.findVisibleCourseIds).toHaveBeenCalledWith(profesor)
+      expect(repositories.courseRepository.find).toHaveBeenCalled()
+    })
+
+    it('incluye solo estudiantes de los cursos asignados al profesor', async () => {
+      const cursoAsignado = course({ id: '10' })
+      const { service } = buildRiskService({
+        courses: [cursoAsignado],
+        enrollments: [{ courseId: '10', studentId: '1' }],
+        students: [student({ id: '1' })]
+      })
+
+      const result = await service.academicRisk(profesor)
+
+      expect(result.summary.totalStudents).toBe(1)
+    })
+
+    it('devuelve reporte vacio cuando el profesor no tiene cursos asignados', async () => {
+      const { service } = buildRiskService({
+        courses: [],
+        enrollments: [],
+        students: []
+      })
+
+      const result = await service.academicRisk(profesor)
+
+      expect(result.summary.totalStudents).toBe(0)
+      expect(result.items).toEqual([])
+    })
+  })
 })
 
 function course(overrides: Partial<any> = {}) {

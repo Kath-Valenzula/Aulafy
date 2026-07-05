@@ -45,6 +45,7 @@ export const ROLE_NAVIGATION_ITEMS: RoleNavigationItem[] = [
   { label: 'Asistencia', path: '/app/attendance', icon: 'event_available', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Anotaciones', path: '/app/annotations', icon: 'assignment_late', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Mensajes del curso', path: '/app/chat', icon: 'chat', roles: ['PROFESOR'], layout: 'backoffice' },
+  { label: 'Alertas de riesgo', path: '/app/risk', icon: 'warning', roles: ['PROFESOR'], layout: 'backoffice' },
   { label: 'Notificaciones', path: '/app/notifications', icon: 'notifications_active', roles: ['PROFESOR'], layout: 'backoffice' },
 
   { label: 'Dashboard', path: '/app/guardian', icon: 'home', roles: ['APODERADO', 'ESTUDIANTE'], layout: 'family' },

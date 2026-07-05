@@ -34,6 +34,15 @@ export interface CourseResponse {
   active: boolean;
   studentCount: number;
   teacherCount: number;
+  myRoleInCourse?: string | null;
+  myRoleLabel?: string | null;
+}
+
+export interface CourseTeacherResponse {
+  teacherId: number;
+  teacherName: string;
+  roleInCourse: string;
+  roleLabel: string;
 }
 
 export interface CourseStudentResponse {

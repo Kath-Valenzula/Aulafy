@@ -43,6 +43,9 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
         <div class="bg-surface-container-low p-3 rounded-lg mb-4">
           <p class="font-medium">{{ course.studentCount }} estudiante(s)</p>
           <p class="text-sm text-on-surface-variant">{{ course.teacherCount }} profesor(es) asignado(s)</p>
+          <p *ngIf="course.myRoleLabel" class="text-xs text-primary font-semibold mt-1">
+            Tu rol: {{ course.myRoleLabel }}
+          </p>
         </div>
         <div class="flex gap-2">
           <a *ngIf="canOpenFeed" routerLink="/app/feed" class="flex-1 border border-primary text-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">

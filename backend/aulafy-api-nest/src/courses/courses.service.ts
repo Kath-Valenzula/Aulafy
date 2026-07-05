@@ -24,6 +24,15 @@ interface CourseResponse {
   active: boolean
   studentCount: number
   teacherCount: number
+  myRoleInCourse?: string | null
+  myRoleLabel?: string | null
+}
+
+interface CourseTeacherResponse {
+  teacherId: number
+  teacherName: string
+  roleInCourse: string
+  roleLabel: string
 }
 
 interface SubjectResponse {
@@ -76,19 +85,33 @@ export class CoursesService {
     }
 
     const courseIds = courses.map((course) => Number(course.id))
-    const studentCounts = await this.countStudentsByCourse(courseIds)
-    const teacherCounts = await this.countTeachersByCourse(courseIds)
+    const [studentCounts, teacherCounts, roleMap] = await Promise.all([
+      this.countStudentsByCourse(courseIds),
+      this.countTeachersByCourse(courseIds),
+      user.role === RoleName.PROFESOR
+        ? this.findRolesByCourseForTeacher(courseIds, user.sub)
+        : Promise.resolve(new Map<number, string>())
+    ])
 
-    return courses.map((course) => ({
-      id: Number(course.id),
-      name: course.name,
-      level: course.level,
-      section: course.section,
-      schoolName: course.schoolName,
-      active: course.active,
-      studentCount: studentCounts.get(Number(course.id)) ?? 0,
-      teacherCount: teacherCounts.get(Number(course.id)) ?? 0
-    }))
+    return courses.map((course) => {
+      const id = Number(course.id)
+      const myRoleInCourse = roleMap.get(id) ?? null
+      const response: CourseResponse = {
+        id,
+        name: course.name,
+        level: course.level,
+        section: course.section,
+        schoolName: course.schoolName,
+        active: course.active,
+        studentCount: studentCounts.get(id) ?? 0,
+        teacherCount: teacherCounts.get(id) ?? 0
+      }
+      if (user.role === RoleName.PROFESOR) {
+        response.myRoleInCourse = myRoleInCourse
+        response.myRoleLabel = myRoleInCourse ? this.roleLabelFor(myRoleInCourse) : null
+      }
+      return response
+    })
   }
 
   async findById(id: number, user: JwtPayload): Promise<CourseResponse> {
@@ -98,7 +121,8 @@ export class CoursesService {
       this.courseStudentRepository.count({ where: { courseId: course.id } }),
       this.courseTeacherRepository.count({ where: { courseId: course.id } })
     ])
-    return {
+
+    const response: CourseResponse = {
       id: Number(course.id),
       name: course.name,
       level: course.level,
@@ -108,6 +132,40 @@ export class CoursesService {
       studentCount,
       teacherCount
     }
+
+    if (user.role === RoleName.PROFESOR) {
+      const assignment = await this.courseTeacherRepository.findOne({
+        where: { courseId: course.id, teacherId: String(user.sub) }
+      })
+      response.myRoleInCourse = assignment?.roleInCourse ?? null
+      response.myRoleLabel = assignment ? this.roleLabelFor(assignment.roleInCourse) : null
+    }
+
+    return response
+  }
+
+  async findTeachersByCourse(courseId: number, user: JwtPayload): Promise<CourseTeacherResponse[]> {
+    await this.accessService.assertCanViewCourse(user, courseId)
+    await this.findCourseOrFail(courseId)
+
+    const assignments = await this.courseTeacherRepository.find({
+      where: { courseId: String(courseId) }
+    })
+    if (!assignments.length) {
+      return []
+    }
+
+    const teachers = await this.userRepository.find({
+      where: assignments.map((a) => ({ id: a.teacherId }))
+    })
+    const teachersMap = new Map(teachers.map((t) => [t.id, t]))
+
+    return assignments.map((a) => ({
+      teacherId: Number(a.teacherId),
+      teacherName: teachersMap.get(a.teacherId)?.fullName ?? 'Docente',
+      roleInCourse: a.roleInCourse,
+      roleLabel: this.roleLabelFor(a.roleInCourse)
+    }))
   }
 
   async create(request: CreateCourseDto): Promise<CourseResponse> {
@@ -418,5 +476,19 @@ export class CoursesService {
     }
 
     return students
+  }
+
+  private roleLabelFor(roleInCourse: string): string {
+    if (roleInCourse === 'HEAD_TEACHER') return 'Profesor jefe'
+    if (roleInCourse === 'ASSISTANT') return 'Asistente'
+    return 'Profesor de asignatura'
+  }
+
+  private async findRolesByCourseForTeacher(courseIds: number[], teacherId: number): Promise<Map<number, string>> {
+    if (!courseIds.length) return new Map()
+    const rows = await this.courseTeacherRepository.find({
+      where: courseIds.map((id) => ({ courseId: String(id), teacherId: String(teacherId) }))
+    })
+    return new Map(rows.map((row) => [Number(row.courseId), row.roleInCourse]))
   }
 }

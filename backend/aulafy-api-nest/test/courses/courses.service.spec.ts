@@ -1,10 +1,12 @@
+import { getMetadataArgsStorage } from 'typeorm'
 import { CoursesService } from '../../src/courses/courses.service'
+import { CourseTeacherEntity } from '../../src/courses/entities/course-teacher.entity'
 import { RoleName } from '../../src/users/enums/role-name.enum'
 
 describe('CoursesService', () => {
   let courseRepository: { findOne: jest.Mock }
   let courseStudentRepository: { find: jest.Mock; count: jest.Mock; createQueryBuilder: jest.Mock }
-  let courseTeacherRepository: { count: jest.Mock; createQueryBuilder: jest.Mock }
+  let courseTeacherRepository: { count: jest.Mock; createQueryBuilder: jest.Mock; find: jest.Mock; findOne: jest.Mock }
   let subjectRepository: Record<string, jest.Mock>
   let userRepository: Record<string, jest.Mock>
   let levelRepository: { find: jest.Mock }
@@ -27,7 +29,9 @@ describe('CoursesService', () => {
     }
     courseTeacherRepository = {
       count: jest.fn(),
-      createQueryBuilder: jest.fn()
+      createQueryBuilder: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn().mockResolvedValue(null)
     }
     subjectRepository = {}
     userRepository = {}
@@ -98,6 +102,54 @@ describe('CoursesService', () => {
         studentUserId: 19
       }
     ])
+  })
+
+  describe('role_in_course', () => {
+    it('findTeachersByCourse devuelve HEAD_TEACHER y SUBJECT_TEACHER con sus labels', async () => {
+      courseTeacherRepository.find = jest.fn().mockResolvedValue([
+        { courseId: '10', teacherId: '7', roleInCourse: 'HEAD_TEACHER' },
+        { courseId: '10', teacherId: '8', roleInCourse: 'SUBJECT_TEACHER' }
+      ])
+      userRepository.find = jest.fn().mockResolvedValue([
+        { id: '7', fullName: 'Juan Perez' },
+        { id: '8', fullName: 'Maria Lopez' }
+      ])
+
+      const result = await service.findTeachersByCourse(10, {
+        sub: 1,
+        email: 'admin@aulafy.cl',
+        role: RoleName.ADMIN
+      })
+
+      expect(result).toEqual([
+        { teacherId: 7, teacherName: 'Juan Perez', roleInCourse: 'HEAD_TEACHER', roleLabel: 'Profesor jefe' },
+        { teacherId: 8, teacherName: 'Maria Lopez', roleInCourse: 'SUBJECT_TEACHER', roleLabel: 'Profesor de asignatura' }
+      ])
+    })
+
+    it('findTeachersByCourse devuelve label Asistente para ASSISTANT', async () => {
+      courseTeacherRepository.find = jest.fn().mockResolvedValue([
+        { courseId: '10', teacherId: '9', roleInCourse: 'ASSISTANT' }
+      ])
+      userRepository.find = jest.fn().mockResolvedValue([
+        { id: '9', fullName: 'Carlos Ayala' }
+      ])
+
+      const result = await service.findTeachersByCourse(10, {
+        sub: 1,
+        email: 'admin@aulafy.cl',
+        role: RoleName.ADMIN
+      })
+
+      expect(result[0]).toMatchObject({ roleInCourse: 'ASSISTANT', roleLabel: 'Asistente' })
+    })
+
+    it('la entidad CourseTeacherEntity declara default SUBJECT_TEACHER para roleInCourse', () => {
+      const col = getMetadataArgsStorage().columns.find(
+        (c) => c.target === CourseTeacherEntity && c.propertyName === 'roleInCourse'
+      )
+      expect((col?.options as any)?.default).toBe('SUBJECT_TEACHER')
+    })
   })
 
   it('mantiene la lista completa para PROFESOR autorizado', async () => {
