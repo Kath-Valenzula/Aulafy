@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -36,6 +37,15 @@ async function bootstrap(): Promise<void> {
       transform: true
     })
   );
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Aulafy API')
+    .setDescription('API REST del sistema académico Aulafy')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
   const port = Number(process.env.PORT ?? 8080);
   await app.listen(port);

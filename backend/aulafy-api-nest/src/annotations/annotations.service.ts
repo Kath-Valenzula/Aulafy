@@ -13,6 +13,7 @@ import { AnnotationsQueryDto } from './dto/annotations-query.dto'
 import { CreateAnnotationDto } from './dto/create-annotation.dto'
 import { StudentAnnotationEntity } from './entities/student-annotation.entity'
 import { AnnotationStatus } from './enums/annotation-status.enum'
+import { AnnotationType } from './enums/annotation-type.enum'
 
 interface AnnotationResponse {
   id: number
@@ -80,6 +81,9 @@ export class AnnotationsService {
     const student = await this.findStudentOrFail(request.studentId)
     const course = await this.findCourseOrFail(request.courseId)
     await this.accessService.assertCanManageStudentRecord(user, request.studentId, request.courseId)
+    if (request.type === AnnotationType.CONDUCTUAL && user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, request.courseId, ['HEAD_TEACHER'])
+    }
 
     const linkCount = await this.courseStudentRepository.count({
       where: {

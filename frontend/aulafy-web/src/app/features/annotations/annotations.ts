@@ -72,6 +72,10 @@ import {
 
       <section class="bg-surface rounded-xl border border-outline-variant shadow-sm p-5 mb-5">
         <h3 class="font-semibold text-primary mb-4">Registrar nueva anotación</h3>
+        <div *ngIf="isRestrictedTeacher" class="mb-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+          <span class="font-bold mt-0.5">!</span>
+          <span>Las anotaciones conductuales son exclusivas del profesor jefe. Solo puedes registrar anotaciones académicas y de comunicación.</span>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <select
             class="bg-surface-bright border border-outline-variant rounded-md px-3 py-2"
@@ -86,7 +90,7 @@ import {
             [ngModel]="annotationDraft.type"
             (ngModelChange)="annotationDraft.type = $event"
           >
-            <option *ngFor="let type of annotationTypes" [value]="type">{{ type }}</option>
+            <option *ngFor="let type of visibleAnnotationTypes" [value]="type">{{ type }}</option>
           </select>
           <select
             class="bg-surface-bright border border-outline-variant rounded-md px-3 py-2"
@@ -170,8 +174,24 @@ export class AnnotationsComponent implements OnInit {
   actionMessage = '';
   saving = false;
 
-  annotationTypes: AnnotationType[] = ['ACADEMICA', 'CONDUCTUAL', 'COMUNICACION'];
-  annotationSeverities: AnnotationSeverity[] = ['LEVE', 'MEDIA', 'ALTA'];
+  readonly annotationTypes: AnnotationType[] = ['ACADEMICA', 'CONDUCTUAL', 'COMUNICACION'];
+  readonly annotationSeverities: AnnotationSeverity[] = ['LEVE', 'MEDIA', 'ALTA'];
+
+  get selectedCourseRole(): string | null {
+    if (!this.selectedCourseId) return null;
+    return this.courses.find(c => c.id === this.selectedCourseId)?.myRoleInCourse ?? null;
+  }
+
+  get isRestrictedTeacher(): boolean {
+    const role = this.selectedCourseRole;
+    return role === 'SUBJECT_TEACHER' || role === 'ASSISTANT';
+  }
+
+  get visibleAnnotationTypes(): AnnotationType[] {
+    return this.isRestrictedTeacher
+      ? ['ACADEMICA', 'COMUNICACION']
+      : this.annotationTypes;
+  }
   annotationDraft: {
     studentId: number | null;
     type: AnnotationType;
@@ -187,6 +207,7 @@ export class AnnotationsComponent implements OnInit {
   };
 
   get canCreateAnnotation(): boolean {
+    if (this.isRestrictedTeacher && this.annotationDraft.type === 'CONDUCTUAL') return false;
     return Boolean(this.selectedCourseId && this.annotationDraft.studentId && this.annotationDraft.title.trim() && this.annotationDraft.description.trim());
   }
 
@@ -216,6 +237,9 @@ export class AnnotationsComponent implements OnInit {
       return;
     }
     this.selectedCourseId = normalized;
+    if (this.isRestrictedTeacher && this.annotationDraft.type === 'CONDUCTUAL') {
+      this.annotationDraft.type = 'COMUNICACION';
+    }
     this.selectedStudentId = null;
     this.actionMessage = '';
     this.loadStudentsAndAnnotations();

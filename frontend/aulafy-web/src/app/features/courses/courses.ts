@@ -32,7 +32,13 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
         *ngFor="let course of courses"
         class="bg-surface rounded-xl border border-outline-variant shadow-sm p-5 relative overflow-hidden"
       >
-        <div class="absolute top-0 left-0 h-1 w-full bg-primary"></div>
+        <div class="absolute top-0 left-0 h-1 w-full"
+          [ngClass]="{
+            'bg-[#1A365D]': course.myRoleInCourse === 'HEAD_TEACHER',
+            'bg-[#6366F1]': course.myRoleInCourse === 'SUBJECT_TEACHER',
+            'bg-outline-variant': course.myRoleInCourse === 'ASSISTANT',
+            'bg-primary': !course.myRoleInCourse
+          }"></div>
         <div class="flex justify-between items-start mb-4">
           <div>
             <h3 class="text-lg font-semibold">{{ course.name }}</h3>
@@ -43,9 +49,29 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
         <div class="bg-surface-container-low p-3 rounded-lg mb-4">
           <p class="font-medium">{{ course.studentCount }} estudiante(s)</p>
           <p class="text-sm text-on-surface-variant">{{ course.teacherCount }} profesor(es) asignado(s)</p>
-          <p *ngIf="course.myRoleLabel" class="text-xs text-primary font-semibold mt-1">
-            Tu rol: {{ course.myRoleLabel }}
-          </p>
+          <ng-container *ngIf="course.myRoleInCourse">
+            <span *ngIf="course.myRoleInCourse === 'HEAD_TEACHER'"
+              class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold bg-[#1A365D] text-white">
+              Profesor jefe del curso
+            </span>
+            <span *ngIf="course.myRoleInCourse === 'SUBJECT_TEACHER'"
+              class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#E0E7FF] text-[#3730A3]">
+              Profesor de asignatura
+            </span>
+            <span *ngIf="course.myRoleInCourse === 'ASSISTANT'"
+              class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-surface-variant text-on-surface-variant">
+              Asistente
+            </span>
+            <p *ngIf="course.myRoleInCourse === 'HEAD_TEACHER'" class="text-xs text-on-surface-variant mt-1">
+              Gestión completa: anotaciones, reuniones y comunicados del curso.
+            </p>
+            <p *ngIf="course.myRoleInCourse === 'SUBJECT_TEACHER'" class="text-xs text-on-surface-variant mt-1">
+              Evaluaciones, notas, asistencia y anotaciones académicas.
+            </p>
+            <p *ngIf="course.myRoleInCourse === 'ASSISTANT'" class="text-xs text-on-surface-variant mt-1">
+              Acceso de consulta al curso.
+            </p>
+          </ng-container>
         </div>
         <div class="flex gap-2">
           <a *ngIf="canOpenFeed" routerLink="/app/feed" class="flex-1 border border-primary text-primary rounded-lg px-3 py-2 text-center text-sm font-semibold">
