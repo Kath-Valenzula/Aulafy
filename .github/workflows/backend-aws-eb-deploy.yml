@@ -33,7 +33,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: backend/aulafy-api-nest
-        run: npm ci
+        # npm install usado temporalmente: package-lock.json tiene entradas nativas
+        # (@emnapi/core, @emnapi/runtime) que npm ci rechaza en Linux por desincronizacion
+        # de plataforma. Mejora futura: regenerar package-lock en Linux y volver a npm ci.
+        run: npm install --no-audit --no-fund
 
       - name: Run backend tests
         working-directory: backend/aulafy-api-nest
