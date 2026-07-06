@@ -75,22 +75,28 @@ Matriz completa: `7_Matriz_pruebas_negras.png`
 | Fix UI Angular 21 (`ChangeDetectorRef`) | OK |
 | Vercel + proxy Beanstalk | OK |
 | Workflow deploy backend EB | OK (en repo) |
+| Redeploy AWS S3 + EB (cuenta Briceño) | OK — jul 2026 |
+| Evidencias AWS actualizadas | OK — `evidencias/aws/` |
 
 ---
 
 ## Pendiente para entrega final
 
-- [ ] **Push** rama `semana-7-new` a GitHub
-- [ ] Captura GitHub post-push (`1_GitHub_rama_semana7_new.png`)
-- [ ] **Merge** `semana-7-new` → `develop` en GitHub
+- [ ] **Push** rama `semana-7-new` a GitHub (incluye scripts AWS + evidencias nuevas)
+- [ ] Captura GitHub post-push (`1_GitHub_rama_semana7_new.png`) — script: `node scripts/semana-7-github-screenshot.mjs`
+- [ ] **Merge** `semana-7-new` → `develop` en GitHub (coordinar con Kath)
+- [ ] Regenerar DOCX tras push (`python3 scripts/generate-docx-semana7.py`)
 - [ ] **Subir DOCX** a plataforma Duoc UC
-- [ ] *(Opcional)* Redeploy frontend AWS S3
+- [x] Redeploy frontend + backend AWS con código Semana 7
+- [x] Evidencias AWS desde entorno desplegado (6 jul 2026)
 
 ---
 
 ## URLs de revisión
 
 - **Vercel:** https://aulafy-web.vercel.app
-- **Backend AWS:** http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health
+- **Frontend AWS (Semana 7):** http://aulafy-frontend-605134438568.s3-website.us-east-2.amazonaws.com
+- **Backend AWS (Semana 7):** http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com/api/health
+- **Backend AWS (Kath):** http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health
 
 **Cuentas demo:** admin@aulafy.cl / Admin1234 · profesor@aulafy.cl / Profesor1234 · apoderado@aulafy.cl / Apoderado1234

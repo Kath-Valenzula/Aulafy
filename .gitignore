@@ -15,6 +15,7 @@ graphify-out/
 .env.*
 .env.local
 !.env.example
+scripts/aws/staging.local.env
 application-local.properties
 application-local.yml
 variables.local.ps1

@@ -47,10 +47,12 @@ def main() -> None:
 
     add_paragraphs(
         doc.tables[2].rows[1].cells[0],
-        "Frontend (Vercel — versión actual): https://aulafy-web.vercel.app",
+        "Frontend (Vercel — HTTPS): https://aulafy-web.vercel.app",
+        "Frontend AWS S3: http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com",
         "Backend AWS Elastic Beanstalk: http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api",
         "Health check: http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health",
         "Vercel consume el backend AWS mediante proxy /api. Base de datos: Amazon RDS MySQL 8.x.",
+        "Respaldo (si no alcanza redeploy en AWS del equipo): frontend http://aulafy-frontend-605134438568.s3-website.us-east-2.amazonaws.com — backend http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com/api",
     )
 
     avance_blocks = [
@@ -79,7 +81,7 @@ def main() -> None:
         "admin@aulafy.cl / Admin1234 | colegio@aulafy.cl / Colegio1234 | profesor@aulafy.cl / Profesor1234 | apoderado@aulafy.cl / Apoderado1234 | estudiante@aulafy.cl / Estudiante1234",
         "",
         "7. LIMITACIONES",
-        "Chat sin tiempo real; moderación de chat no implementada; redeploy frontend S3 pendiente de credenciales AWS.",
+        "Chat sin tiempo real; moderación de chat no implementada; S3 sin HTTPS (CloudFront proyectado).",
     ]
 
     add_paragraphs(doc.tables[3].rows[1].cells[0], *avance_blocks)
@@ -91,6 +93,10 @@ def main() -> None:
         ("6_Cobertura_tests_backend.png", "Cobertura Jest — 56 tests"),
         ("7_Matriz_pruebas_negras.png", "Matriz pruebas caja negra y gris"),
         ("8_Build_frontend_OK.png", "Build frontend exitoso"),
+        ("aws/2_Frontend_AWS_login.png", "Login — AWS S3 Semana 7"),
+        ("aws/3_Chat_apoderado_funcionando_AWS.png", "Chat apoderado — AWS"),
+        ("aws/4_Riesgo_academico_colegio_AWS.png", "Riesgo académico — AWS COLEGIO"),
+        ("aws/5_Backend_AWS_health.png", "Health backend — AWS EB"),
         ("vercel/9_Vercel_profesor_riesgo_academico.png", "Riesgo académico — rol PROFESOR"),
         ("vercel/10_Vercel_apoderado_dashboard_mensajes.png", "Dashboard apoderado — Mensajes del curso"),
         ("vercel/4_Vercel_admin_chat_funcionando.png", "Chat — Vercel + Beanstalk"),

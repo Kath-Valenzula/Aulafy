@@ -57,24 +57,31 @@ Los avances de Semana 7 se respaldan en la rama **`develop`**, con trazabilidad 
 
 | Componente | URL |
 |------------|-----|
-| **Frontend (Vercel — versión actual)** | https://aulafy-web.vercel.app |
-| **Frontend (AWS S3 — build anterior)** | http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com |
+| **Frontend (Vercel — HTTPS)** | https://aulafy-web.vercel.app |
+| **Frontend (AWS S3)** | http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com |
 | **Backend (AWS Elastic Beanstalk)** | http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api |
 | **Health check (directo)** | http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health |
 | **Health vía Vercel (proxy)** | https://aulafy-web.vercel.app/api/health |
 
+**Entorno de respaldo** (misma versión Semana 7, por si no alcanza el redeploy en AWS del equipo):
+
+| Componente | URL |
+|------------|-----|
+| Frontend AWS S3 (respaldo) | http://aulafy-frontend-605134438568.s3-website.us-east-2.amazonaws.com |
+| Backend EB (respaldo) | http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com/api |
+| Health (respaldo) | http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com/api/health |
+
 El sistema Aulafy se mantiene desplegado en un **entorno de demostración académica (staging)** en AWS:
 
-- **Frontend principal de revisión:** Vercel (Angular compilado con build `vercel`, proxy `/api` hacia Elastic Beanstalk).
-- **Frontend legacy:** Amazon S3 Static Website (versión anterior sin fix UI).
-- **Backend:** AWS Elastic Beanstalk (API NestJS).
+- **Frontend principal de revisión:** Vercel (HTTPS) o AWS S3 del equipo.
+- **Backend:** AWS Elastic Beanstalk (API NestJS) — entorno Kath.
 - **Base de datos:** Amazon RDS MySQL 8.x.
 
 El acceso permite revisar inicio de sesión con usuarios demo, navegación diferenciada por roles, dashboards y módulos académicos implementados. El endpoint `/api/health` confirma que el backend está activo.
 
 **Declaración de entorno:** staging académico, no producción final. Vercel sirve HTTPS; S3 utiliza HTTP. Para un entorno productivo se proyecta Amazon CloudFront con certificado HTTPS (AWS Certificate Manager).
 
-**Nota Semana 7:** El frontend en S3 no fue redeployado (GitHub Actions sin credenciales AWS). Vercel evidencia la versión actual del MVP con chat y riesgo académico operativos contra el mismo backend Beanstalk.
+**Nota Semana 7:** El frontend en S3 del equipo puede requerir redeploy (GitHub Actions necesita variables en environment `staging`). Vercel evidencia la versión actual del MVP con chat y riesgo académico operativos contra el backend Beanstalk. Existe un entorno AWS de respaldo con la versión Semana 7 desplegada (ver tabla arriba). Evidencias en `docs/semana-7/evidencias/`.
 
 ---
 
@@ -317,7 +324,7 @@ Pruebas de flujos que cruzan frontend, API y base de datos:
 | Build frontend Vercel | `npm run build:vercel` | ✅ OK |
 | Health AWS | GET `/api/health` | ✅ OK — status UP |
 | Frontend Vercel accesible | Navegador | ✅ OK — https://aulafy-web.vercel.app |
-| Frontend AWS S3 | Navegador | ⚠️ Parcial — chat/riesgo en build antiguo |
+| Frontend AWS S3 | Navegador | ✅ OK — build staging Semana 7 (chat, riesgo, login) |
 
 ### 3.7 Documentos y archivos actualizados
 
@@ -399,7 +406,7 @@ Capturas de pantalla en `docs/semana-7/evidencias/`:
 
 | # | Archivo | Descripción | Estado |
 |---|---------|-------------|--------|
-| 1 | `1_GitHub_rama_semana7_new.png` | Repositorio y rama Semana 7 | ✅ |
+| 1 | `1_GitHub_rama_semana7_new.png` | Repositorio y rama Semana 7 | ⏳ Tras push a GitHub |
 | 2 | `2_Frontend_Vercel_login.png` / `2_Frontend_AWS_login.png` | Login en nube | ✅ |
 | 3 | `3_Chat_apoderado_funcionando.png` / `vercel/7_Vercel_apoderado_chat_funcionando.png` | Chat apoderado | ✅ |
 | 4 | `4_Riesgo_academico_colegio.png` / `vercel/6_Vercel_colegio_riesgo_academico.png` | Reporte de riesgo | ✅ |
@@ -416,10 +423,10 @@ Esta sección resume las modificaciones técnicas que el equipo debe completar a
 
 | Prioridad | Tarea | Tipo |
 |-----------|-------|------|
-| Alta | Redeploy AWS con versión actual de `develop` | Infra |
-| Alta | Aplicar migraciones RDS si BD es anterior | Infra |
-| Alta | Ejecutar y documentar pruebas (blanca/negra/gris) | QA |
-| Alta | Completar marcadores `[PENDIENTE]` en este documento | Doc |
+| Alta | ~~Redeploy AWS con versión actual de `develop`~~ | Infra — ✅ hecho (cuenta Briceño, jul 2026) |
+| Alta | ~~Aplicar migraciones RDS si BD es anterior~~ | Infra — ✅ schema+seed+migración 20260705 |
+| Alta | ~~Ejecutar y documentar pruebas (blanca/negra/gris)~~ | QA — ✅ 56 tests + 17 casos manuales |
+| Alta | ~~Completar marcadores `[PENDIENTE]` en este documento~~ | Doc — ✅ |
 | Media | Actualizar `backend/aulafy-api-nest/README.md` (chat en MVP) | Doc |
 | Media | Agregar sección Semana 7 en `README.md` raíz | Doc |
 | Media | Crear `database/mysql/README.md` (guía migraciones) | Doc |

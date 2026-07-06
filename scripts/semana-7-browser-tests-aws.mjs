@@ -1,14 +1,32 @@
 import { chromium } from 'playwright';
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT = join(__dirname, '../docs/semana-7/evidencias/aws');
+const ROOT = join(__dirname, '..');
+const OUT = join(ROOT, 'docs/semana-7/evidencias/aws');
+const ENV_FILE = join(ROOT, 'scripts/aws/staging.local.env');
 mkdirSync(OUT, { recursive: true });
 
-const BASE = 'http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com';
-const HEALTH = 'http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health';
+function loadStagingEnv() {
+  try {
+    for (const line of readFileSync(ENV_FILE, 'utf8').split('\n')) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (m) process.env[m[1]] = m[2].trim();
+    }
+  } catch {
+    console.warn('No se encontró staging.local.env; usando URLs por defecto.');
+  }
+}
+
+loadStagingEnv();
+
+const BASE = (process.env.FRONTEND_URL || 'http://aulafy-frontend-605134438568.s3-website.us-east-2.amazonaws.com').replace(/\/$/, '');
+const HEALTH = process.env.HEALTH_URL || `${(process.env.EB_URL || 'http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com').replace(/\/$/, '')}/api/health`;
+
+console.log('Frontend AWS:', BASE);
+console.log('Health:', HEALTH);
 
 async function shot(page, name) {
   await page.screenshot({ path: join(OUT, name), fullPage: true });
@@ -139,4 +157,16 @@ await page.waitForURL(/login/, { timeout: 15000 }).catch(() => {});
 await shot(page, '2_Frontend_AWS_login.png');
 
 await browser.close();
+
+// Alias numerados en carpeta raíz evidencias/
+const aliases = [
+  '2_Frontend_AWS_login.png',
+  '3_Chat_apoderado_funcionando_AWS.png',
+  '4_Riesgo_academico_colegio_AWS.png',
+  '5_Backend_AWS_health.png',
+];
+for (const name of aliases) {
+  copyFileSync(join(OUT, name), join(ROOT, 'docs/semana-7/evidencias', name));
+}
+
 console.log('AWS screenshots saved to', OUT);

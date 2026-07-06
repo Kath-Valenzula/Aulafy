@@ -58,9 +58,16 @@
 
 ### Carpeta AWS (`evidencias/aws/`)
 
-20 capturas adicionales con prefijo `AWS_BN-*` y `AWS_BG-*`.
+20 capturas contra el entorno AWS **actualizado** (cuenta `605134438568`, jul 2026):
 
-Script: `node scripts/semana-7-browser-tests-aws.mjs`
+- Frontend: `http://aulafy-frontend-605134438568.s3-website.us-east-2.amazonaws.com`
+- Backend: `http://aulafy-api-staging-sbriceno.eba-57zmbb7c.us-east-2.elasticbeanstalk.com`
+
+Script (lee URLs desde `scripts/aws/staging.local.env`):
+
+```bash
+node scripts/semana-7-browser-tests-aws.mjs
+```
 
 ### Carpeta Vercel (`evidencias/vercel/`)
 
