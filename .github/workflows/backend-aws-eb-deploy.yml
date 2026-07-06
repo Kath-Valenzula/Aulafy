@@ -7,18 +7,18 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
-  AWS_EB_APPLICATION: ${{ vars.AWS_EB_APPLICATION }}
-  AWS_EB_ENVIRONMENT: ${{ vars.AWS_EB_ENVIRONMENT }}
-  AWS_EB_DEPLOY_BUCKET: ${{ vars.AWS_EB_DEPLOY_BUCKET }}
-
 jobs:
   deploy:
     name: Build and deploy backend to Elastic Beanstalk
     runs-on: ubuntu-latest
     environment: staging
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+      AWS_EB_APPLICATION: ${{ vars.AWS_EB_APPLICATION }}
+      AWS_EB_ENVIRONMENT: ${{ vars.AWS_EB_ENVIRONMENT }}
+      AWS_EB_DEPLOY_BUCKET: ${{ vars.AWS_EB_DEPLOY_BUCKET }}
 
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: "backend/aulafy-api-nest/.nvmrc"
           cache: npm
           cache-dependency-path: backend/aulafy-api-nest/package-lock.json
 
@@ -43,11 +43,20 @@ jobs:
         working-directory: backend/aulafy-api-nest
         run: npm run build
 
+      - name: Validate deployment variables
+        run: |
+          test -n "${{ vars.AWS_REGION }}"
+          test -n "${{ vars.AWS_ROLE_TO_ASSUME }}"
+          test -n "${{ vars.AWS_EB_APPLICATION }}"
+          test -n "${{ vars.AWS_EB_ENVIRONMENT }}"
+          test -n "${{ vars.AWS_EB_DEPLOY_BUCKET }}"
+          echo "Deployment variables are present."
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
 
       - name: Create Procfile
         working-directory: backend/aulafy-api-nest
