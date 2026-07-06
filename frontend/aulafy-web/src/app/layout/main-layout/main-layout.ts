@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { RoleNavigationItem, navigationForRole } from '../../core/navigation/role-navigation';
@@ -81,6 +82,13 @@ export class MainLayoutComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly teacherPermissions = inject(TeacherPermissionsService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  constructor() {
+    this.teacherPermissions.permissions$.pipe(
+      takeUntilDestroyed(inject(DestroyRef))
+    ).subscribe(() => this.cdr.markForCheck());
+  }
 
   ngOnInit(): void {
     this.teacherPermissions.load();

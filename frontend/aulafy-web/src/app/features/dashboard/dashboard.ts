@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
@@ -58,6 +59,13 @@ interface DashboardContext {
 export class DashboardComponent {
   readonly auth = inject(AuthService);
   private readonly teacherPermissions = inject(TeacherPermissionsService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  constructor() {
+    this.teacherPermissions.permissions$.pipe(
+      takeUntilDestroyed(inject(DestroyRef))
+    ).subscribe(() => this.cdr.markForCheck());
+  }
 
   get context(): DashboardContext {
     const role = this.auth.currentUser?.role;
@@ -98,10 +106,11 @@ export class DashboardComponent {
     if (this.teacherPermissions.isSubjectTeacherOnly) {
       return {
         title: 'Dashboard docente',
-        subtitle: 'Acceso academico a tu asignatura y estudiantes del curso.',
-        focus: 'Acceso de profesor de asignatura. Algunas funciones institucionales estan reservadas para profesor jefe.',
+        subtitle: 'Acceso academico limitado a cursos y estudiantes autorizados.',
+        focus: 'Acceso academico de profesor de asignatura. Algunas funciones institucionales estan reservadas para profesor jefe.',
         actions: [
           { label: 'Cursos asignados', description: 'Consultar cursos donde tienes asignatura.', icon: 'school', path: '/app/courses' },
+          { label: 'Muro academico', description: 'Revisar publicaciones y comunicados del curso.', icon: 'dynamic_feed', path: '/app/feed' },
           { label: 'Calendario', description: 'Revisar pruebas y tareas programadas.', icon: 'calendar_month', path: '/app/calendar' },
           { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar notas de tu asignatura.', icon: 'grade', path: '/app/academic' },
           { label: 'Asistencia', description: 'Registrar asistencia basica del curso.', icon: 'event_available', path: '/app/attendance' },
