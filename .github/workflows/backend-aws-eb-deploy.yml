@@ -66,12 +66,19 @@ jobs:
         run: |
           echo "web: node dist/main.js" > Procfile
 
+      - name: Prepare version label
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          VERSION_LABEL="backend-${SHORT_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ZIP_NAME="${VERSION_LABEL}.zip"
+          echo "VERSION_LABEL=${VERSION_LABEL}" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
+          echo "Using version label: ${VERSION_LABEL}"
+
       - name: Package application for Elastic Beanstalk
         working-directory: backend/aulafy-api-nest
-        env:
-          VERSION_LABEL: ${{ github.sha }}
         run: |
-          zip -r "deploy-${VERSION_LABEL}.zip" \
+          zip -r "${ZIP_NAME}" \
             dist/ \
             package.json \
             package-lock.json \
@@ -79,26 +86,20 @@ jobs:
 
       - name: Upload artifact to S3
         working-directory: backend/aulafy-api-nest
-        env:
-          VERSION_LABEL: ${{ github.sha }}
         run: |
           aws s3 cp \
-            "deploy-${VERSION_LABEL}.zip" \
-            "s3://${AWS_EB_DEPLOY_BUCKET}/aulafy-api/${VERSION_LABEL}.zip"
+            "${ZIP_NAME}" \
+            "s3://${AWS_EB_DEPLOY_BUCKET}/aulafy-api/${ZIP_NAME}"
 
       - name: Create Elastic Beanstalk application version
-        env:
-          VERSION_LABEL: ${{ github.sha }}
         run: |
           aws elasticbeanstalk create-application-version \
             --application-name "${AWS_EB_APPLICATION}" \
             --version-label "${VERSION_LABEL}" \
-            --source-bundle "S3Bucket=${AWS_EB_DEPLOY_BUCKET},S3Key=aulafy-api/${VERSION_LABEL}.zip" \
+            --source-bundle "S3Bucket=${AWS_EB_DEPLOY_BUCKET},S3Key=aulafy-api/${ZIP_NAME}" \
             --no-auto-create-application
 
       - name: Deploy to Elastic Beanstalk environment
-        env:
-          VERSION_LABEL: ${{ github.sha }}
         run: |
           aws elasticbeanstalk update-environment \
             --application-name "${AWS_EB_APPLICATION}" \
