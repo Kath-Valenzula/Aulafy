@@ -309,6 +309,10 @@ export class CoursesService {
     })
     const levelsMap = new Map(levels.map((level) => [level.id, level]))
 
+    const isSubjectTeacherRole =
+      user.role === RoleName.PROFESOR &&
+      (await this.accessService.getTeacherRoleInCourse(courseId, user.sub)) !== 'HEAD_TEACHER'
+
     return visibleStudents.map((student) => ({
       id: Number(student.id),
       firstName: student.firstName,
@@ -316,8 +320,8 @@ export class CoursesService {
       fullName: `${student.firstName} ${student.lastName}`.trim(),
       levelName: levelsMap.get(student.levelId)?.name ?? 'Nivel',
       section: student.section,
-      guardianId: student.guardianId ? Number(student.guardianId) : null,
-      studentUserId: student.studentUserId ? Number(student.studentUserId) : null
+      guardianId: isSubjectTeacherRole ? null : (student.guardianId ? Number(student.guardianId) : null),
+      studentUserId: isSubjectTeacherRole ? null : (student.studentUserId ? Number(student.studentUserId) : null)
     }))
   }
 

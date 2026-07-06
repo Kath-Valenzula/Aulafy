@@ -348,9 +348,15 @@ export class AnnotationsComponent implements OnInit {
         this.annotationDraft.studentId = students[0]?.id ?? null;
         this.loadAnnotations();
       },
-      error: (error) => {
-        console.error('Error al cargar alumnos para anotaciones', error);
-        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+      error: (err) => {
+        console.error('Error al cargar alumnos para anotaciones', err);
+        if (err?.status === 403) {
+          this.students = [];
+          this.annotations = [];
+          this.annotationDraft.studentId = null;
+        } else {
+          this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        }
         this.loading = false;
       }
     });
@@ -374,9 +380,13 @@ export class AnnotationsComponent implements OnInit {
           this.annotations = annotations;
           this.loading = false;
         },
-        error: (error) => {
-          console.error('Error al cargar anotaciones', error);
-          this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        error: (err) => {
+          console.error('Error al cargar anotaciones', err);
+          if (err?.status === 403) {
+            this.annotations = [];
+          } else {
+            this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+          }
           this.loading = false;
         }
       });

@@ -410,9 +410,16 @@ export class AttendanceComponent implements OnInit {
         this.selectedStudentId = this.students[0].id;
         this.fetchAttendance(this.students[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar alumnos del curso', error);
-        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+      error: (err) => {
+        console.error('Error al cargar alumnos del curso', err);
+        if (err?.status === 403) {
+          this.students = [];
+          this.records = [];
+          this.summary = null;
+          this.selectedStudentId = null;
+        } else {
+          this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        }
         this.loading = false;
       }
     });
@@ -431,9 +438,14 @@ export class AttendanceComponent implements OnInit {
         this.summary = summary;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar asistencia del alumno', error);
-        this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+      error: (err) => {
+        console.error('Error al cargar asistencia del alumno', err);
+        if (err?.status === 403) {
+          this.records = [];
+          this.summary = null;
+        } else {
+          this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
+        }
         this.loading = false;
       }
     });

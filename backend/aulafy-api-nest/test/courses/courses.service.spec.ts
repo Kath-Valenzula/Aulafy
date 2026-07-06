@@ -12,7 +12,7 @@ describe('CoursesService', () => {
   let levelRepository: { find: jest.Mock }
   let cycleRepository: Record<string, jest.Mock>
   let studentRepository: { find: jest.Mock }
-  let accessService: { assertCanViewCourse: jest.Mock; findVisibleCourseIds: jest.Mock }
+  let accessService: { assertCanViewCourse: jest.Mock; findVisibleCourseIds: jest.Mock; getTeacherRoleInCourse: jest.Mock }
   let service: CoursesService
 
   beforeEach(() => {
@@ -47,7 +47,8 @@ describe('CoursesService', () => {
     }
     accessService = {
       assertCanViewCourse: jest.fn().mockResolvedValue(undefined),
-      findVisibleCourseIds: jest.fn()
+      findVisibleCourseIds: jest.fn(),
+      getTeacherRoleInCourse: jest.fn().mockResolvedValue('HEAD_TEACHER')
     }
     service = new CoursesService(
       courseRepository as any,
