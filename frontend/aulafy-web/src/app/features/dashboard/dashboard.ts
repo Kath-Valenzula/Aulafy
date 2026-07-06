@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 
 interface DashboardAction {
   label: string;
@@ -56,6 +57,7 @@ interface DashboardContext {
 })
 export class DashboardComponent {
   readonly auth = inject(AuthService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
 
   get context(): DashboardContext {
     const role = this.auth.currentUser?.role;
@@ -93,10 +95,25 @@ export class DashboardComponent {
       };
     }
 
+    if (this.teacherPermissions.isSubjectTeacherOnly) {
+      return {
+        title: 'Dashboard docente',
+        subtitle: 'Acceso academico a tu asignatura y estudiantes del curso.',
+        focus: 'Acceso de profesor de asignatura. Algunas funciones institucionales estan reservadas para profesor jefe.',
+        actions: [
+          { label: 'Cursos asignados', description: 'Consultar cursos donde tienes asignatura.', icon: 'school', path: '/app/courses' },
+          { label: 'Calendario', description: 'Revisar pruebas y tareas programadas.', icon: 'calendar_month', path: '/app/calendar' },
+          { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar notas de tu asignatura.', icon: 'grade', path: '/app/academic' },
+          { label: 'Asistencia', description: 'Registrar asistencia basica del curso.', icon: 'event_available', path: '/app/attendance' },
+          { label: 'Anotaciones', description: 'Registrar anotaciones academicas o de comunicacion.', icon: 'assignment_late', path: '/app/annotations' }
+        ]
+      };
+    }
+
     return {
       title: 'Dashboard docente',
       subtitle: 'Acceso operativo a cursos asignados, evaluaciones, asistencia y comunicaciones.',
-      focus: 'Acceso docente para trabajar con cursos y estudiantes autorizados.',
+      focus: 'Acceso integral del curso como profesor jefe.',
       actions: [
         { label: 'Cursos asignados', description: 'Consultar cursos visibles para el docente.', icon: 'school', path: '/app/courses' },
         { label: 'Muro academico', description: 'Publicar y revisar comunicaciones del curso.', icon: 'dynamic_feed', path: '/app/feed' },

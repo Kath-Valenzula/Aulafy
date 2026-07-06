@@ -5,6 +5,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CommentsService } from '../../core/services/comments.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { PostsService } from '../../core/services/posts.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import { CommentResponse, CourseResponse, PostResponse, PostType } from '../../shared/models/aulafy.models';
 
 @Component({
@@ -43,8 +44,12 @@ import { CommentResponse, CourseResponse, PostResponse, PostType } from '../../s
           (ngModelChange)="selectedTypeFilter = normalizeFilter($event)"
         >
           <option value="">Todos los tipos</option>
-          <option *ngFor="let type of postTypes" [value]="type">{{ type }}</option>
+          <option *ngFor="let type of visiblePostTypes" [value]="type">{{ type }}</option>
         </select>
+      </section>
+
+      <section *ngIf="isRestrictedTeacher" class="bg-surface-variant rounded-xl border border-outline-variant p-4 mb-4 text-sm text-on-surface-variant">
+        Vista limitada. Como profesor de asignatura solo puedes publicar TAREA, EVALUACION y MATERIAL. Los tipos AVISO, COMUNICADO y REUNION son exclusivos del profesor jefe.
       </section>
 
       <section *ngIf="canCreatePost" class="bg-surface rounded-xl border border-outline-variant p-5 mb-4">
@@ -60,7 +65,7 @@ import { CommentResponse, CourseResponse, PostResponse, PostType } from '../../s
             (ngModelChange)="postDraft.type = $event"
             class="bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
           >
-            <option *ngFor="let type of postTypes" [value]="type">{{ type }}</option>
+            <option *ngFor="let type of visiblePostTypes" [value]="type">{{ type }}</option>
           </select>
           <textarea
             [(ngModel)]="postDraft.content"
@@ -151,6 +156,7 @@ export class FeedComponent implements OnInit {
   private readonly coursesService = inject(CoursesService);
   private readonly postsService = inject(PostsService);
   private readonly commentsService = inject(CommentsService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
 
   courses: CourseResponse[] = [];
   posts: PostResponse[] = [];
@@ -165,7 +171,8 @@ export class FeedComponent implements OnInit {
   commentsOpenByPost: Record<number, boolean> = {};
   commentsByPost: Record<number, CommentResponse[]> = {};
   commentDraftByPost: Record<number, string> = {};
-  postTypes: PostType[] = ['AVISO', 'TAREA', 'EVALUACION', 'REUNION', 'MATERIAL', 'COMUNICADO'];
+  readonly allPostTypes: PostType[] = ['AVISO', 'TAREA', 'EVALUACION', 'REUNION', 'MATERIAL', 'COMUNICADO'];
+  readonly restrictedPostTypes: PostType[] = ['TAREA', 'EVALUACION', 'MATERIAL'];
 
   postDraft: {
     title: string;
@@ -178,6 +185,19 @@ export class FeedComponent implements OnInit {
     type: 'AVISO',
     commentsEnabled: true
   };
+
+  get selectedCourseRole(): string | null {
+    return this.courses.find((c) => c.id === this.selectedCourseId)?.myRoleInCourse ?? null;
+  }
+
+  get isRestrictedTeacher(): boolean {
+    const role = this.selectedCourseRole;
+    return role === 'SUBJECT_TEACHER' || role === 'ASSISTANT';
+  }
+
+  get visiblePostTypes(): PostType[] {
+    return this.isRestrictedTeacher ? this.restrictedPostTypes : this.allPostTypes;
+  }
 
   get canCreatePost(): boolean {
     return this.auth.hasAnyRole(['COLEGIO', 'PROFESOR']);
@@ -362,7 +382,7 @@ export class FeedComponent implements OnInit {
     this.postDraft = {
       title: '',
       content: '',
-      type: 'AVISO',
+      type: this.isRestrictedTeacher ? 'TAREA' : 'AVISO',
       commentsEnabled: true
     };
   }

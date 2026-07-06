@@ -2,12 +2,20 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationsService } from '../../core/services/notifications.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import { NotificationLogResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-notifications',
   imports: [CommonModule, FormsModule],
   template: `
+    <section *ngIf="isAccessBlocked" class="bg-surface-variant rounded-xl border border-outline-variant p-5 mb-5">
+      <h2 class="text-xl font-bold text-on-surface-variant mb-1">Acceso restringido</h2>
+      <p class="text-sm text-on-surface-variant">Las notificaciones externas estan disponibles solo para profesor jefe.</p>
+    </section>
+
+    <ng-container *ngIf="!isAccessBlocked">
     <section class="mb-5">
       <h2 class="text-3xl font-bold text-primary">Notificaciones externas</h2>
       <p class="text-on-surface-variant">Envio opcional por Telegram con fallback controlado cuando no esta configurado.</p>
@@ -88,10 +96,17 @@ import { NotificationLogResponse } from '../../shared/models/aulafy.models';
         </table>
       </div>
     </section>
+    </ng-container>
   `
 })
 export class NotificationsComponent implements OnInit {
   private readonly notificationsService = inject(NotificationsService);
+  private readonly authService = inject(AuthService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
+
+  get isAccessBlocked(): boolean {
+    return this.authService.currentUser?.role === 'PROFESOR' && this.teacherPermissions.isSubjectTeacherOnly;
+  }
 
   logs: NotificationLogResponse[] = [];
   loading = true;
@@ -103,7 +118,9 @@ export class NotificationsComponent implements OnInit {
   chatId = '';
 
   ngOnInit(): void {
-    this.loadLogs();
+    if (!this.isAccessBlocked) {
+      this.loadLogs();
+    }
   }
 
   loadLogs(): void {

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { RoleNavigationItem, navigationForRole } from '../../core/navigation/role-navigation';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -76,16 +77,26 @@ import { RoleNavigationItem, navigationForRole } from '../../core/navigation/rol
     </ng-template>
   `
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
+
+  ngOnInit(): void {
+    this.teacherPermissions.load();
+  }
 
   get mobileFamiliesItems(): RoleNavigationItem[] {
     return navigationForRole(this.auth.currentUser?.role, 'family');
   }
 
   get backofficeNavItems(): RoleNavigationItem[] {
-    return navigationForRole(this.auth.currentUser?.role, 'backoffice');
+    const items = navigationForRole(this.auth.currentUser?.role, 'backoffice');
+    if (this.auth.currentUser?.role !== 'PROFESOR' || !this.teacherPermissions.isSubjectTeacherOnly) {
+      return items;
+    }
+    const blocked = new Set(['/app/risk', '/app/chat', '/app/notifications']);
+    return items.filter((item) => !blocked.has(item.path));
   }
 
   get workspaceTitle(): string {
@@ -128,6 +139,7 @@ export class MainLayoutComponent {
 
   logout(): void {
     this.auth.logout();
+    this.teacherPermissions.reset();
     this.router.navigateByUrl('/login');
   }
 }

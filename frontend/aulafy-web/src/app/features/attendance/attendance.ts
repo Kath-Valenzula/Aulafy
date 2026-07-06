@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AcademicStructureService } from '../../core/services/academic-structure.service';
 import { AttendanceService } from '../../core/services/attendance.service';
 import { CoursesService } from '../../core/services/courses.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import {
   AttendanceResponse,
   AttendanceStatus,
@@ -103,6 +104,10 @@ interface StudentOption {
     </ng-container>
 
     <ng-template #backofficeAttendance>
+      <section *ngIf="isSubjectTeacherOnly" class="bg-surface-variant rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
+        Como profesor de asignatura puedes registrar asistencia, pero la gestion integral del curso corresponde al profesor jefe.
+      </section>
+
       <section class="mb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 class="text-3xl font-bold text-primary">Toma de Asistencia</h2>
@@ -212,6 +217,11 @@ export class AttendanceComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceService);
   private readonly academicStructureService = inject(AcademicStructureService);
   private readonly coursesService = inject(CoursesService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
+
+  get isSubjectTeacherOnly(): boolean {
+    return this.teacherPermissions.isSubjectTeacherOnly;
+  }
 
   students: StudentOption[] = [];
   courses: CourseResponse[] = [];

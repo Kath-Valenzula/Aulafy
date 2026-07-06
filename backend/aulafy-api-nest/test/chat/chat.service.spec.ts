@@ -43,6 +43,7 @@ function userFixture(overrides: Record<string, any> = {}): any {
 
 function buildChatService(options: {
   findVisibleCourseIds?: jest.Mock
+  findHeadTeacherCourseIds?: jest.Mock
   assertCanViewCourse?: jest.Mock
   assertCanManageCourse?: jest.Mock
 } = {}) {
@@ -72,6 +73,7 @@ function buildChatService(options: {
 
   const accessService = {
     findVisibleCourseIds: options.findVisibleCourseIds ?? jest.fn().mockResolvedValue([1]),
+    findHeadTeacherCourseIds: options.findHeadTeacherCourseIds ?? jest.fn().mockResolvedValue([1]),
     assertCanViewCourse: options.assertCanViewCourse ?? jest.fn().mockResolvedValue(undefined),
     assertCanManageCourse: options.assertCanManageCourse ?? jest.fn().mockResolvedValue(undefined)
   }
@@ -103,7 +105,7 @@ describe('ChatService', () => {
     expect(result).toHaveLength(1)
     expect(result[0].courseId).toBe(1)
     expect(result[0].courseName).toBe('6 Basico B')
-    expect(mocks.accessService.findVisibleCourseIds).toHaveBeenCalledWith(profesor)
+    expect(mocks.accessService.findHeadTeacherCourseIds).toHaveBeenCalledWith(profesor.sub)
   })
 
   it('APODERADO recibe ForbiddenException al intentar crear una sala', async () => {

@@ -155,7 +155,8 @@ export class RiskService {
       })
     }
 
-    const courseIds = await this.accessService.findVisibleCourseIds(user)
+    // PROFESOR: solo cursos donde es HEAD_TEACHER. SUBJECT_TEACHER no accede a riesgo.
+    const courseIds = await this.accessService.findHeadTeacherCourseIds(user.sub)
     if (!courseIds.length) {
       return []
     }

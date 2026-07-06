@@ -4,12 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-chat',
   imports: [CommonModule, FormsModule],
   template: `
+    <section *ngIf="isAccessBlocked" class="bg-surface-variant rounded-xl border border-outline-variant p-5 mb-5">
+      <h2 class="text-xl font-bold text-on-surface-variant mb-1">Acceso restringido</h2>
+      <p class="text-sm text-on-surface-variant">Los mensajes del curso estan disponibles solo para profesor jefe. Consulta con el profesor jefe del curso para comunicarte con las familias.</p>
+    </section>
+
+    <ng-container *ngIf="!isAccessBlocked">
     <section class="mb-4">
       <h2 class="text-xl font-semibold text-on-background">{{ selectedRoom?.name || 'Mensajes del curso' }}</h2>
       <p class="text-sm text-on-surface-variant">{{ selectedRoom?.courseName || 'Mensajería entre profesor y familia del curso' }}</p>
@@ -85,13 +92,19 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
         {{ messageError }}
       </section>
     </ng-container>
+    </ng-container>
   `
 })
 export class ChatComponent implements OnInit {
   private readonly chatService = inject(ChatService);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  get isAccessBlocked(): boolean {
+    return this.authService.currentUser?.role === 'PROFESOR' && this.teacherPermissions.isSubjectTeacherOnly;
+  }
 
   rooms: ChatRoomResponse[] = [];
   messages: ChatMessageResponse[] = [];
@@ -108,7 +121,9 @@ export class ChatComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadRooms();
+    if (!this.isAccessBlocked) {
+      this.loadRooms();
+    }
   }
 
   loadRooms(): void {

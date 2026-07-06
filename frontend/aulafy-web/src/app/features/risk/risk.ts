@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { catchError, finalize, of, timeout } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { RiskService } from '../../core/services/risk.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import { RiskReportResponse, RiskStudentResponse } from '../../shared/models/aulafy.models';
 
 const RISK_REPORT_TIMEOUT_MS = 12000;
@@ -11,6 +12,12 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
   selector: 'app-risk',
   imports: [CommonModule],
   template: `
+    <section *ngIf="isAccessBlocked" class="bg-surface-variant rounded-xl border border-outline-variant p-5 mb-5">
+      <h2 class="text-xl font-bold text-on-surface-variant mb-1">Acceso restringido</h2>
+      <p class="text-sm text-on-surface-variant">Las alertas de riesgo academico estan disponibles solo para profesor jefe. Consulta con el profesor jefe del curso para mas informacion.</p>
+    </section>
+
+    <ng-container *ngIf="!isAccessBlocked">
     <section class="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h2 class="text-3xl font-bold text-on-background">
@@ -132,15 +139,21 @@ const RISK_REPORT_TIMEOUT_MS = 12000;
         </div>
       </section>
     </ng-container>
+    </ng-container>
   `
 })
 export class RiskComponent implements OnInit {
   private readonly riskService = inject(RiskService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly authService = inject(AuthService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
 
   get isProfesor(): boolean {
     return this.authService.currentUser?.role === 'PROFESOR';
+  }
+
+  get isAccessBlocked(): boolean {
+    return this.isProfesor && this.teacherPermissions.isSubjectTeacherOnly;
   }
 
   report: RiskReportResponse | null = null;
@@ -148,7 +161,9 @@ export class RiskComponent implements OnInit {
   error = '';
 
   ngOnInit(): void {
-    this.loadRiskReport();
+    if (!this.isAccessBlocked) {
+      this.loadRiskReport();
+    }
   }
 
   loadRiskReport(): void {

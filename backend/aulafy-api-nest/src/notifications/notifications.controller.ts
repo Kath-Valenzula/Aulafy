@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common'
+import { AcademicAccessService } from '../common/access/academic-access.service'
 import { CurrentUser } from '../common/auth/current-user.decorator'
 import { JwtAuthGuard } from '../common/auth/jwt-auth.guard'
 import { JwtPayload } from '../common/auth/jwt-payload.interface'
@@ -13,20 +14,26 @@ import { NotificationsService } from './notifications.service'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly accessService: AcademicAccessService
+  ) {}
 
   @Get('logs')
-  listLogs(@Query() query: LogsQueryDto) {
+  async listLogs(@Query() query: LogsQueryDto, @CurrentUser() user: JwtPayload) {
+    await this.accessService.assertHasHeadTeacherAccess(user)
     return this.notificationsService.listLogs(query.limit ?? 50)
   }
 
   @Post('telegram/test')
-  testTelegram(@CurrentUser() user: JwtPayload) {
+  async testTelegram(@CurrentUser() user: JwtPayload) {
+    await this.accessService.assertHasHeadTeacherAccess(user)
     return this.notificationsService.sendTest(user.sub)
   }
 
   @Post('telegram/send')
-  sendTelegram(@Body() request: SendTelegramDto, @CurrentUser() user: JwtPayload) {
+  async sendTelegram(@Body() request: SendTelegramDto, @CurrentUser() user: JwtPayload) {
+    await this.accessService.assertHasHeadTeacherAccess(user)
     return this.notificationsService.sendMessage(user.sub, request.message, request.chatId ?? null)
   }
 }

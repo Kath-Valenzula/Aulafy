@@ -1,7 +1,8 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { JwtPayload } from '../common/auth/jwt-payload.interface'
 import { AcademicAccessService } from '../common/access/academic-access.service'
+import { RoleName } from '../users/enums/role-name.enum'
 import { StudentEntity } from '../academic-structure/entities/student.entity'
 import { CourseEntity } from '../courses/entities/course.entity'
 import { CourseStudentEntity } from '../courses/entities/course-student.entity'
@@ -70,10 +71,29 @@ export class AcademicService {
     await this.accessService.assertCanViewCourse(user, courseId)
 
     const course = await this.findCourseOrFail(courseId)
-    const evaluations = await this.evaluationRepository.find({
+    let evaluations = await this.evaluationRepository.find({
       where: { courseId: course.id, active: true },
       order: { evaluationDate: 'DESC', title: 'ASC' }
     })
+
+    if (!evaluations.length) {
+      return []
+    }
+
+    // SUBJECT_TEACHER solo ve evaluaciones de sus asignaturas propias
+    if (user.role === RoleName.PROFESOR) {
+      const roleInCourse = await this.accessService.getTeacherRoleInCourse(courseId, user.sub)
+      if (roleInCourse !== 'HEAD_TEACHER') {
+        const allSubjectIds = [...new Set(evaluations.map((e) => e.subjectId))]
+        const ownSubjects = allSubjectIds.length
+          ? await this.subjectRepository.find({
+              where: allSubjectIds.map((id) => ({ id, teacherId: String(user.sub) }))
+            })
+          : []
+        const ownSubjectIdSet = new Set(ownSubjects.map((s) => s.id))
+        evaluations = evaluations.filter((e) => ownSubjectIdSet.has(e.subjectId))
+      }
+    }
 
     if (!evaluations.length) {
       return []
@@ -98,6 +118,14 @@ export class AcademicService {
 
     if (subject.courseId !== course.id) {
       throw new BadRequestException('La asignatura no pertenece al curso indicado')
+    }
+
+    // SUBJECT_TEACHER solo puede crear evaluaciones de sus propias asignaturas
+    if (user.role === RoleName.PROFESOR) {
+      const roleInCourse = await this.accessService.getTeacherRoleInCourse(request.courseId, user.sub)
+      if (roleInCourse !== 'HEAD_TEACHER' && subject.teacherId !== String(user.sub)) {
+        throw new ForbiddenException('Solo puedes crear evaluaciones de tus asignaturas asignadas')
+      }
     }
 
     const evaluation = this.evaluationRepository.create({
@@ -158,6 +186,20 @@ export class AcademicService {
       request.studentId,
       Number(evaluation.courseId)
     )
+
+    // SUBJECT_TEACHER solo puede registrar notas de sus propias asignaturas
+    if (user.role === RoleName.PROFESOR) {
+      const roleInCourse = await this.accessService.getTeacherRoleInCourse(
+        Number(evaluation.courseId),
+        user.sub
+      )
+      if (roleInCourse !== 'HEAD_TEACHER') {
+        const subject = await this.findSubjectOrFail(Number(evaluation.subjectId))
+        if (subject.teacherId !== String(user.sub)) {
+          throw new ForbiddenException('Solo puedes registrar notas de tus asignaturas asignadas')
+        }
+      }
+    }
 
     const studentInCourse = await this.courseStudentRepository.count({
       where: { studentId: student.id, courseId: evaluation.courseId }

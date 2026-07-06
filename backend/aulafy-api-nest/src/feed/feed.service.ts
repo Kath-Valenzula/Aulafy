@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { JwtPayload } from '../common/auth/jwt-payload.interface'
 import { AcademicAccessService } from '../common/access/academic-access.service'
+import { RoleName } from '../users/enums/role-name.enum'
 import { CourseEntity } from '../courses/entities/course.entity'
 import { UserEntity } from '../users/entities/user.entity'
 import { CreateCommentDto } from './dto/create-comment.dto'
@@ -75,6 +76,10 @@ export class FeedService {
 
   async createPost(courseId: number, request: CreatePostDto, user: JwtPayload): Promise<PostResponse> {
     await this.accessService.assertCanManageCourse(user, courseId)
+    const GENERAL_POST_TYPES = ['AVISO', 'COMUNICADO', 'REUNION']
+    if (GENERAL_POST_TYPES.includes(request.type) && user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
+    }
     const course = await this.findCourseOrFail(courseId)
     const author = await this.findUserOrFail(user.sub)
 

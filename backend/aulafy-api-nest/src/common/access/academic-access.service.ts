@@ -185,6 +185,26 @@ export class AcademicAccessService {
     return record?.roleInCourse ?? null
   }
 
+  async findHeadTeacherCourseIds(userId: number): Promise<number[]> {
+    const rows = await this.courseTeacherRepository.find({
+      where: { teacherId: String(userId), roleInCourse: 'HEAD_TEACHER' }
+    })
+    return rows.map((r) => Number(r.courseId))
+  }
+
+  async assertHasHeadTeacherAccess(user: JwtPayload): Promise<void> {
+    if (isAdminOrSchool(user.role)) {
+      return
+    }
+    if (user.role !== RoleName.PROFESOR) {
+      throw new ForbiddenException('Acceso no permitido')
+    }
+    const courseIds = await this.findHeadTeacherCourseIds(user.sub)
+    if (!courseIds.length) {
+      throw new ForbiddenException('Esta funcion esta reservada para profesor jefe')
+    }
+  }
+
   private async existsTeacherInCourse(courseId: number, teacherId: number): Promise<boolean> {
     const count = await this.courseTeacherRepository.count({
       where: { courseId: String(courseId), teacherId: String(teacherId) }

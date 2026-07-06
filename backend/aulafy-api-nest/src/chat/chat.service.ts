@@ -147,7 +147,10 @@ export class ChatService {
       })
     }
 
-    const visibleCourseIds = await this.accessService.findVisibleCourseIds(user)
+    // PROFESOR: solo salas de cursos donde es HEAD_TEACHER
+    const visibleCourseIds = user.role === RoleName.PROFESOR
+      ? await this.accessService.findHeadTeacherCourseIds(user.sub)
+      : await this.accessService.findVisibleCourseIds(user)
     if (!visibleCourseIds.length) {
       return []
     }

@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AcademicStructureService, AcademicStudentResponse } from '../../core/services/academic-structure.service';
 import { AcademicService } from '../../core/services/academic.service';
 import { CoursesService } from '../../core/services/courses.service';
+import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
 import {
   AcademicSummaryResponse,
   CourseResponse,
@@ -100,6 +101,10 @@ import {
       <section class="mb-5">
         <h2 class="text-3xl font-bold text-primary">Gestión de Calificaciones</h2>
         <p class="text-on-surface-variant mt-1">Administra y valida las notas del semestre actual.</p>
+      </section>
+
+      <section *ngIf="isSubjectTeacherOnly" class="bg-surface-variant rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
+        Vista limitada a tus asignaturas asignadas. Solo puedes crear evaluaciones y registrar notas de las asignaturas donde apareces como docente responsable.
       </section>
 
       <section *ngIf="loading" class="bg-surface rounded-xl border border-outline-variant p-4 mb-5 text-sm text-on-surface-variant">
@@ -294,6 +299,11 @@ export class AcademicComponent implements OnInit {
   private readonly academicService = inject(AcademicService);
   private readonly coursesService = inject(CoursesService);
   private readonly academicStructureService = inject(AcademicStructureService);
+  private readonly teacherPermissions = inject(TeacherPermissionsService);
+
+  get isSubjectTeacherOnly(): boolean {
+    return this.teacherPermissions.isSubjectTeacherOnly;
+  }
 
   students: AcademicStudentResponse[] = [];
   selectedStudentId: number | null = null;

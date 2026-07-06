@@ -41,8 +41,10 @@ function buildRiskService(options: {
   const studentRepository = {
     find: jest.fn().mockResolvedValue(options.students ?? [student()])
   }
+  const courseIds = (options.courses ?? [course()]).map((item) => Number(item.id))
   const accessService = {
-    findVisibleCourseIds: jest.fn().mockResolvedValue((options.courses ?? [course()]).map((item) => Number(item.id)))
+    findVisibleCourseIds: jest.fn().mockResolvedValue(courseIds),
+    findHeadTeacherCourseIds: jest.fn().mockResolvedValue(courseIds)
   }
 
   return {
@@ -175,7 +177,7 @@ describe('RiskService', () => {
 
       await service.academicRisk(profesor)
 
-      expect(repositories.accessService.findVisibleCourseIds).toHaveBeenCalledWith(profesor)
+      expect(repositories.accessService.findHeadTeacherCourseIds).toHaveBeenCalledWith(profesor.sub)
       expect(repositories.courseRepository.find).toHaveBeenCalled()
     })
 
