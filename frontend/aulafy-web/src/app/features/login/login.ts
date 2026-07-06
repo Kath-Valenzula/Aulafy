@@ -64,7 +64,10 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     this.authService.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl('/app/home'),
+      next: () => {
+        this.cdr.markForCheck();
+        void this.router.navigateByUrl('/app/home');
+      },
       error: (error) => {
         console.error('Error al iniciar sesion', error);
         this.error = 'Credenciales invalidas o servicio no disponible. Intenta nuevamente.';

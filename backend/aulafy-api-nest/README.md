@@ -42,4 +42,9 @@ La API queda en `http://localhost:8080/api`.
   - `GET /api/annotations`
   - `GET /api/notifications/logs`
   - `GET /api/risk/academic`
-- Modulo `chat` presente como funcionalidad experimental/post-MVP.
+  - `GET /api/chat/rooms`
+  - `POST /api/chat/rooms`
+  - `GET /api/chat/rooms/:roomId/messages`
+  - `POST /api/chat/rooms/:roomId/messages`
+- Modulo `chat` incluido en el MVP: mensajeria interna por curso via REST (sin WebSocket).
+- Modulo `risk`: reporte de riesgo academico (promedio < 4.0 o asistencia < 85%). Acceso ADMIN y COLEGIO.
