@@ -11,7 +11,7 @@
 ### Caja blanca
 | Archivo | Descripción |
 |---------|-------------|
-| `6_Cobertura_tests_backend.png` | Resultado `npm run test:coverage` — 8 suites, 31 tests |
+| `6_Cobertura_tests_backend.png` | Resultado `npm run test:coverage` — 10 suites, 56 tests |
 
 ### Caja negra (BN)
 | ID | Archivo | Resultado |
@@ -49,7 +49,7 @@
 
 | # | Archivo local | Archivo AWS |
 |---|---------------|-------------|
-| 1 | `1_GitHub_rama_semana7_documentacion_cierre.png` | Repositorio y rama `feature/semana-7-documentacion-cierre` |
+| 1 | `1_GitHub_rama_semana7_new.png` | Repositorio y rama `semana-7-new` |
 | 2 | `2_Frontend_local_login.png` | `../2_Frontend_AWS_login.png` |
 | 3 | `3_Chat_apoderado_funcionando.png` | `../3_Chat_apoderado_funcionando_AWS.png` |
 | 4 | `4_Riesgo_academico_colegio.png` | `../4_Riesgo_academico_colegio_AWS.png` |
@@ -74,11 +74,11 @@ Frontend en **https://aulafy-web.vercel.app** conectado al backend Elastic Beans
 | `4_Vercel_admin_chat_funcionando.png` | Chat cargando mensajes (fix Angular 21) |
 | `5_Vercel_admin_riesgo_academico.png` | Reporte de riesgo académico admin |
 | `6_Vercel_colegio_riesgo_academico.png` | Riesgo académico rol COLEGIO |
+| `9_Vercel_profesor_riesgo_academico.png` | Riesgo académico rol PROFESOR |
+| `10_Vercel_apoderado_dashboard_mensajes.png` | Dashboard apoderado — Mensajes del curso |
 | `7_Vercel_apoderado_chat_funcionando.png` | Chat apoderado |
 
 Script: `node scripts/semana-7-browser-tests-vercel.mjs`
-
----
 
 ## Script de reproducción
 

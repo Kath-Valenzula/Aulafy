@@ -67,8 +67,8 @@ export class GuardianComponent {
 
   get subtitle(): string {
     return this.isStudent
-      ? 'Acceso a comunicados, calendario, notas, asistencia y perfil propio.'
-      : 'Seguimiento de estudiantes vinculados, comunicados, calendario y alertas.';
+      ? 'Acceso a comunicados, calendario, notas, asistencia, mensajes del curso y perfil propio.'
+      : 'Seguimiento de estudiantes vinculados, comunicados, calendario, mensajes del curso y alertas.';
   }
 
   get summaryText(): string {
@@ -84,7 +84,7 @@ export class GuardianComponent {
         { label: 'Calendario', description: 'Eventos y evaluaciones.', icon: 'calendar_month', path: '/app/calendar' },
         { label: 'Mis notas', description: 'Calificaciones propias.', icon: 'grade', path: '/app/academic' },
         { label: 'Mi asistencia', description: 'Registro personal.', icon: 'event_available', path: '/app/attendance' },
-        { label: 'Notificaciones', description: 'Avisos disponibles.', icon: 'notifications', path: '/app/messages' },
+        { label: 'Mensajes del curso', description: 'Chat con el profesor del curso.', icon: 'chat', path: '/app/chat' },
         { label: 'Perfil', description: 'Datos de cuenta.', icon: 'person', path: '/app/profile' }
       ];
     }
@@ -95,7 +95,7 @@ export class GuardianComponent {
       { label: 'Calendario', description: 'Eventos academicos.', icon: 'calendar_month', path: '/app/calendar' },
       { label: 'Notas', description: 'Calificaciones por estudiante.', icon: 'grade', path: '/app/academic' },
       { label: 'Asistencia', description: 'Registro de asistencia.', icon: 'event_available', path: '/app/attendance' },
-      { label: 'Alertas', description: 'Avisos relevantes.', icon: 'notifications', path: '/app/messages' },
+      { label: 'Mensajes del curso', description: 'Chat iniciado por el profesor.', icon: 'chat', path: '/app/chat' },
       { label: 'Perfil', description: 'Datos de cuenta.', icon: 'person', path: '/app/profile' }
     ];
   }

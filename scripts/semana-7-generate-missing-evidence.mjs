@@ -22,7 +22,8 @@ const rows = [
   ['BN-07', 'Profesor — salas de chat', 'Local + AWS', 'OK'],
   ['BN-08', 'Registrar / ver asistencia', 'Local + AWS', 'OK'],
   ['BN-09', 'Módulo anotaciones profesor', 'Local', 'OK'],
-  ['BN-10', 'Reporte riesgo académico', 'Local + Vercel', 'OK'],
+  ['BN-10', 'Reporte riesgo académico (COLEGIO/ADMIN)', 'Local + Vercel', 'OK'],
+  ['BN-10b', 'Alertas de riesgo docente (PROFESOR)', 'Local + Vercel', 'OK'],
   ['BN-11', 'Listar usuarios (UI admin)', 'Local + AWS', 'OK'],
   ['BN-12', 'Health backend /api/health', 'AWS + Vercel proxy', 'OK'],
   ['BG-01', 'Login → JWT → módulo académico', 'Local', 'OK'],
@@ -43,7 +44,7 @@ const tableRows = rows
 const matrizHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Matriz pruebas negras</title></head>
 <body style="font-family:Segoe UI,Arial,sans-serif;padding:32px;background:#eef2f7;margin:0">
 <h1 style="color:#1e3a5f;margin:0 0 8px">Aulafy — Matriz de pruebas de caja negra y gris</h1>
-<p style="color:#475569;margin:0 0 20px">Semana 7 · 4 de julio de 2026 · 16 casos ejecutados · 16 aprobados</p>
+<p style="color:#475569;margin:0 0 20px">Semana 7 · 5 de julio de 2026 · 17 casos ejecutados · 17 aprobados · 56 tests Jest backend</p>
 <table style="border-collapse:collapse;width:100%;box-shadow:0 2px 8px rgba(0,0,0,.08)">${tableRows}</table>
 <p style="color:#64748b;margin-top:16px;font-size:13px">Nota: frontend AWS S3 parcial en chat/riesgo (build antiguo). Vercel evidencia versión actual.</p>
 </body></html>`;

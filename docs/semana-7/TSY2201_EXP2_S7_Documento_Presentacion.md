@@ -7,8 +7,8 @@
 **Asignatura:** Taller Aplicado de Software  
 **Carrera:** Ingeniería en Desarrollo de Software  
 **Profesor:** Alonso Esteban Castillo Pizarro  
-**Fecha:** 4 de julio de 2026  
-**Rama de entrega:** `develop`  
+**Fecha:** 5 de julio de 2026  
+**Rama de entrega:** `develop` (integración vía `semana-7-new`)  
 **Repositorio:** https://github.com/Kath-Valenzula/Aulafy
 
 > **Nota de uso:** Este archivo Markdown es la fuente para generar el documento oficial DOCX (`TSY2201_EXP2_S7_Formato_respuesta_Aulafy_Semana7.docx`). Los marcadores `[PENDIENTE]` deben completarse antes de la entrega final.
@@ -48,7 +48,7 @@ El proyecto Aulafy se encuentra versionado en GitHub en un repositorio público 
 
 Los avances de Semana 7 se respaldan en la rama **`develop`**, con trazabilidad mediante commits incrementales y GitHub Issues. La organización del repositorio separa responsabilidades por capa: frontend, backend, base de datos, documentación, CI/CD y scripts de infraestructura.
 
-**Rama activa de revisión:** `feature/semana-7-documentacion-cierre`  
+**Rama activa de integración:** `semana-7-new`  
 **Rama base:** `develop`
 
 ---
@@ -113,7 +113,7 @@ Las siguientes funcionalidades se encuentran implementadas y disponibles para re
 | **Asistencia** | Registro y resumen porcentual | PROFESOR, APODERADO, ESTUDIANTE | ✅ Completo |
 | **Anotaciones** | Anotaciones académicas/conductuales | PROFESOR | ✅ Completo |
 | **Chat interno** | Mensajes del curso (REST) | PROFESOR, APODERADO, ESTUDIANTE | ✅ Completo |
-| **Riesgo académico** | Alerta por bajo rendimiento o asistencia | ADMIN, COLEGIO | ✅ Completo |
+| **Riesgo académico** | Alerta por bajo rendimiento o asistencia | ADMIN, COLEGIO, **PROFESOR** | ✅ Completo |
 | **Notificaciones Telegram** | Avisos externos opcionales | ADMIN, COLEGIO, PROFESOR | ✅ Opcional |
 | **Perfil** | Datos del usuario vinculado | APODERADO, ESTUDIANTE | ✅ Completo |
 | **Health check** | Verificación de servicio activo | Público | ✅ Completo |
@@ -121,7 +121,7 @@ Las siguientes funcionalidades se encuentran implementadas y disponibles para re
 **Funcionalidades no incluidas en el MVP (mejora futura):**
 
 - Mensajería en tiempo real (WebSocket).
-- Permisos diferenciados por `role_in_course` (profesor jefe vs. profesor de asignatura).
+- Permisos diferenciados por `role_in_course` en anotaciones y calendario (HEAD_TEACHER vs SUBJECT_TEACHER). Otras acciones docentes mantienen permisos operativos completos en el MVP.
 - CRUD completo de cursos/usuarios desde la interfaz.
 - HTTPS con CloudFront (proyectado, no activo).
 - Invalidación server-side de JWT al cerrar sesión.
@@ -146,7 +146,7 @@ Respuestas formales a las observaciones de la retroalimentación Semana 5:
 - Campo `role_in_course` en tabla `course_teachers`.
 - Valores: `HEAD_TEACHER`, `SUBJECT_TEACHER`, `ASSISTANT`.
 - Profesor demo registrado como `HEAD_TEACHER`.
-- **Limitación declarada:** en el MVP todos los profesores asignados a un curso mantienen permisos operativos completos. La diferenciación fina de permisos según rol docente queda como mejora futura.
+- **Limitación declarada:** en el MVP la moderación del chat y permisos granulares en todos los módulos docentes quedan como mejora futura. `role_in_course` ya diferencia permisos en anotaciones y calendario.
 
 #### Módulo de riesgo — ¿Qué funcionalidad tiene?
 
@@ -253,12 +253,12 @@ npm run test:coverage  # Cobertura de código
 
 | Métrica | Semana 6 (referencia) | Semana 7 (actual) |
 |---------|----------------------|-------------------|
-| Suites | 7 | **8** |
-| Tests | 27 | **31** |
-| Statements | 61.45% | **62.87%** |
-| Branches | 39.42% | **39.49%** |
-| Functions | 47.85% | **50.51%** |
-| Lines | 59.50% | **61.35%** |
+| Suites | 7 | **10** |
+| Tests | 27 | **56** |
+| Statements | 61.45% | **64.87%** |
+| Branches | 39.42% | **43.52%** |
+| Functions | 47.85% | **52.21%** |
+| Lines | 59.50% | **63.90%** |
 
 **Módulos con tests:**
 
@@ -267,6 +267,8 @@ npm run test:coverage  # Cobertura de código
 - Chat (`chat.service.spec.ts`) — incluye permisos APODERADO
 - Annotations (`annotations.service.spec.ts`)
 - Risk (`risk.service.spec.ts`, `risk-permissions.spec.ts`)
+- Annotations permissions (`annotations-role-permissions.spec.ts`)
+- Calendar permissions (`calendar-role-permissions.spec.ts`)
 - Academic Access (`academic-access.service.spec.ts`)
 - Smoke (`smoke.spec.ts`)
 
@@ -287,10 +289,11 @@ Pruebas desde la interfaz de usuario sin conocer la implementación interna:
 | BN-09 | Registrar / ver asistencia | PROFESOR — Local + AWS | ✅ OK |
 | BN-10 | Crear anotación de estudiante | PROFESOR — Local | ✅ OK |
 | BN-11 | Ver reporte de riesgo académico | COLEGIO — Local + Vercel | ✅ OK |
+| BN-11b | Alertas de riesgo docente | PROFESOR — Local + Vercel | ✅ OK |
 | BN-12 | Listar usuarios del sistema | ADMIN — Local + AWS | ✅ OK |
 | BN-13 | Endpoint /api/health responde status OK | AWS + Vercel proxy | ✅ OK |
 
-**Resumen matriz:** **16** casos ejecutados de **16** planificados (incluye flujos gris documentados en matriz). Evidencia: `7_Matriz_pruebas_negras.png`.
+**Resumen matriz:** **17** casos ejecutados de **17** planificados (incluye flujos gris documentados en matriz). Evidencia: `7_Matriz_pruebas_negras.png`.
 
 #### 3.6.3 Pruebas de caja gris (integración)
 
@@ -309,7 +312,7 @@ Pruebas de flujos que cruzan frontend, API y base de datos:
 | Validación | Comando | Resultado |
 |------------|---------|-----------|
 | Build backend | `npm run build` | ✅ OK |
-| Tests backend | `npm test` | ✅ OK — 31 tests |
+| Tests backend | `npm test` | ✅ OK — 56 tests |
 | Cobertura backend | `npm run test:coverage` | ✅ OK — ver métricas 3.6.1 |
 | Build frontend Vercel | `npm run build:vercel` | ✅ OK |
 | Health AWS | GET `/api/health` | ✅ OK — status UP |
@@ -374,7 +377,7 @@ Datos de demostración exclusivamente para revisión académica:
 ### 3.9 Limitaciones conocidas y mejoras futuras
 
 1. **Chat:** sin mensajería en tiempo real (WebSocket). Recarga manual necesaria.
-2. **Profesor jefe:** `role_in_course` persistido, permisos no diferenciados en MVP.
+2. **Profesor jefe:** `role_in_course` persistido; permisos parciales en anotaciones/calendario; resto de módulos sin diferenciación fina.
 3. **Riesgo académico:** umbrales fijos en código (4.0 y 85%), no configurables en UI.
 4. **Frontend:** cursos y usuarios en modo solo lectura (backend sí expone CRUD).
 5. **Logout:** limpieza local; JWT válido en servidor hasta expiración (2h).
@@ -396,7 +399,7 @@ Capturas de pantalla en `docs/semana-7/evidencias/`:
 
 | # | Archivo | Descripción | Estado |
 |---|---------|-------------|--------|
-| 1 | `1_GitHub_rama_semana7_documentacion_cierre.png` | Repositorio y rama Semana 7 | ✅ |
+| 1 | `1_GitHub_rama_semana7_new.png` | Repositorio y rama Semana 7 | ✅ |
 | 2 | `2_Frontend_Vercel_login.png` / `2_Frontend_AWS_login.png` | Login en nube | ✅ |
 | 3 | `3_Chat_apoderado_funcionando.png` / `vercel/7_Vercel_apoderado_chat_funcionando.png` | Chat apoderado | ✅ |
 | 4 | `4_Riesgo_academico_colegio.png` / `vercel/6_Vercel_colegio_riesgo_academico.png` | Reporte de riesgo | ✅ |

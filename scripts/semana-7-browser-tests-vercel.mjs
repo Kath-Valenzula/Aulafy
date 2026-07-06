@@ -59,6 +59,15 @@ await waitGone(page, 'Cargando reporte de riesgo');
 await page.waitForSelector('text=Alumnos en riesgo', { timeout: 20000 }).catch(() => {});
 await shot(page, '5_Vercel_admin_riesgo_academico.png');
 
+// Profesor — alertas de riesgo
+await page.getByRole('button', { name: 'Salir' }).click();
+await page.waitForURL(/login/, { timeout: 10000 });
+await login(page, 'profesor@aulafy.cl', 'Profesor1234');
+await gotoApp(page, '/app/risk');
+await waitGone(page, 'Cargando reporte de riesgo');
+await page.waitForSelector('text=Alumnos en riesgo', { timeout: 20000 }).catch(() => {});
+await shot(page, '9_Vercel_profesor_riesgo_academico.png');
+
 // Colegio — riesgo
 await page.getByRole('button', { name: 'Salir' }).click();
 await page.waitForURL(/login/, { timeout: 10000 });
@@ -74,6 +83,9 @@ await login(page, 'apoderado@aulafy.cl', 'Apoderado1234');
 await gotoApp(page, '/app/chat');
 await waitGone(page, 'Cargando conversaciones');
 await shot(page, '7_Vercel_apoderado_chat_funcionando.png');
+await gotoApp(page, '/app/guardian');
+await page.waitForSelector('text=Mensajes del curso', { timeout: 15000 }).catch(() => {});
+await shot(page, '10_Vercel_apoderado_dashboard_mensajes.png');
 
 await browser.close();
 console.log('Vercel screenshots saved to', OUT);
