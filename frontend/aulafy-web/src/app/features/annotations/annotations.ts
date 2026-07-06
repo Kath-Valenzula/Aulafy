@@ -58,7 +58,7 @@ import {
           (ngModelChange)="selectedTypeFilter = normalizeFilter($event)"
         >
           <option value="">Tipo: Todos</option>
-          <option *ngFor="let type of annotationTypes" [value]="type">{{ type }}</option>
+          <option *ngFor="let type of visibleTypeFilters" [value]="type">{{ type }}</option>
         </select>
         <select
           class="bg-surface-bright border border-outline-variant rounded-md px-3 py-2"
@@ -211,8 +211,15 @@ export class AnnotationsComponent implements OnInit {
     return Boolean(this.selectedCourseId && this.annotationDraft.studentId && this.annotationDraft.title.trim() && this.annotationDraft.description.trim());
   }
 
+  get visibleTypeFilters(): AnnotationType[] {
+    return this.isRestrictedTeacher
+      ? this.annotationTypes.filter(t => t !== 'CONDUCTUAL')
+      : this.annotationTypes;
+  }
+
   get filteredAnnotations(): AnnotationResponse[] {
     return this.annotations.filter((annotation) => {
+      if (this.isRestrictedTeacher && annotation.type === 'CONDUCTUAL') return false;
       const byType = !this.selectedTypeFilter || annotation.type === this.selectedTypeFilter;
       const bySeverity = !this.selectedSeverityFilter || annotation.severity === this.selectedSeverityFilter;
       return byType && bySeverity;

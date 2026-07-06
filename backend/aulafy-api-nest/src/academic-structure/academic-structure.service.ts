@@ -233,13 +233,15 @@ export class AcademicStructureService {
     })
     const levelsMap = new Map(levels.map((level) => [level.id, level]))
 
+    const hideContactData = await this.shouldHideContactData(user)
+
     const mapped = students
       .map((student) => {
         const level = levelsMap.get(student.levelId)
         if (!level) {
           return null
         }
-        return this.mapStudent(student, level)
+        return this.mapStudent(student, level, hideContactData)
       })
       .filter((student): student is StudentSummary => Boolean(student))
 
@@ -381,7 +383,17 @@ export class AcademicStructureService {
     }
   }
 
-  private mapStudent(student: StudentEntity, level: LevelEntity): StudentSummary {
+  private async shouldHideContactData(user: JwtPayload): Promise<boolean> {
+    if (user.role !== RoleName.PROFESOR) {
+      return false
+    }
+    const teacherCourses = await this.courseTeacherRepository.find({
+      where: { teacherId: String(user.sub) }
+    })
+    return !teacherCourses.some((tc) => tc.roleInCourse === 'HEAD_TEACHER')
+  }
+
+  private mapStudent(student: StudentEntity, level: LevelEntity, hideContactData = false): StudentSummary {
     return {
       id: Number(student.id),
       firstName: student.firstName,
@@ -391,8 +403,8 @@ export class AcademicStructureService {
       notes: student.notes,
       active: student.active,
       level: this.mapLevel(level),
-      guardianId: student.guardianId ? Number(student.guardianId) : null,
-      studentUserId: student.studentUserId ? Number(student.studentUserId) : null
+      guardianId: hideContactData ? null : (student.guardianId ? Number(student.guardianId) : null),
+      studentUserId: hideContactData ? null : (student.studentUserId ? Number(student.studentUserId) : null)
     }
   }
 }

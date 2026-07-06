@@ -178,7 +178,7 @@ export class AcademicAccessService {
     return false
   }
 
-  private async getTeacherRoleInCourse(courseId: number, teacherId: number): Promise<string | null> {
+  async getTeacherRoleInCourse(courseId: number, teacherId: number): Promise<string | null> {
     const record = await this.courseTeacherRepository.findOne({
       where: { courseId: String(courseId), teacherId: String(teacherId) }
     })

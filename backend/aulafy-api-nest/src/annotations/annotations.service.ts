@@ -54,10 +54,15 @@ export class AnnotationsService {
       return []
     }
 
-    const annotations = await this.annotationRepository.find({
+    let annotations = await this.annotationRepository.find({
       where,
       order: { createdAt: 'DESC' }
     })
+    if (!annotations.length) {
+      return []
+    }
+
+    annotations = await this.filterConductualByRole(annotations, user)
     if (!annotations.length) {
       return []
     }
@@ -67,10 +72,14 @@ export class AnnotationsService {
 
   async findByStudent(studentId: number, user: JwtPayload): Promise<AnnotationResponse[]> {
     await this.accessService.assertCanViewStudent(user, studentId)
-    const annotations = await this.annotationRepository.find({
+    let annotations = await this.annotationRepository.find({
       where: { studentId: String(studentId), active: true },
       order: { createdAt: 'DESC' }
     })
+    if (!annotations.length) {
+      return []
+    }
+    annotations = await this.filterConductualByRole(annotations, user)
     if (!annotations.length) {
       return []
     }
@@ -204,6 +213,30 @@ export class AnnotationsService {
       ...base,
       studentId: String(studentId)
     }))
+  }
+
+  private async filterConductualByRole(
+    annotations: StudentAnnotationEntity[],
+    user: JwtPayload
+  ): Promise<StudentAnnotationEntity[]> {
+    if (user.role !== RoleName.PROFESOR) {
+      return annotations
+    }
+    const conductual = annotations.filter((a) => a.type === AnnotationType.CONDUCTUAL)
+    if (!conductual.length) {
+      return annotations
+    }
+    const courseIds = [...new Set(conductual.map((a) => Number(a.courseId)))]
+    const headTeacherCourses = new Set<string>()
+    for (const courseId of courseIds) {
+      const role = await this.accessService.getTeacherRoleInCourse(courseId, user.sub)
+      if (role === 'HEAD_TEACHER') {
+        headTeacherCourses.add(String(courseId))
+      }
+    }
+    return annotations.filter(
+      (a) => a.type !== AnnotationType.CONDUCTUAL || headTeacherCourses.has(a.courseId)
+    )
   }
 
   private async mapAnnotations(annotations: StudentAnnotationEntity[]): Promise<AnnotationResponse[]> {

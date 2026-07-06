@@ -63,10 +63,10 @@ import { CourseResponse } from '../../shared/models/aulafy.models';
               Asistente
             </span>
             <p *ngIf="course.myRoleInCourse === 'HEAD_TEACHER'" class="text-xs text-on-surface-variant mt-1">
-              Gestión completa: anotaciones, reuniones y comunicados del curso.
+              Acceso integral del curso: anotaciones conductuales, reuniones, comunicados e historial completo.
             </p>
             <p *ngIf="course.myRoleInCourse === 'SUBJECT_TEACHER'" class="text-xs text-on-surface-variant mt-1">
-              Evaluaciones, notas, asistencia y anotaciones académicas.
+              Acceso académico limitado: evaluaciones, notas, asistencia y anotaciones académicas. Algunas acciones están reservadas para profesor jefe.
             </p>
             <p *ngIf="course.myRoleInCourse === 'ASSISTANT'" class="text-xs text-on-surface-variant mt-1">
               Acceso de consulta al curso.
