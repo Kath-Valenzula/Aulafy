@@ -104,6 +104,8 @@ export class DashboardComponent {
         { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar calificaciones.', icon: 'grade', path: '/app/academic' },
         { label: 'Asistencia', description: 'Registrar y consultar asistencia.', icon: 'event_available', path: '/app/attendance' },
         { label: 'Anotaciones', description: 'Registrar observaciones academicas o conductuales.', icon: 'assignment_late', path: '/app/annotations' },
+        { label: 'Mensajes del curso', description: 'Comunicacion directa con estudiantes y apoderados.', icon: 'chat', path: '/app/chat' },
+        { label: 'Alertas de riesgo', description: 'Revisar indicadores de riesgo academico.', icon: 'warning', path: '/app/risk' },
         { label: 'Notificaciones', description: 'Revisar bitacora de avisos externos.', icon: 'notifications_active', path: '/app/notifications' }
       ]
     };
