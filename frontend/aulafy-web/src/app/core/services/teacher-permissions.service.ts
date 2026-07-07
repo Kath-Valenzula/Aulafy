@@ -20,7 +20,7 @@ export class TeacherPermissionsService {
   readonly permissions$ = this.state.asObservable();
 
   get loaded(): boolean { return this.state.value.loaded; }
-  get isSubjectTeacherOnly(): boolean { return this.state.value.isSubjectTeacherOnly; }
+  get isSubjectTeacherOnly(): boolean { return this.isSubjectTeacherDemo || this.state.value.isSubjectTeacherOnly; }
   get hasHeadTeacherCourse(): boolean { return this.state.value.hasHeadTeacherCourse; }
 
   get canViewRisk(): boolean { return !this.isProfesor || !this.isSubjectTeacherOnly; }
@@ -31,12 +31,21 @@ export class TeacherPermissionsService {
     return this.auth.currentUser?.role === 'PROFESOR';
   }
 
+  private get isSubjectTeacherDemo(): boolean {
+    return this.auth.currentUser?.email === 'profesor.asignatura@aulafy.cl';
+  }
+
   load(): void {
     if (this.state.value.loaded) {
       return;
     }
     if (!this.isProfesor) {
       this.state.next({ loaded: true, isSubjectTeacherOnly: false, hasHeadTeacherCourse: false });
+      return;
+    }
+
+    if (this.isSubjectTeacherDemo) {
+      this.state.next({ loaded: true, isSubjectTeacherOnly: true, hasHeadTeacherCourse: false });
       return;
     }
 
