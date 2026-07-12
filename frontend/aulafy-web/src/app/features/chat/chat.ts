@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
+import { CoursesService } from '../../core/services/courses.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TeacherPermissionsService } from '../../core/services/teacher-permissions.service';
-import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulafy.models';
+import { ChatMessageResponse, ChatRoomResponse, CourseResponse } from '../../shared/models/aulafy.models';
 
 @Component({
   selector: 'app-chat',
@@ -22,12 +24,34 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
       <p class="text-sm text-on-surface-variant">{{ selectedRoom?.courseName || 'Mensajería entre profesor y familia del curso' }}</p>
     </section>
 
-    <section *ngIf="loadingRooms" class="bg-surface rounded-xl border border-outline-variant p-3 text-sm text-on-surface-variant mb-4">
+    <section *ngIf="loadingRooms || (isHeadTeacher && loadingCourses)" class="bg-surface rounded-xl border border-outline-variant p-3 text-sm text-on-surface-variant mb-4">
       Cargando conversaciones...
     </section>
 
-    <section *ngIf="!loadingRooms && !rooms.length && !roomError" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
+    <section *ngIf="!loadingRooms && !rooms.length && !roomError && !isHeadTeacher" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
       No hay conversaciones activas para tu cuenta.
+    </section>
+
+    <section *ngIf="!loadingRooms && !loadingCourses && !courseError && isHeadTeacher && !creatableHeadCourses.length && !rooms.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
+      No tienes cursos asignados como profesor jefe.
+    </section>
+
+    <section *ngIf="!loadingRooms && !loadingCourses && isHeadTeacher && creatableHeadCourses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4">
+      <p class="text-sm text-on-surface-variant mb-3">{{ rooms.length ? 'Puedes iniciar una sala para otro curso.' : 'No hay conversaciones activas. Puedes iniciar una sala para tu curso.' }}</p>
+      <label class="block text-sm text-on-surface-variant mb-2">Seleccionar curso</label>
+      <select
+        [(ngModel)]="selectedCourseIdForCreate"
+        class="w-full bg-surface border border-outline-variant rounded-lg p-2.5 mb-3"
+      >
+        <option *ngFor="let course of creatableHeadCourses" [ngValue]="course.id">{{ course.name }}</option>
+      </select>
+      <button
+        class="px-4 py-2 bg-primary text-on-primary rounded-lg disabled:opacity-60"
+        (click)="createRoom()"
+        [disabled]="creatingRoom || !selectedCourseIdForCreate"
+      >
+        {{ creatingRoom ? 'Creando...' : 'Iniciar sala de mensajes' }}
+      </button>
     </section>
 
     <section *ngIf="!loadingRooms && rooms.length" class="mb-4">
@@ -43,6 +67,10 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
 
     <section *ngIf="roomError" class="bg-error-container text-on-error-container rounded-xl p-3 text-sm mb-4">
       {{ roomError }}
+    </section>
+
+    <section *ngIf="courseError" class="bg-error-container text-on-error-container rounded-xl p-3 text-sm mb-4">
+      {{ courseError }}
     </section>
 
     <section
@@ -97,13 +125,49 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
 })
 export class ChatComponent implements OnInit {
   private readonly chatService = inject(ChatService);
+  private readonly coursesService = inject(CoursesService);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly teacherPermissions = inject(TeacherPermissionsService);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  private roomsInitialized = false;
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    this.teacherPermissions.permissions$
+      .pipe(takeUntilDestroyed(destroyRef))
+      .subscribe((permissions) => {
+        if (this.authService.currentUser?.role !== 'PROFESOR') {
+          return;
+        }
+        if (!permissions.loaded) {
+          return;
+        }
+        if (this.isAccessBlocked) {
+          this.loadingRooms = false;
+          this.cdr.markForCheck();
+          return;
+        }
+        if (!this.roomsInitialized) {
+          this.roomsInitialized = true;
+          this.loadRooms();
+        }
+      });
+  }
+
   get isAccessBlocked(): boolean {
     return this.authService.currentUser?.role === 'PROFESOR' && this.teacherPermissions.isSubjectTeacherOnly;
+  }
+
+  get isHeadTeacher(): boolean {
+    return this.authService.currentUser?.role === 'PROFESOR' && this.teacherPermissions.hasHeadTeacherCourse;
+  }
+
+  get creatableHeadCourses(): CourseResponse[] {
+    return this.headCourses.filter(
+      (course) => !this.rooms.some((room) => room.courseId === course.id)
+    );
   }
 
   rooms: ChatRoomResponse[] = [];
@@ -115,15 +179,21 @@ export class ChatComponent implements OnInit {
   draftMessage = '';
   roomError = '';
   messageError = '';
+  courseError = '';
+  headCourses: CourseResponse[] = [];
+  loadingCourses = false;
+  creatingRoom = false;
+  selectedCourseIdForCreate: number | null = null;
 
   get selectedRoom(): ChatRoomResponse | undefined {
     return this.rooms.find((room) => room.id === this.selectedRoomId);
   }
 
   ngOnInit(): void {
-    if (!this.isAccessBlocked) {
+    if (this.authService.currentUser?.role !== 'PROFESOR') {
       this.loadRooms();
     }
+    // PROFESOR: la suscripción en el constructor espera a que permissions$ emita loaded=true
   }
 
   loadRooms(): void {
@@ -134,6 +204,10 @@ export class ChatComponent implements OnInit {
       next: (rooms) => {
         this.rooms = rooms;
         this.loadingRooms = false;
+
+        if (this.isHeadTeacher) {
+          this.loadHeadCourses();
+        }
 
         if (!rooms.length) {
           this.selectedRoomId = null;
@@ -206,5 +280,48 @@ export class ChatComponent implements OnInit {
 
   isOwn(message: ChatMessageResponse): boolean {
     return message.authorId === this.authService.currentUser?.id;
+  }
+
+  private loadHeadCourses(): void {
+    this.loadingCourses = true;
+    this.courseError = '';
+    this.coursesService.findAll().subscribe({
+      next: (courses) => {
+        this.headCourses = courses.filter((c) => c.myRoleInCourse === 'HEAD_TEACHER');
+        this.selectedCourseIdForCreate = this.creatableHeadCourses[0]?.id ?? null;
+        this.loadingCourses = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.courseError = 'No fue posible cargar los cursos disponibles.';
+        this.loadingCourses = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  createRoom(): void {
+    if (!this.selectedCourseIdForCreate) {
+      return;
+    }
+    const course = this.headCourses.find((c) => c.id === this.selectedCourseIdForCreate);
+    this.creatingRoom = true;
+    this.roomError = '';
+    this.chatService.createRoom({ courseId: this.selectedCourseIdForCreate, name: `Chat ${course?.name ?? ''}` }).subscribe({
+      next: (room) => {
+        this.creatingRoom = false;
+        if (!this.rooms.find((r) => r.id === room.id)) {
+          this.rooms = [...this.rooms, room];
+        }
+        this.selectedCourseIdForCreate = this.creatableHeadCourses[0]?.id ?? null;
+        this.onRoomChange(room.id);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.creatingRoom = false;
+        this.roomError = 'No fue posible crear la sala de chat.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 }
