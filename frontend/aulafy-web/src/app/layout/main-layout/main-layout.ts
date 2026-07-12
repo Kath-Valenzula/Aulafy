@@ -53,9 +53,20 @@ import { TeacherPermissionsService } from '../../core/services/teacher-permissio
             <img src="/aulafy-icon.png" alt="Aulafy" class="h-10 w-auto" />
             <h1 class="font-semibold text-primary">{{ workspaceTitle }}</h1>
           </div>
-          <a routerLink="/app/messages" class="text-on-surface-variant">
-            <span class="material-symbols-outlined">notifications</span>
-          </a>
+          <div class="flex items-center gap-3">
+            <a routerLink="/app/messages" class="text-on-surface-variant">
+              <span class="material-symbols-outlined">notifications</span>
+            </a>
+            <button
+              type="button"
+              aria-label="Cerrar sesión"
+              class="flex items-center gap-1 text-sm text-on-surface-variant"
+              (click)="logout()"
+            >
+              <span class="material-symbols-outlined">logout</span>
+              <span>Salir</span>
+            </button>
+          </div>
         </header>
 
         <main class="pt-20 px-4 pb-24 max-w-md mx-auto">
