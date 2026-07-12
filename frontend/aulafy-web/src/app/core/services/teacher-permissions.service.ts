@@ -9,7 +9,7 @@ interface TeacherPermissions {
   hasHeadTeacherCourse: boolean;
 }
 
-const INITIAL: TeacherPermissions = { loaded: false, isSubjectTeacherOnly: false, hasHeadTeacherCourse: true };
+const INITIAL: TeacherPermissions = { loaded: false, isSubjectTeacherOnly: false, hasHeadTeacherCourse: false };
 
 @Injectable({ providedIn: 'root' })
 export class TeacherPermissionsService {
@@ -20,7 +20,15 @@ export class TeacherPermissionsService {
   readonly permissions$ = this.state.asObservable();
 
   get loaded(): boolean { return this.state.value.loaded; }
-  get isSubjectTeacherOnly(): boolean { return this.isSubjectTeacherDemo || this.state.value.isSubjectTeacherOnly; }
+
+  get isSubjectTeacherOnly(): boolean {
+    // fail-closed mientras se cargan los permisos: PROFESOR no ve módulos restringidos hasta confirmar rol
+    if (!this.state.value.loaded && this.isProfesor) {
+      return true;
+    }
+    return this.state.value.isSubjectTeacherOnly;
+  }
+
   get hasHeadTeacherCourse(): boolean { return this.state.value.hasHeadTeacherCourse; }
 
   get canViewRisk(): boolean { return !this.isProfesor || !this.isSubjectTeacherOnly; }
@@ -29,10 +37,6 @@ export class TeacherPermissionsService {
 
   private get isProfesor(): boolean {
     return this.auth.currentUser?.role === 'PROFESOR';
-  }
-
-  private get isSubjectTeacherDemo(): boolean {
-    return this.auth.currentUser?.email === 'profesor.asignatura@aulafy.cl';
   }
 
   load(): void {
@@ -44,15 +48,10 @@ export class TeacherPermissionsService {
       return;
     }
 
-    if (this.isSubjectTeacherDemo) {
-      this.state.next({ loaded: true, isSubjectTeacherOnly: true, hasHeadTeacherCourse: false });
-      return;
-    }
-
     this.coursesService.findAll().subscribe({
       next: (courses) => {
         const hasHead = courses.some((c) => c.myRoleInCourse === 'HEAD_TEACHER');
-        const isSubjectOnly = courses.length > 0 && !hasHead;
+        const isSubjectOnly = !hasHead;
         this.state.next({ loaded: true, isSubjectTeacherOnly: isSubjectOnly, hasHeadTeacherCourse: hasHead });
       },
       error: () => {

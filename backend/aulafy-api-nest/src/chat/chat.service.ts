@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { StudentEntity } from '../academic-structure/entities/student.entity'
@@ -68,7 +68,7 @@ export class ChatService {
   }
 
   async createRoom(request: CreateChatRoomDto, user: JwtPayload): Promise<ChatRoomResponse> {
-    await this.accessService.assertCanManageCourse(user, request.courseId)
+    await this.assertCanCreateChatRoom(user, request.courseId)
     const course = await this.findCourseOrFail(request.courseId)
 
     const existing = await this.roomRepository.findOne({
@@ -93,7 +93,7 @@ export class ChatService {
 
   async findMessagesByRoom(roomId: number, user: JwtPayload): Promise<ChatMessageResponse[]> {
     const room = await this.findRoomOrFail(roomId)
-    await this.accessService.assertCanViewCourse(user, Number(room.courseId))
+    await this.assertCanUseCourseChat(user, Number(room.courseId))
 
     const messages = await this.messageRepository.find({
       where: {
@@ -122,7 +122,7 @@ export class ChatService {
     user: JwtPayload
   ): Promise<ChatMessageResponse> {
     const room = await this.findRoomOrFail(roomId)
-    await this.accessService.assertCanViewCourse(user, Number(room.courseId))
+    await this.assertCanUseCourseChat(user, Number(room.courseId))
     const author = await this.findUserOrFail(user.sub)
 
     const message = this.messageRepository.create({
@@ -137,6 +137,28 @@ export class ChatService {
     await this.notifyRoomParticipants(course, author, created.content)
 
     return this.mapMessage(created, author)
+  }
+
+  private async assertCanCreateChatRoom(user: JwtPayload, courseId: number): Promise<void> {
+    if (user.role === RoleName.ADMIN || user.role === RoleName.COLEGIO) {
+      return
+    }
+    if (user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
+      return
+    }
+    throw new ForbiddenException('No tienes permiso para crear una sala de chat')
+  }
+
+  private async assertCanUseCourseChat(user: JwtPayload, courseId: number): Promise<void> {
+    if (user.role === RoleName.ADMIN || user.role === RoleName.COLEGIO) {
+      return
+    }
+    if (user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
+      return
+    }
+    await this.accessService.assertCanViewCourse(user, courseId)
   }
 
   private async findVisibleRooms(user: JwtPayload): Promise<ChatRoomEntity[]> {
@@ -246,7 +268,9 @@ export class ChatService {
       : []
 
     const targetUserIds = new Set<string>()
-    teacherLinks.forEach((link) => targetUserIds.add(link.teacherId))
+    teacherLinks
+      .filter((link) => link.roleInCourse === 'HEAD_TEACHER')
+      .forEach((link) => targetUserIds.add(link.teacherId))
     students.forEach((student) => {
       if (student.studentUserId) {
         targetUserIds.add(student.studentUserId)
