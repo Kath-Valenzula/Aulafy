@@ -5,7 +5,7 @@ import { ChatMessageResponse, ChatRoomResponse } from '../../shared/models/aulaf
 
 interface CreateChatRoomRequest {
   courseId: number;
-  name?: string;
+  name: string;
 }
 
 interface CreateChatMessageRequest {
@@ -30,5 +30,9 @@ export class ChatService {
 
   sendMessage(roomId: number, request: CreateChatMessageRequest) {
     return this.http.post<ChatMessageResponse>(`${environment.apiUrl}/chat/rooms/${roomId}/messages`, request);
+  }
+
+  archiveRoom(roomId: number) {
+    return this.http.patch<{ id: number; archived: boolean }>(`${environment.apiUrl}/chat/rooms/${roomId}/archive`, {});
   }
 }

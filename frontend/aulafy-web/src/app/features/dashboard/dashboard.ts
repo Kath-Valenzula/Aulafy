@@ -81,8 +81,7 @@ export class DashboardComponent {
           { label: 'Apoderados', description: 'Revisar cuentas familiares vinculables.', icon: 'supervisor_account', path: '/app/users/guardians' },
           { label: 'Cursos', description: 'Administrar estructura de cursos.', icon: 'school', path: '/app/courses' },
           { label: 'Asignaturas', description: 'Consultar asignaturas por curso.', icon: 'menu_book', path: '/app/subjects' },
-          { label: 'Reportes y riesgo', description: 'Acceder a reportes institucionales.', icon: 'analytics', path: '/app/risk' },
-          { label: 'Notificaciones', description: 'Revisar bitacora de notificaciones externas.', icon: 'notifications_active', path: '/app/notifications' }
+          { label: 'Reportes y riesgo', description: 'Acceder a reportes institucionales.', icon: 'analytics', path: '/app/risk' }
         ]
       };
     }
@@ -97,8 +96,7 @@ export class DashboardComponent {
           { label: 'Comunicados', description: 'Publicar y revisar avisos por curso.', icon: 'campaign', path: '/app/feed' },
           { label: 'Calendario institucional', description: 'Consultar eventos academicos.', icon: 'event_note', path: '/app/calendar' },
           { label: 'Usuarios academicos', description: 'Gestionar usuarios del entorno escolar.', icon: 'badge', path: '/app/users/academic' },
-          { label: 'Reportes', description: 'Revisar indicadores de riesgo.', icon: 'analytics', path: '/app/risk' },
-          { label: 'Notificaciones', description: 'Gestionar avisos externos opcionales.', icon: 'notifications_active', path: '/app/notifications' }
+          { label: 'Reportes', description: 'Revisar indicadores de riesgo.', icon: 'analytics', path: '/app/risk' }
         ]
       };
     }
@@ -131,8 +129,7 @@ export class DashboardComponent {
         { label: 'Asistencia', description: 'Registrar y consultar asistencia.', icon: 'event_available', path: '/app/attendance' },
         { label: 'Anotaciones', description: 'Registrar observaciones academicas o conductuales.', icon: 'assignment_late', path: '/app/annotations' },
         { label: 'Mensajes del curso', description: 'Comunicacion directa con estudiantes y apoderados.', icon: 'chat', path: '/app/chat' },
-        { label: 'Alertas de riesgo', description: 'Revisar indicadores de riesgo academico.', icon: 'warning', path: '/app/risk' },
-        { label: 'Notificaciones', description: 'Revisar bitacora de avisos externos.', icon: 'notifications_active', path: '/app/notifications' }
+        { label: 'Alertas de riesgo', description: 'Revisar indicadores de riesgo academico.', icon: 'warning', path: '/app/risk' }
       ]
     };
   }
