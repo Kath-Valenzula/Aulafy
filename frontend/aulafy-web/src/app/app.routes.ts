@@ -130,12 +130,7 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] },
         loadComponent: () => import('./features/subjects/subjects').then((m) => m.SubjectsComponent)
       },
-      {
-        path: 'notifications',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'COLEGIO', 'PROFESOR'] },
-        loadComponent: () => import('./features/notifications/notifications').then((m) => m.NotificationsComponent)
-      },
+      { path: 'notifications', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'annotations',
         canActivate: [roleGuard],

@@ -32,26 +32,44 @@ import { ChatMessageResponse, ChatRoomResponse, CourseResponse } from '../../sha
       No hay conversaciones activas para tu cuenta.
     </section>
 
-    <section *ngIf="!loadingRooms && !loadingCourses && !courseError && isHeadTeacher && !creatableHeadCourses.length && !rooms.length" class="bg-surface rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant mb-4">
-      No tienes cursos asignados como profesor jefe.
-    </section>
+    <section *ngIf="isHeadTeacher && !loadingRooms" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4">
+      <h3 class="text-base font-semibold text-on-surface mb-1">Nueva sala de chat</h3>
+      <p class="text-xs text-on-surface-variant mb-3">Puedes crear salas temáticas para organizar las comunicaciones de cada curso.</p>
 
-    <section *ngIf="!loadingRooms && !loadingCourses && isHeadTeacher && creatableHeadCourses.length" class="bg-surface rounded-xl border border-outline-variant p-4 mb-4">
-      <p class="text-sm text-on-surface-variant mb-3">{{ rooms.length ? 'Puedes iniciar una sala para otro curso.' : 'No hay conversaciones activas. Puedes iniciar una sala para tu curso.' }}</p>
-      <label class="block text-sm text-on-surface-variant mb-2">Seleccionar curso</label>
-      <select
-        [(ngModel)]="selectedCourseIdForCreate"
-        class="w-full bg-surface border border-outline-variant rounded-lg p-2.5 mb-3"
-      >
-        <option *ngFor="let course of creatableHeadCourses" [ngValue]="course.id">{{ course.name }}</option>
-      </select>
-      <button
-        class="px-4 py-2 bg-primary text-on-primary rounded-lg disabled:opacity-60"
-        (click)="createRoom()"
-        [disabled]="creatingRoom || !selectedCourseIdForCreate"
-      >
-        {{ creatingRoom ? 'Creando...' : 'Iniciar sala de mensajes' }}
-      </button>
+      <p *ngIf="loadingCourses" class="text-sm text-on-surface-variant">Cargando cursos...</p>
+
+      <p *ngIf="!loadingCourses && !headCourses.length" class="text-sm text-on-surface-variant">No tienes cursos asignados como profesor jefe.</p>
+
+      <ng-container *ngIf="!loadingCourses && headCourses.length">
+        <label class="block text-sm text-on-surface-variant mb-1">Curso</label>
+        <select
+          [(ngModel)]="selectedCourseIdForCreate"
+          class="w-full bg-surface border border-outline-variant rounded-lg p-2.5 mb-3"
+        >
+          <option *ngFor="let course of headCourses" [ngValue]="course.id">{{ course.name }}</option>
+        </select>
+
+        <label class="block text-sm text-on-surface-variant mb-1">Nombre de la sala</label>
+        <input
+          type="text"
+          [(ngModel)]="newRoomName"
+          maxlength="160"
+          placeholder="Ej: Comunicaciones generales"
+          class="w-full bg-surface border border-outline-variant rounded-lg p-2.5 mb-3"
+        />
+
+        <button
+          class="px-4 py-2 bg-primary text-on-primary rounded-lg disabled:opacity-60"
+          (click)="createRoom()"
+          [disabled]="creatingRoom || !selectedCourseIdForCreate || !newRoomName.trim()"
+        >
+          {{ creatingRoom ? 'Creando...' : 'Crear sala' }}
+        </button>
+      </ng-container>
+
+      <section *ngIf="courseError" class="mt-3 bg-error-container text-on-error-container rounded-xl p-3 text-sm">
+        {{ courseError }}
+      </section>
     </section>
 
     <section *ngIf="!loadingRooms && rooms.length" class="mb-4">
@@ -59,18 +77,24 @@ import { ChatMessageResponse, ChatRoomResponse, CourseResponse } from '../../sha
       <select
         [ngModel]="selectedRoomId"
         (ngModelChange)="onRoomChange($event)"
-        class="w-full bg-surface border border-outline-variant rounded-lg p-2.5"
+        [disabled]="archivingRoom"
+        class="w-full bg-surface border border-outline-variant rounded-lg p-2.5 mb-3"
       >
         <option *ngFor="let room of rooms" [ngValue]="room.id">{{ room.name }} · {{ room.courseName }}</option>
       </select>
+      <button
+        *ngIf="isHeadTeacher && selectedRoomId"
+        class="flex items-center gap-1 text-sm text-error disabled:opacity-60"
+        (click)="archiveRoom()"
+        [disabled]="archivingRoom"
+      >
+        <span class="material-symbols-outlined text-base">archive</span>
+        {{ archivingRoom ? 'Eliminando...' : 'Eliminar sala' }}
+      </button>
     </section>
 
     <section *ngIf="roomError" class="bg-error-container text-on-error-container rounded-xl p-3 text-sm mb-4">
       {{ roomError }}
-    </section>
-
-    <section *ngIf="courseError" class="bg-error-container text-on-error-container rounded-xl p-3 text-sm mb-4">
-      {{ courseError }}
     </section>
 
     <section
@@ -164,12 +188,6 @@ export class ChatComponent implements OnInit {
     return this.authService.currentUser?.role === 'PROFESOR' && this.teacherPermissions.hasHeadTeacherCourse;
   }
 
-  get creatableHeadCourses(): CourseResponse[] {
-    return this.headCourses.filter(
-      (course) => !this.rooms.some((room) => room.courseId === course.id)
-    );
-  }
-
   rooms: ChatRoomResponse[] = [];
   messages: ChatMessageResponse[] = [];
   selectedRoomId: number | null = null;
@@ -183,6 +201,8 @@ export class ChatComponent implements OnInit {
   headCourses: CourseResponse[] = [];
   loadingCourses = false;
   creatingRoom = false;
+  archivingRoom = false;
+  newRoomName = '';
   selectedCourseIdForCreate: number | null = null;
 
   get selectedRoom(): ChatRoomResponse | undefined {
@@ -288,7 +308,7 @@ export class ChatComponent implements OnInit {
     this.coursesService.findAll().subscribe({
       next: (courses) => {
         this.headCourses = courses.filter((c) => c.myRoleInCourse === 'HEAD_TEACHER');
-        this.selectedCourseIdForCreate = this.creatableHeadCourses[0]?.id ?? null;
+        this.selectedCourseIdForCreate = this.headCourses[0]?.id ?? null;
         this.loadingCourses = false;
         this.cdr.markForCheck();
       },
@@ -301,25 +321,58 @@ export class ChatComponent implements OnInit {
   }
 
   createRoom(): void {
-    if (!this.selectedCourseIdForCreate) {
+    if (!this.selectedCourseIdForCreate || !this.newRoomName.trim()) {
       return;
     }
-    const course = this.headCourses.find((c) => c.id === this.selectedCourseIdForCreate);
     this.creatingRoom = true;
     this.roomError = '';
-    this.chatService.createRoom({ courseId: this.selectedCourseIdForCreate, name: `Chat ${course?.name ?? ''}` }).subscribe({
+    this.chatService.createRoom({ courseId: this.selectedCourseIdForCreate, name: this.newRoomName.trim() }).subscribe({
       next: (room) => {
         this.creatingRoom = false;
         if (!this.rooms.find((r) => r.id === room.id)) {
           this.rooms = [...this.rooms, room];
         }
-        this.selectedCourseIdForCreate = this.creatableHeadCourses[0]?.id ?? null;
+        this.newRoomName = '';
         this.onRoomChange(room.id);
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.creatingRoom = false;
-        this.roomError = 'No fue posible crear la sala de chat.';
+        this.roomError = err?.status === 409
+          ? 'Ya existe una sala activa con ese nombre para este curso.'
+          : 'No fue posible crear la sala de chat.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  archiveRoom(): void {
+    const roomId = this.selectedRoomId;
+    if (!roomId) {
+      return;
+    }
+    const room = this.rooms.find((r) => r.id === roomId);
+    if (!confirm(`¿Eliminar la sala "${room?.name}"? Dejará de estar disponible, pero el historial se conservará para auditoría.`)) {
+      return;
+    }
+    this.archivingRoom = true;
+    this.roomError = '';
+    this.chatService.archiveRoom(roomId).subscribe({
+      next: () => {
+        this.archivingRoom = false;
+        this.rooms = this.rooms.filter((r) => r.id !== roomId);
+        const next = this.rooms[0] ?? null;
+        if (next) {
+          this.onRoomChange(next.id);
+        } else {
+          this.selectedRoomId = null;
+          this.messages = [];
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.archivingRoom = false;
+        this.roomError = 'No fue posible eliminar la sala.';
         this.cdr.markForCheck();
       }
     });

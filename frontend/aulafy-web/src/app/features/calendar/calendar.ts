@@ -111,10 +111,6 @@ import { CalendarEventResponse, CourseResponse, EventType } from '../../shared/m
             <input [(ngModel)]="eventDraft.startAt" type="datetime-local" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5" />
             <input [(ngModel)]="eventDraft.endAt" type="datetime-local" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5" />
             <input [(ngModel)]="eventDraft.description" class="bg-background border border-outline-variant rounded-lg px-3 py-2.5 md:col-span-2" placeholder="Descripción" />
-            <label class="flex items-center gap-2 text-sm text-on-surface-variant md:col-span-2">
-              <input [(ngModel)]="eventDraft.notifyTelegram" type="checkbox" />
-              Notificar por Telegram
-            </label>
           </div>
           <button
             (click)="createEvent()"
@@ -272,7 +268,7 @@ export class CalendarComponent implements OnInit {
         type: this.eventDraft.type,
         startAt: dateTimeLocalToIso(this.eventDraft.startAt),
         endAt: this.eventDraft.endAt ? dateTimeLocalToIso(this.eventDraft.endAt) : null,
-        notifyTelegram: this.eventDraft.notifyTelegram
+        notifyTelegram: false
       })
       .subscribe({
         next: () => {

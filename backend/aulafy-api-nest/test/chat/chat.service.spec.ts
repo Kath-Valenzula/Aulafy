@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { ChatService } from '../../src/chat/chat.service'
 import { RoleName } from '../../src/users/enums/role-name.enum'
 
@@ -55,7 +55,12 @@ function buildChatService(options: {
   const roomRepository = {
     find: jest.fn().mockResolvedValue([roomFixture()]),
     findOne: jest.fn().mockResolvedValue(roomFixture()),
-    create: jest.fn().mockImplementation((data: any) => ({ ...messageFixture(), ...data })),
+    createQueryBuilder: jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(null)
+    }),
+    create: jest.fn().mockImplementation((data: any) => ({ ...roomFixture(), ...data })),
     save: jest.fn().mockImplementation((entity: any) => Promise.resolve(entity))
   }
   const messageRepository = {
@@ -112,6 +117,8 @@ describe('ChatService', () => {
   const subjectTeacher = { sub: 5, email: 'profesor.asignatura@aulafy.cl', role: RoleName.PROFESOR }
   const apoderado = { sub: 4, email: 'apoderado@aulafy.cl', role: RoleName.APODERADO }
   const estudiante = { sub: 6, email: 'estudiante@aulafy.cl', role: RoleName.ESTUDIANTE }
+  const admin = { sub: 1, email: 'admin@aulafy.cl', role: RoleName.ADMIN }
+  const colegio = { sub: 2, email: 'colegio@aulafy.cl', role: RoleName.COLEGIO }
   const profesor = headTeacher
 
   it('PROFESOR lista salas de cursos asignados via course_teachers', async () => {
@@ -331,6 +338,28 @@ describe('ChatService', () => {
     )
   })
 
+  it('la notificacion Telegram incluye el nombre de la sala', async () => {
+    const headTeacherUser = { id: '3', fullName: 'Profesor Jefe', telegramChatId: 'chat_head', active: true }
+    const apoderadoUser = { id: '4', fullName: 'Apoderado Demo', email: 'apoderado@aulafy.cl', active: true, telegramChatId: null }
+
+    const { service, mocks } = buildChatService({
+      courseTeacherLinks: [
+        { teacherId: '3', courseId: '1', roleInCourse: 'HEAD_TEACHER' }
+      ],
+      availableUsers: [headTeacherUser, apoderadoUser],
+      userFindOne: jest.fn().mockResolvedValue(apoderadoUser)
+    })
+
+    await service.createMessage(1, { content: 'Consulta de apoderado' }, apoderado)
+
+    expect(mocks.notificationsService.sendTypedMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      'TELEGRAM_CHAT_MESSAGE',
+      expect.stringContaining('Chat 6 Basico B'),
+      'chat_head'
+    )
+  })
+
   // Casos: ESTUDIANTE
 
   it('ESTUDIANTE vinculado puede leer mensajes', async () => {
@@ -369,5 +398,181 @@ describe('ChatService', () => {
     })
 
     await expect(service.findMessagesByRoom(1, estudiante)).rejects.toThrow(ForbiddenException)
+  })
+
+  // Múltiples salas por curso
+
+  it('HEAD_TEACHER crea segunda sala para el mismo curso sin error', async () => {
+    const { service } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+
+    const result = await service.createRoom({ courseId: 1, name: 'Evaluaciones y tareas' }, headTeacher)
+
+    expect(result.courseId).toBe(1)
+    expect(result.name).toBe('Evaluaciones y tareas')
+  })
+
+  it('nombre duplicado activo en el mismo curso genera ConflictException', async () => {
+    const { service, mocks } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+    mocks.roomRepository.createQueryBuilder = jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(roomFixture({ name: 'Comunicaciones generales' }))
+    })
+
+    await expect(
+      service.createRoom({ courseId: 1, name: 'Comunicaciones generales' }, headTeacher)
+    ).rejects.toThrow(ConflictException)
+  })
+
+  it('el mismo nombre puede usarse en un curso diferente', async () => {
+    const { service, mocks } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+    mocks.courseRepository.findOne = jest.fn().mockResolvedValue(courseFixture({ id: '2', name: '7 Basico A' }))
+
+    const result = await service.createRoom({ courseId: 2, name: 'Comunicaciones generales' }, headTeacher)
+
+    expect(result.courseId).toBe(2)
+  })
+
+  it('nombre formado solo por espacios es rechazado con BadRequestException', async () => {
+    const { service } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+
+    await expect(
+      service.createRoom({ courseId: 1, name: '     ' }, headTeacher)
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  it('duplicado con distinta capitalizacion genera ConflictException', async () => {
+    const { service, mocks } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+    mocks.roomRepository.createQueryBuilder = jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(roomFixture({ name: 'comunicaciones generales' }))
+    })
+
+    await expect(
+      service.createRoom({ courseId: 1, name: 'COMUNICACIONES GENERALES' }, headTeacher)
+    ).rejects.toThrow(ConflictException)
+  })
+
+  it('nombre archivado puede reutilizarse en una nueva sala activa', async () => {
+    const { service } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+    // createQueryBuilder devuelve null por defecto: sala archivada no aparece en la consulta active=true
+
+    const result = await service.createRoom({ courseId: 1, name: 'Evaluaciones' }, headTeacher)
+
+    expect(result.name).toBe('Evaluaciones')
+    expect(result.courseId).toBe(1)
+  })
+
+  it('dos salas creadas para el mismo curso reciben identificadores diferentes', async () => {
+    const { service, mocks } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+    let callCount = 0
+    mocks.roomRepository.save = jest.fn().mockImplementation((entity: any) => {
+      callCount++
+      return Promise.resolve({ ...entity, id: String(callCount + 1) })
+    })
+
+    const first = await service.createRoom({ courseId: 1, name: 'Sala A' }, headTeacher)
+    const second = await service.createRoom({ courseId: 1, name: 'Sala B' }, headTeacher)
+
+    expect(first.id).toBe(2)
+    expect(second.id).toBe(3)
+    expect(first.id).not.toBe(second.id)
+  })
+
+  // Solo HEAD_TEACHER puede administrar salas — ADMIN y COLEGIO no
+
+  it('ADMIN recibe ForbiddenException al intentar crear una sala', async () => {
+    const { service } = buildChatService()
+
+    await expect(service.createRoom({ courseId: 1, name: 'Sala test' }, admin))
+      .rejects.toThrow(ForbiddenException)
+  })
+
+  it('COLEGIO recibe ForbiddenException al intentar crear una sala', async () => {
+    const { service } = buildChatService()
+
+    await expect(service.createRoom({ courseId: 1, name: 'Sala test' }, colegio))
+      .rejects.toThrow(ForbiddenException)
+  })
+
+  it('ADMIN recibe ForbiddenException al intentar eliminar una sala', async () => {
+    const { service } = buildChatService()
+
+    await expect(service.archiveRoom(1, admin)).rejects.toThrow(ForbiddenException)
+  })
+
+  it('COLEGIO recibe ForbiddenException al intentar eliminar una sala', async () => {
+    const { service } = buildChatService()
+
+    await expect(service.archiveRoom(1, colegio)).rejects.toThrow(ForbiddenException)
+  })
+
+  // archiveRoom
+
+  it('HEAD_TEACHER puede archivar una sala de su curso', async () => {
+    const { service, mocks } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockResolvedValue(undefined)
+    })
+
+    const result = await service.archiveRoom(1, headTeacher)
+
+    expect(result).toEqual({ id: 1, archived: true })
+    expect(mocks.roomRepository.save).toHaveBeenCalledWith(expect.objectContaining({ active: false }))
+  })
+
+  it('SUBJECT_TEACHER recibe ForbiddenException al archivar una sala', async () => {
+    const { service } = buildChatService({
+      assertTeacherCourseRole: jest.fn().mockRejectedValue(
+        new ForbiddenException('No tienes permiso para esta accion en el curso')
+      )
+    })
+
+    await expect(service.archiveRoom(1, subjectTeacher)).rejects.toThrow(ForbiddenException)
+  })
+
+  it('APODERADO recibe ForbiddenException al archivar una sala', async () => {
+    const { service } = buildChatService()
+
+    await expect(service.archiveRoom(1, apoderado)).rejects.toThrow(ForbiddenException)
+  })
+
+  it('sala archivada no aparece en listRooms', async () => {
+    const { service, mocks } = buildChatService()
+    mocks.roomRepository.find = jest.fn().mockResolvedValue([])
+
+    const result = await service.listRooms(headTeacher)
+
+    expect(result).toHaveLength(0)
+  })
+
+  it('sala archivada lanza NotFoundException al intentar leer mensajes', async () => {
+    const { service, mocks } = buildChatService()
+    mocks.roomRepository.findOne = jest.fn().mockResolvedValue(null)
+
+    await expect(service.findMessagesByRoom(1, headTeacher)).rejects.toThrow(NotFoundException)
+  })
+
+  it('sala archivada lanza NotFoundException al intentar enviar mensajes', async () => {
+    const { service, mocks } = buildChatService()
+    mocks.roomRepository.findOne = jest.fn().mockResolvedValue(null)
+
+    await expect(
+      service.createMessage(1, { content: 'Mensaje no permitido' }, headTeacher)
+    ).rejects.toThrow(NotFoundException)
   })
 })

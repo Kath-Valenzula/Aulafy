@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common'
 import { CurrentUser } from '../common/auth/current-user.decorator'
 import { JwtAuthGuard } from '../common/auth/jwt-auth.guard'
 import { JwtPayload } from '../common/auth/jwt-payload.interface'
@@ -24,6 +24,12 @@ export class ChatController {
   @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
   createRoom(@Body() request: CreateChatRoomDto, @CurrentUser() user: JwtPayload) {
     return this.chatService.createRoom(request, user)
+  }
+
+  @Patch('rooms/:roomId/archive')
+  @Roles(RoleName.ADMIN, RoleName.COLEGIO, RoleName.PROFESOR)
+  archiveRoom(@Param('roomId', ParseIntPipe) roomId: number, @CurrentUser() user: JwtPayload) {
+    return this.chatService.archiveRoom(roomId, user)
   }
 
   @Get('rooms/:roomId/messages')

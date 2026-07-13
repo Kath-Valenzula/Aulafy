@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { StudentEntity } from '../academic-structure/entities/student.entity'
@@ -71,24 +71,36 @@ export class ChatService {
     await this.assertCanCreateChatRoom(user, request.courseId)
     const course = await this.findCourseOrFail(request.courseId)
 
-    const existing = await this.roomRepository.findOne({
-      where: {
-        courseId: String(request.courseId),
-        active: true
-      }
-    })
-    if (existing) {
-      return this.mapRoom(existing, course, null)
+    const normalizedName = request.name.trim()
+    if (!normalizedName) {
+      throw new BadRequestException('El nombre de la sala es obligatorio')
+    }
+    const duplicate = await this.roomRepository
+      .createQueryBuilder('room')
+      .where('room.courseId = :courseId', { courseId: String(request.courseId) })
+      .andWhere('LOWER(room.name) = LOWER(:name)', { name: normalizedName })
+      .andWhere('room.active = :active', { active: true })
+      .getOne()
+    if (duplicate) {
+      throw new ConflictException('Ya existe una sala activa con ese nombre para este curso')
     }
 
     const room = this.roomRepository.create({
       courseId: String(request.courseId),
-      name: request.name?.trim() || `Chat ${course.name}`,
+      name: normalizedName,
       createdById: String(user.sub),
       active: true
     })
     const created = await this.roomRepository.save(room)
     return this.mapRoom(created, course, null)
+  }
+
+  async archiveRoom(roomId: number, user: JwtPayload): Promise<{ id: number; archived: boolean }> {
+    const room = await this.findRoomOrFail(roomId)
+    await this.assertCanArchiveChatRoom(user, Number(room.courseId))
+    room.active = false
+    await this.roomRepository.save(room)
+    return { id: Number(room.id), archived: true }
   }
 
   async findMessagesByRoom(roomId: number, user: JwtPayload): Promise<ChatMessageResponse[]> {
@@ -134,20 +146,25 @@ export class ChatService {
     const created = await this.messageRepository.save(message)
 
     const course = await this.findCourseOrFail(Number(room.courseId))
-    await this.notifyRoomParticipants(course, author, created.content)
+    await this.notifyRoomParticipants(course, room, author, created.content)
 
     return this.mapMessage(created, author)
   }
 
-  private async assertCanCreateChatRoom(user: JwtPayload, courseId: number): Promise<void> {
-    if (user.role === RoleName.ADMIN || user.role === RoleName.COLEGIO) {
-      return
-    }
+  private async assertCanArchiveChatRoom(user: JwtPayload, courseId: number): Promise<void> {
     if (user.role === RoleName.PROFESOR) {
       await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
       return
     }
-    throw new ForbiddenException('No tienes permiso para crear una sala de chat')
+    throw new ForbiddenException('No tienes permiso para eliminar salas de chat')
+  }
+
+  private async assertCanCreateChatRoom(user: JwtPayload, courseId: number): Promise<void> {
+    if (user.role === RoleName.PROFESOR) {
+      await this.accessService.assertTeacherCourseRole(user, courseId, ['HEAD_TEACHER'])
+      return
+    }
+    throw new ForbiddenException('No tienes permiso para crear salas de chat')
   }
 
   private async assertCanUseCourseChat(user: JwtPayload, courseId: number): Promise<void> {
@@ -253,7 +270,7 @@ export class ChatService {
     }
   }
 
-  private async notifyRoomParticipants(course: CourseEntity, author: UserEntity, content: string): Promise<void> {
+  private async notifyRoomParticipants(course: CourseEntity, room: ChatRoomEntity, author: UserEntity, content: string): Promise<void> {
     const teacherLinks = await this.courseTeacherRepository.find({
       where: { courseId: course.id }
     })
@@ -296,6 +313,7 @@ export class ChatService {
 
     const message = [
       `Aulafy | Nuevo mensaje en ${course.name}`,
+      `Sala: ${room.name}`,
       `De: ${author.fullName}`,
       `Mensaje: ${content}`
     ].join('\n')
