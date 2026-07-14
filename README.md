@@ -1,106 +1,143 @@
 # Aulafy
 
-Aulafy es un MVP academico de plataforma web para comunicacion y gestion escolar. Centraliza publicaciones, calendario academico, notas, asistencia y anotaciones para mejorar la coordinacion entre colegio, profesores, estudiantes y apoderados.
+Aulafy es un MVP académico de plataforma web para comunicación y gestión escolar. Centraliza publicaciones, calendario académico, notas, asistencia, anotaciones y mensajería interna para mejorar la coordinación entre colegio, profesores, estudiantes y apoderados.
 
-El stack oficial vigente es:
+---
 
-- Frontend Angular 21 con TypeScript.
-- Backend NestJS con Node.js y TypeScript.
-- Base de datos MySQL 8.x.
-- ORM TypeORM.
-- Docker Compose para base de datos local.
-- Pruebas backend automatizadas con Jest.
-- Control de versiones en GitHub y seguimiento mediante GitHub Issues.
-- Telegram Bot API solo como integracion opcional para notificaciones externas.
-- AWS como entorno de demostracion academica: frontend en Amazon S3, backend en Elastic Beanstalk y base de datos MySQL en Amazon RDS.
+## Estado actual del MVP
 
-## Integrantes
+El sistema está desplegado en AWS y disponible para revisión académica. Los módulos principales están operativos. El rol contextual del docente (`role_in_course`) está implementado en backend y frontend: los permisos de HEAD_TEACHER y SUBJECT_TEACHER son distintos.
 
-- Katherine Gisselle Valenzuela Moreno
-- Sebastián Alberto Briceño Inostroza
+**Resultados de pruebas backend (Semana 8):**
 
-Profesor: Alonso Esteban Castillo Pizarro
+- 12 suites aprobadas.
+- 99 tests aprobados.
+- Statements: 69,30 % / Branches: 48,12 % / Functions: 59,66 % / Lines: 68,24 %.
 
-## Stack tecnico
+> **Nota:** Los resultados de pruebas corresponden al commit `265b2cb` (PR #6, mergeado en `develop` el 2026-07-13). Todos los módulos están desplegados en AWS. Smoke test aprobado.
 
-- Backend: NestJS, Node.js, TypeScript, JWT, TypeORM, class-validator.
-- Frontend: Angular 21, TypeScript, SCSS, Angular Router, Reactive Forms, HttpClient.
-- Base de datos: MySQL 8 mediante Docker Compose en local y Amazon RDS en AWS.
-- Pruebas: Jest en backend con suites unitarias y de permisos.
-- Integraciones: Telegram Bot API para avisos externos opcionales.
+---
 
 ## Arquitectura
 
-El proyecto sigue una arquitectura cliente-servidor. El backend NestJS modular expone una API REST bajo `/api`; el frontend Angular la consume por HTTP. La base de datos es MySQL gestionada con TypeORM. El despliegue se realiza en AWS.
+El backend NestJS expone una API REST bajo `/api`. El frontend corresponde a una SPA Angular compilada y servida como archivos estáticos desde Amazon S3. La aplicación consume la API REST NestJS por HTTP. La base de datos es MySQL gestionada con TypeORM. No se usan microservicios.
 
-Estructura del repositorio:
+---
 
-- `frontend/aulafy-web`: aplicacion Angular mobile-first.
-- `backend/aulafy-api-nest`: API NestJS con modulos por dominio.
-- `database/mysql`: scripts oficiales de esquema y datos demo en MySQL.
-- `docs`: documentacion academica del proyecto, avances semanales e imagenes de evidencia.
-- `.github/workflows`: integracion continua y flujos manuales de despliegue AWS.
+## Stack tecnológico
 
-No se usan microservicios porque el MVP requiere simplicidad operativa, menor costo y trazabilidad clara para entrega academica.
+| Capa | Tecnología | Versión |
+|------|-----------|---------|
+| Frontend | Angular + TypeScript | 21.2.x (instalada 21.2.14) |
+| Backend | NestJS + TypeScript | 11.x |
+| Runtime backend y deploy EB | Node.js | 22.x |
+| ORM | TypeORM | — |
+| Base de datos | MySQL | 8.x |
+| Autenticación | JWT (jsonwebtoken) | — |
+| Documentación API | Swagger / OpenAPI | — |
+| CI/CD | GitHub Actions | — |
+| Notificaciones externas | Telegram Bot API (opcional) | — |
 
-## Modulos principales
+---
 
-- Auth y seguridad JWT.
-- Gestion de usuarios y roles.
-- Cursos, asignaturas y evaluaciones. Profesor jefe formalizado con campo `role_in_course` en `course_teachers`. Los valores considerados son `HEAD_TEACHER`, `SUBJECT_TEACHER` y `ASSISTANT`. En el MVP todos los profesores asignados a un curso mantienen permisos operativos completos; la diferenciacion fina de permisos segun `role_in_course` queda como mejora futura.
-- Feed academico tipo red social.
-- Calendario por curso.
-- Anotaciones/comunicaciones personales del estudiante.
-- Asistencia y resumen academico.
-- Modulo de riesgo academico (`risk`): identifica estudiantes con bajo rendimiento (promedio inferior a 4.0) o baja asistencia (inferior al 85%). No corresponde a riesgo conductual ni disciplinario. Acceso restringido a los roles ADMIN y COLEGIO.
-- Chat interno por curso ("Mensajes del curso"): comunicacion interna entre PROFESOR, APODERADO y ESTUDIANTE dentro de cada curso. Disponible en frontend mediante la ruta `/app/chat`, implementado en backend mediante el modulo `chat` via API REST. La mensajeria en tiempo real con WebSocket queda como mejora futura.
-- Notificaciones externas opcionales mediante Telegram (solo canal de aviso externo, no es el chat principal).
+## Módulos implementados
 
-## Roles
+| Módulo | Estado | Ruta o endpoint |
+|--------|--------|----------------|
+| Autenticación JWT | Activo | `/login` |
+| Gestión de usuarios y roles | Activo | `/app/users` |
+| Cursos y asignaturas | Activo | `/app/courses` |
+| Muro académico (feed) | Activo | `/app/feed` |
+| Calendario por curso | Activo | `/app/calendar` |
+| Evaluaciones y notas | Activo | `/app/academic` |
+| Asistencia | Activo | `/app/attendance` |
+| Anotaciones | Activo | `/app/annotations` |
+| Chat interno por curso (múltiples salas, solo HEAD_TEACHER administra) | Activo | `/app/chat` |
+| Riesgo académico | Activo | `/app/risk` |
+| Notificaciones externas Telegram | Interno (no expuesto en UI del MVP) | — |
+| Health check | Activo | `/api/health` |
+| Documentación Swagger | Activo | `/api/docs` |
 
-- `ADMIN`
-- `COLEGIO`
-- `PROFESOR`
-- `APODERADO`
-- `ESTUDIANTE`
+---
 
-Para el MVP cada usuario tiene un rol principal. La estructura queda preparada para extender permisos si luego se requiere un modelo de multiples roles.
+## Roles y permisos
 
-## Entorno de revision AWS
+### Roles generales (claim en JWT)
 
-El entorno principal para revision academica esta publicado en AWS:
+| Rol | Descripción |
+|-----|------------|
+| ADMIN | Administración global de usuarios y configuración |
+| COLEGIO | Coordinación institucional |
+| PROFESOR | Docente; se subdivide por `role_in_course` dentro de cada curso |
+| APODERADO | Familiar o tutor del estudiante |
+| ESTUDIANTE | Alumno del establecimiento |
 
-- Frontend S3: <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com>
-- Backend Elastic Beanstalk: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api>
-- Health backend: <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
-- Base de datos: MySQL en Amazon RDS.
+### Rol contextual del docente (`role_in_course`)
 
-El entorno AWS se mantiene como instancia de revision academica controlada. Cualquier cambio de infraestructura debe revisarse antes de ejecutarse para evitar costos innecesarios y no exponer secretos.
+El campo `role_in_course` en la tabla `course_teachers` determina qué puede hacer cada profesor dentro de un curso específico. No forma parte del JWT; se consulta desde la base de datos en las operaciones que requieren autorización contextual por curso.
 
-## Ejecucion local para desarrollo
+| Valor | Acceso |
+|-------|--------|
+| HEAD_TEACHER | Acceso integral del curso: anotaciones conductuales, eventos generales (REUNION, ACTIVIDAD, COMUNICADO), riesgo académico, mensajes del curso, notificaciones institucionales |
+| SUBJECT_TEACHER | Acceso académico acotado: cursos asignados, muro, calendario (PRUEBA, TAREA), evaluaciones y notas, asistencia, anotaciones académicas |
+| ASSISTANT | Rol definido en el modelo de datos; alcance funcional específico pendiente de validación formal |
 
-La ejecucion local se conserva para desarrollo, pruebas y correcciones. No reemplaza al entorno AWS de revision.
+### Diferenciación HEAD_TEACHER / SUBJECT_TEACHER
 
-Base de datos:
+La diferenciación contextual se implementa en backend mediante `AcademicAccessService` y validaciones específicas en los servicios de calendario, muro, anotaciones, académico, chat, riesgo y notificaciones. `RolesGuard` valida exclusivamente los roles generales incluidos en el JWT.
+
+- Las anotaciones conductuales requieren `HEAD_TEACHER`.
+- Los eventos generales (REUNION, ACTIVIDAD, COMUNICADO) requieren `HEAD_TEACHER`.
+- El reporte de riesgo académico está disponible para ADMIN, COLEGIO y `HEAD_TEACHER`.
+- `SUBJECT_TEACHER` no accede al reporte de riesgo ni a notificaciones institucionales.
+- `SUBJECT_TEACHER` queda bloqueado para listar salas, crear salas, leer mensajes y enviar mensajes del chat general. La corrección está validada mediante pruebas automatizadas (commit `5d05e41`, PR #4) y smoke test en AWS (2026-07-12).
+- Un mismo usuario puede ser `HEAD_TEACHER` en un curso y `SUBJECT_TEACHER` en otro.
+
+El backend constituye la autoridad final de autorización mediante `role_in_course`. El frontend obtiene `myRoleInCourse` desde `/api/courses` y mantiene un estado restrictivo mientras carga los permisos o si la consulta falla.
+
+### Módulo de riesgo académico
+
+Identifica estudiantes con bajo rendimiento según umbrales fijos: promedio inferior a 4,0 o asistencia inferior al 85 %. No corresponde a riesgo conductual ni disciplinario. Acceso disponible para ADMIN, COLEGIO y PROFESOR con rol `HEAD_TEACHER` en el curso correspondiente.
+
+---
+
+## Infraestructura AWS
+
+| Componente | Servicio | URL |
+|-----------|---------|-----|
+| Frontend | Amazon S3 Static Website | http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com |
+| Backend | AWS Elastic Beanstalk | http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api |
+| Health check | AWS Elastic Beanstalk | http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health |
+| API Docs (Swagger) | AWS Elastic Beanstalk | http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/docs |
+| Base de datos | Amazon RDS MySQL 8.x | Amazon RDS MySQL conectado al backend Elastic Beanstalk; endpoint y credenciales no publicados |
+
+El entorno AWS es una instancia de revisión académica controlada, no un entorno de producción final. La comunicación es por HTTP; HTTPS no está activo en el staging actual.
+
+---
+
+## Instalación local
+
+### Base de datos
 
 ```bash
 docker compose down -v
 docker compose up -d
 ```
 
-El reinicio con `down -v` elimina el volumen local de MySQL y fuerza la carga automatica de `database/mysql/schema.sql` y `database/mysql/seed.sql` desde `/docker-entrypoint-initdb.d/`.
+El reinicio con `down -v` elimina el volumen local y fuerza la carga de `database/mysql/schema.sql` y `database/mysql/seed.sql`.
 
-Backend NestJS:
+### Backend
 
 ```bash
 cd backend/aulafy-api-nest
 cp .env.example .env
 npm install
-npm run build
 npm run start:dev
 ```
 
-Frontend:
+> Nota técnica: el lockfile del backend presenta una desincronización que impide el uso de `npm ci` en entornos Linux limpios. Se usa `npm install` como alternativa mientras se resuelve en Semana 8.
+
+### Frontend
 
 ```bash
 cd frontend/aulafy-web
@@ -108,11 +145,15 @@ npm install
 npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
 ```
 
-La interfaz queda disponible en `http://localhost:4200` y el proxy local redirige `/api` hacia `http://localhost:8080/api`.
+La interfaz queda disponible en `http://localhost:4200`. El proxy local redirige `/api` hacia `http://localhost:8080/api`.
 
-## Variables de entorno local
+---
 
-```bash
+## Variables de entorno
+
+Copiar `.env.example` a `.env` en el directorio del backend y completar los valores:
+
+```env
 NODE_ENV=development
 PORT=8080
 
@@ -129,120 +170,136 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
 
-## Credenciales demo
+Las variables de Telegram son opcionales. Si no se configuran, el sistema opera en modo `NOT_CONFIGURED` sin fallar.
 
-- `admin@aulafy.cl` / `Admin1234`
-- `colegio@aulafy.cl` / `Colegio1234`
-- `profesor@aulafy.cl` / `Profesor1234`
-- `apoderado@aulafy.cl` / `Apoderado1234`
-- `estudiante@aulafy.cl` / `Estudiante1234`
+---
 
-## Estado actual del MVP
+## Usuarios demo
 
-- Backend NestJS con modulos por dominio para autenticacion, usuarios, cursos, calendario, publicaciones, evaluaciones, asistencia, anotaciones, chat y notificaciones.
-- Frontend Angular operativo con rutas protegidas y pantallas principales del MVP.
-- Base de datos MySQL con esquema y seed demo en `database/mysql`. Seed incluye 3 estudiantes demo con diferentes perfiles de riesgo academico.
-- Chat interno por curso activo para PROFESOR, APODERADO y ESTUDIANTE. Telegram solo envia avisos externos opcionales.
-- Profesor jefe formalizado: campo `role_in_course` en tabla `course_teachers`. El profesor demo figura como `HEAD_TEACHER`.
-- Reporte de riesgo academico con umbrales configurados: promedio < 4.0 y asistencia < 85%. Acceso exclusivo para ADMIN y COLEGIO.
-- Documentacion academica y evidencias disponibles en la carpeta `docs`, organizadas por semana de avance.
+Los usuarios base están disponibles mediante `database/mysql/seed.sql`. Los usuarios Profesor Jefe Demo y Profesor Asignatura Demo se incorporan mediante `database/mysql/migrations/20260705_seed_profesor_jefe_asignatura_demo.sql`, migración ya aplicada en el RDS de staging.
 
-## Entrega Semana 5
+| Email | Contraseña | Rol JWT | role_in_course |
+|-------|-----------|---------|----------------|
+| admin@aulafy.cl | Admin1234 | ADMIN | — |
+| colegio@aulafy.cl | Colegio1234 | COLEGIO | — |
+| profesor.jefe@aulafy.cl | ProfesorJefe1234 | PROFESOR | HEAD_TEACHER |
+| profesor.asignatura@aulafy.cl | ProfesorAsignatura1234 | PROFESOR | SUBJECT_TEACHER |
+| apoderado@aulafy.cl | Apoderado1234 | APODERADO | — |
+| estudiante@aulafy.cl | Estudiante1234 | ESTUDIANTE | — |
 
-- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> - rama activa: `develop`.
-- **Arquitectura real:** cliente-servidor / monolito modular. Un proceso NestJS expone la API REST bajo `/api`; un proceso Angular la consume por HTTP. No hay microservicios ni gateways de mensajeria adicionales.
-- **Funcionalidades disponibles:** autenticacion JWT, roles (ADMIN, COLEGIO, PROFESOR, APODERADO, ESTUDIANTE), feed con publicaciones y comentarios, calendario por curso, evaluaciones y notas con calculo de promedio, asistencia con resumen porcentual, anotaciones de estudiante, reporte de riesgo academico, notificaciones externas opcionales por Telegram.
-- **Despliegue AWS:** frontend publicado en Amazon S3, backend NestJS publicado en Elastic Beanstalk y base MySQL en Amazon RDS.
-- **Correccion reciente:** el modulo `Reportes y riesgo` maneja errores, timeouts y respuestas vacias sin quedar en carga infinita.
-- **Levantar el sistema localmente:**
+---
+
+## Pruebas y cobertura
 
 ```bash
-# Base de datos
-docker compose up -d
-
-# Backend
 cd backend/aulafy-api-nest
-cp .env.example .env
-npm install
-npm run start:dev
-
-# Frontend (con proxy local hacia backend)
-cd frontend/aulafy-web
-npm install
-npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.json
+npm test
+npm run test:coverage
 ```
 
-- **Build frontend:** `cd frontend/aulafy-web && npm run build`
-- **Build frontend staging:** `cd frontend/aulafy-web && npm run build:staging`
-- **Pruebas backend:** `cd backend/aulafy-api-nest && npm test`
+Resultados actuales del backend (medición Semana 8):
 
-## Entrega Semana 6
+| Métrica | Resultado |
+|---------|----------|
+| Suites | 12 |
+| Tests | 99 PASS |
+| Statements | 69,30 % |
+| Branches | 48,12 % |
+| Functions | 59,66 % |
+| Lines | 68,24 % |
 
-- **Repositorio:** <https://github.com/Kath-Valenzula/Aulafy> — rama activa: `develop`.
-- **Frontend AWS S3 Static Website:** <http://aulafy-frontend-803615173905.s3-website.us-east-2.amazonaws.com> (HTTP, staging académico).
-- **Backend AWS Elastic Beanstalk health:** <http://aulafy-api-staging.eba-uuqbidym.us-east-2.elasticbeanstalk.com/api/health>
-- **Tipo de entorno:** demostración académica. No es producción final. Los recursos AWS están activos únicamente para revisión y se mantienen controlados para evitar costos innecesarios.
+**Módulos con mayor cobertura:** Auth (~95 %), Risk (~88 %), Annotations, RolesGuard, Chat (~72 %).
+**Módulos con menor cobertura:** Notifications (21 %), Users (18 %), Courses (38 %).
 
-### Mejoras técnicas aplicadas en Semana 6
+El frontend no cuenta con pruebas unitarias automatizadas en esta etapa del MVP.
 
-**Seguridad mínima:**
+---
 
-- CORS restringido: se reemplazó `cors: true` abierto por una lista explícita de orígenes permitidos (localhost de desarrollo, frontend AWS, variable `FRONTEND_URL`).
-- Helmet agregado: cabeceras HTTP de seguridad configuradas con modo conservador para API REST (`contentSecurityPolicy: false`, `crossOriginEmbedderPolicy: false`).
-- `.env.example` actualizado con placeholders seguros; sin contraseñas reales en el repositorio.
-- `deploy-aws.sh` ajustado para no imprimir credenciales en consola y no dejar MySQL abierto a `0.0.0.0/0` en futuras recreaciones.
+## Rendimiento en staging (Semana 8)
 
-**Calidad:**
+Medición sobre AWS en modo desktop (Chrome, sin caché).
 
-- `test:coverage` agregado con Jest. Resultados de la línea base medida:
-  - Statements: 61.45% / Branches: 39.42% / Functions: 47.85% / Lines: 59.50%
-- Backend: 7 suites, 27 tests, todos pasando.
-- `sonar-project.properties` preparado para integración futura con SonarQube/SonarCloud, sin tokens ni credenciales.
-- Se eliminó la dependencia de Google Fonts para la tipografía general del sistema. La interfaz utiliza fuentes del sistema (`system-ui`, `Segoe UI`, `sans-serif`), manteniendo únicamente Material Symbols Outlined para la representación de íconos del menú y acciones visuales.
-- `npm audit` ejecutado y vulnerabilidades documentadas. No se aplicó `audit fix --force` para evitar cambios no controlados en dependencias críticas.
+| Métrica | Valor |
+| ------- | ----- |
+| Health endpoint — promedio (10 req) | 190,97 ms |
+| Health endpoint — mínimo | 150,44 ms |
+| Health endpoint — máximo | 424,65 ms |
+| Health endpoint — p50 | 163,36 ms |
+| DOMContentLoaded (sesión fría) | 714 ms |
+| Load event (sesión fría) | 1,67 s |
+| Lighthouse Performance (desktop) | 75 / 100 |
+| FCP | 1,6 s |
+| LCP | 2,0 s |
+| TBT | 210 ms |
+| CLS | 0 |
+| Bundle inicial (gzip) | 82,03 kB |
+| Elastic Beanstalk CPU | 0,312 % |
+| RDS conexiones activas | 4 |
+| RDS CPU | ~4,15 % |
 
-**Mejoras de despliegue proyectadas (no activas actualmente):**
+---
 
-- CloudFront para servir el frontend con HTTPS.
-- AWS Certificate Manager (ACM) para certificado HTTPS si se dispone de dominio propio.
-- AWS Budget mensual para control de costos del staging.
-- Secretos migrados a AWS SSM Parameter Store o Secrets Manager.
-- RDS MySQL restringida a acceso privado desde el backend (sin acceso público a Internet).
+## CI/CD
 
-Los scripts base para estas mejoras están disponibles en `scripts/aws/`.
+Los workflows de GitHub Actions se encuentran en `.github/workflows/`:
 
-### Comandos de validación Semana 6
+| Archivo | Descripción |
+|---------|------------|
+| `backend-nest-ci.yml` | Integración continua del backend: build y tests en cada push |
+| `frontend-angular-ci.yml` | Integración continua del frontend: build en cada push |
+| `backend-aws-eb-deploy.yml` | Despliegue manual del backend en AWS Elastic Beanstalk |
+| `frontend-aws-s3-deploy.yml` | Despliegue manual del frontend en Amazon S3 |
 
-```bash
-# Backend
-cd backend/aulafy-api-nest
-npm run build          # compilar TypeScript
-npm test               # 7 suites, 27 tests
-npm run test:coverage  # cobertura Jest
+---
 
-# Frontend
-cd frontend/aulafy-web
-npm run build          # build de produccion
+## Estructura del repositorio
+
+```
+Aulafy/
+├── backend/aulafy-api-nest/    # API NestJS con módulos por dominio
+├── frontend/aulafy-web/        # Aplicación Angular (SPA)
+├── database/mysql/             # schema.sql, seed.sql y migraciones
+├── docs/                       # Documentación académica por semana
+│   ├── semana-7/               # Documentación y evidencias Semana 7
+│   ├── semana-8/               # Documentación y evidencias Semana 8
+│   └── sumativa-2/             # Área de trabajo para actualizar los siete documentos de la Sumativa 2
+├── .github/workflows/          # CI/CD GitHub Actions
+└── docker-compose.yml          # Base de datos local
 ```
 
-## Limitaciones conocidas
+---
 
-- Chat interno por curso: persiste mensajes via REST, sin tiempo real (sin WebSocket). La pantalla no se actualiza automaticamente; hay que recargar para ver mensajes nuevos.
-- Profesor jefe: `role_in_course` ya esta implementado como dato. Los permisos aun no estan diferenciados por rol del docente; todos los docentes del curso tienen igual nivel de acceso en el MVP actual.
-- Reporte de riesgo: los umbrales (promedio < 4.0, asistencia < 85%) estan fijados en el codigo backend. No son configurables por la interfaz.
-- Frontend no implementa todo el CRUD disponible en backend: cursos y usuarios son de solo lectura en la interfaz.
-- Logout solo en cliente: el JWT sigue siendo valido en el servidor hasta su expiracion de 2h.
-- Telegram es opcional: si no hay credenciales, el sistema degrada a modo `NOT_CONFIGURED` sin fallar.
-- Dashboard por rol sin indicadores (KPIs) de negocio reales: muestra navegacion por modulos.
-- Entorno AWS activo para revision academica de alcance academico. No es produccion final. HTTPS no esta activo; el frontend se sirve por HTTP desde S3 Static Website.
+## Limitaciones del staging académico
 
-## Roadmap
+| Limitación | Descripción |
+|-----------|------------|
+| Sin HTTPS | S3 y Elastic Beanstalk en HTTP |
+| Logout solo en cliente | El token JWT continúa siendo válido en el servidor hasta su expiración de 1 día |
+| Umbrales de riesgo fijos | promedio < 4,0 y asistencia < 85 %, no configurables por interfaz |
+| Chat sin tiempo real | Implementado vía REST; requiere recarga manual para ver mensajes nuevos |
+| role_in_course fuera del JWT | Se consulta desde la base de datos en operaciones con autorización contextual |
+| Reproducibilidad en Linux | `npm ci` backend falla en entorno Linux limpio; en revisión durante Semana 8 |
+| Frontend sin pruebas automatizadas | No hay suite de pruebas unitarias en el frontend |
 
-1. Consolidar pruebas automatizadas del stack NestJS/Angular.
-2. Completar evidencias de QA y trazabilidad con GitHub Issues.
-3. Completar cobertura de pruebas para el modulo de chat.
-4. Mantener el despliegue AWS con monitoreo basico, variables seguras y control de costos.
-5. Activar CloudFront con HTTPS para el frontend.
-6. Configurar AWS Budget mensual para control de costos del staging.
-7. Migrar secretos a AWS SSM Parameter Store o Secrets Manager.
-8. Restringir RDS a acceso privado desde el backend, eliminando la apertura publica usada en el entorno de demo academica.
+---
+
+## Documentación del proyecto
+
+La carpeta `docs/` contiene la documentación académica organizada por etapa:
+
+| Ruta | Contenido |
+|------|----------|
+| `docs/FICHA_ESTADO_REAL_AULAFY.md` | Fuente única de verdad: stack, URLs, tests, roles y deuda técnica |
+| `docs/semana-7/` | Evidencias, documento de avance y capturas de pantalla |
+| `docs/semana-8/` | QA, registros de defectos, no conformidades y backlog técnico |
+| `docs/sumativa-2/` | Área de trabajo para la actualización de los siete documentos de la Sumativa 2 |
+
+---
+
+## Integrantes
+
+- Katherine Gisselle Valenzuela Moreno
+- Sebastián Alberto Briceño Inostroza
+
+Profesor: Alonso Esteban Castillo Pizarro
+Curso: TSY2201 — Proyecto de Título
