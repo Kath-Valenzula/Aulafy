@@ -133,8 +133,7 @@ export class UsersComponent implements OnInit {
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        console.error('Error al cargar usuarios', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
         this.cdr.markForCheck();

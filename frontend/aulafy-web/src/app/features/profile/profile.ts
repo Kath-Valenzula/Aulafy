@@ -122,8 +122,7 @@ export class ProfileComponent implements OnInit {
         this.students = students;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar perfil', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }

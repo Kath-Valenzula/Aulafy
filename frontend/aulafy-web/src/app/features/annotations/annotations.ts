@@ -282,8 +282,7 @@ export class AnnotationsComponent implements OnInit {
           this.resetDraft();
           this.loadAnnotations();
         },
-        error: (error) => {
-          console.error('Error al registrar anotacion', error);
+        error: () => {
           this.saving = false;
           this.actionMessage = 'No fue posible registrar la anotacion.';
         }
@@ -326,8 +325,7 @@ export class AnnotationsComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadStudentsAndAnnotations();
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para anotaciones', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -349,7 +347,6 @@ export class AnnotationsComponent implements OnInit {
         this.loadAnnotations();
       },
       error: (err) => {
-        console.error('Error al cargar alumnos para anotaciones', err);
         if (err?.status === 403) {
           this.students = [];
           this.annotations = [];
@@ -381,7 +378,6 @@ export class AnnotationsComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error al cargar anotaciones', err);
           if (err?.status === 403) {
             this.annotations = [];
           } else {

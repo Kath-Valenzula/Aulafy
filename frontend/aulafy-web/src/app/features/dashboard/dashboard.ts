@@ -60,11 +60,12 @@ export class DashboardComponent {
   readonly auth = inject(AuthService);
   private readonly teacherPermissions = inject(TeacherPermissionsService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
-    this.teacherPermissions.permissions$.pipe(
-      takeUntilDestroyed(inject(DestroyRef))
-    ).subscribe(() => this.cdr.markForCheck());
+    this.teacherPermissions.permissions$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cdr.markForCheck());
   }
 
   get context(): DashboardContext {
@@ -101,36 +102,34 @@ export class DashboardComponent {
       };
     }
 
-    if (this.teacherPermissions.isSubjectTeacherOnly) {
-      return {
-        title: 'Dashboard docente',
-        subtitle: 'Acceso academico limitado a cursos y estudiantes autorizados.',
-        focus: 'Acceso academico de profesor de asignatura. Algunas funciones institucionales estan reservadas para profesor jefe.',
-        actions: [
-          { label: 'Cursos asignados', description: 'Consultar cursos donde tienes asignatura.', icon: 'school', path: '/app/courses' },
-          { label: 'Muro academico', description: 'Revisar publicaciones y comunicados del curso.', icon: 'dynamic_feed', path: '/app/feed' },
-          { label: 'Calendario', description: 'Revisar pruebas y tareas programadas.', icon: 'calendar_month', path: '/app/calendar' },
-          { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar notas de tu asignatura.', icon: 'grade', path: '/app/academic' },
-          { label: 'Asistencia', description: 'Registrar asistencia basica del curso.', icon: 'event_available', path: '/app/attendance' },
-          { label: 'Anotaciones', description: 'Registrar anotaciones academicas o de comunicacion.', icon: 'assignment_late', path: '/app/annotations' }
-        ]
-      };
-    }
+    return this.buildTeacherContext();
+  }
 
-    return {
-      title: 'Dashboard docente',
-      subtitle: 'Acceso operativo a cursos asignados, evaluaciones, asistencia y comunicaciones.',
-      focus: 'Acceso integral del curso como profesor jefe.',
-      actions: [
-        { label: 'Cursos asignados', description: 'Consultar cursos visibles para el docente.', icon: 'school', path: '/app/courses' },
-        { label: 'Muro academico', description: 'Publicar y revisar comunicaciones del curso.', icon: 'dynamic_feed', path: '/app/feed' },
-        { label: 'Calendario', description: 'Revisar eventos y evaluaciones programadas.', icon: 'calendar_month', path: '/app/calendar' },
-        { label: 'Evaluaciones y notas', description: 'Crear evaluaciones y registrar calificaciones.', icon: 'grade', path: '/app/academic' },
-        { label: 'Asistencia', description: 'Registrar y consultar asistencia.', icon: 'event_available', path: '/app/attendance' },
-        { label: 'Anotaciones', description: 'Registrar observaciones academicas o conductuales.', icon: 'assignment_late', path: '/app/annotations' },
+  private buildTeacherContext(): DashboardContext {
+    const subjectOnly = this.teacherPermissions.isSubjectTeacherOnly;
+    const actions: DashboardAction[] = [
+      { label: 'Cursos asignados', description: subjectOnly ? 'Consultar cursos donde tienes asignatura.' : 'Consultar cursos visibles para el docente.', icon: 'school', path: '/app/courses' },
+      { label: 'Muro academico', description: subjectOnly ? 'Revisar publicaciones y comunicados del curso.' : 'Publicar y revisar comunicaciones del curso.', icon: 'dynamic_feed', path: '/app/feed' },
+      { label: 'Calendario', description: subjectOnly ? 'Revisar pruebas y tareas programadas.' : 'Revisar eventos y evaluaciones programadas.', icon: 'calendar_month', path: '/app/calendar' },
+      { label: 'Evaluaciones y notas', description: subjectOnly ? 'Crear evaluaciones y registrar notas de tu asignatura.' : 'Crear evaluaciones y registrar calificaciones.', icon: 'grade', path: '/app/academic' },
+      { label: 'Asistencia', description: subjectOnly ? 'Registrar asistencia basica del curso.' : 'Registrar y consultar asistencia.', icon: 'event_available', path: '/app/attendance' },
+      { label: 'Anotaciones', description: subjectOnly ? 'Registrar anotaciones academicas o de comunicacion.' : 'Registrar observaciones academicas o conductuales.', icon: 'assignment_late', path: '/app/annotations' }
+    ];
+    if (!subjectOnly) {
+      actions.push(
         { label: 'Mensajes del curso', description: 'Comunicacion directa con estudiantes y apoderados.', icon: 'chat', path: '/app/chat' },
         { label: 'Alertas de riesgo', description: 'Revisar indicadores de riesgo academico.', icon: 'warning', path: '/app/risk' }
-      ]
+      );
+    }
+    return {
+      title: 'Dashboard docente',
+      subtitle: subjectOnly
+        ? 'Acceso academico limitado a cursos y estudiantes autorizados.'
+        : 'Acceso operativo a cursos asignados, evaluaciones, asistencia y comunicaciones.',
+      focus: subjectOnly
+        ? 'Acceso academico de profesor de asignatura. Algunas funciones institucionales estan reservadas para profesor jefe.'
+        : 'Acceso integral del curso como profesor jefe.',
+      actions
     };
   }
 }

@@ -132,8 +132,7 @@ export class NotificationsComponent implements OnInit {
         this.logs = logs;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar notificaciones', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -150,8 +149,7 @@ export class NotificationsComponent implements OnInit {
         this.actionMessage = `Prueba ejecutada con estado: ${result.status}.`;
         this.loadLogs();
       },
-      error: (error) => {
-        console.error('Error al probar Telegram', error);
+      error: () => {
         this.sendingTest = false;
         this.actionMessage = 'No fue posible ejecutar la prueba Telegram.';
       }
@@ -172,8 +170,7 @@ export class NotificationsComponent implements OnInit {
         this.actionMessage = `Mensaje procesado con estado: ${result.status}.`;
         this.loadLogs();
       },
-      error: (error) => {
-        console.error('Error al enviar notificacion', error);
+      error: () => {
         this.sendingMessage = false;
         this.actionMessage = 'No fue posible enviar el mensaje.';
       }

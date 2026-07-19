@@ -277,8 +277,7 @@ export class CalendarComponent implements OnInit {
           this.resetEventDraft();
           this.loadEvents(this.selectedCourseId!);
         },
-        error: (error) => {
-          console.error('Error al crear evento', error);
+        error: () => {
           this.saving = false;
           this.actionMessage = 'No fue posible crear el evento.';
         }
@@ -312,8 +311,7 @@ export class CalendarComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadEvents(courses[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para calendario', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -329,8 +327,7 @@ export class CalendarComponent implements OnInit {
         this.events = events;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar eventos del curso', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }

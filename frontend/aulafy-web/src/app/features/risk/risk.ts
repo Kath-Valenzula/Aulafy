@@ -172,8 +172,7 @@ export class RiskComponent implements OnInit {
 
     this.riskService.academicRisk().pipe(
       timeout(RISK_REPORT_TIMEOUT_MS),
-      catchError((error) => {
-        console.error('Error al cargar reporte de riesgo', error);
+      catchError(() => {
         this.report = null;
         this.error = 'No fue posible cargar el reporte de riesgo en este momento.';
         return of(null);

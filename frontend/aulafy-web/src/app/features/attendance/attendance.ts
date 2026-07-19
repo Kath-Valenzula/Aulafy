@@ -325,8 +325,7 @@ export class AttendanceComponent implements OnInit {
           this.attendanceDraft.comment = '';
           this.fetchAttendance(this.selectedStudentId!);
         },
-        error: (error) => {
-          console.error('Error al registrar asistencia', error);
+        error: () => {
           this.savingAttendance = false;
           this.actionMessage = 'No fue posible registrar la asistencia.';
         }
@@ -361,8 +360,7 @@ export class AttendanceComponent implements OnInit {
         this.selectedStudentId = this.students[0].id;
         this.fetchAttendance(this.students[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar alumnos vinculados', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -384,8 +382,7 @@ export class AttendanceComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadBackofficeStudentsByCourse(courses[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para asistencia', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -411,7 +408,6 @@ export class AttendanceComponent implements OnInit {
         this.fetchAttendance(this.students[0].id);
       },
       error: (err) => {
-        console.error('Error al cargar alumnos del curso', err);
         if (err?.status === 403) {
           this.students = [];
           this.records = [];
@@ -439,7 +435,6 @@ export class AttendanceComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error al cargar asistencia del alumno', err);
         if (err?.status === 403) {
           this.records = [];
           this.summary = null;

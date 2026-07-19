@@ -125,8 +125,7 @@ export class SubjectsComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadSubjects(courses[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para asignaturas', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -144,8 +143,7 @@ export class SubjectsComponent implements OnInit {
         this.subjects = subjects;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar asignaturas', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }

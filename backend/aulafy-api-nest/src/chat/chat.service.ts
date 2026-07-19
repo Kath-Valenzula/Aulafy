@@ -245,28 +245,26 @@ export class ChatService {
     course?: CourseEntity,
     latestMessage?: ChatMessageEntity | null
   ): ChatRoomResponse {
-    const createdAt = room.createdAt instanceof Date ? room.createdAt : new Date()
     const latestAt = latestMessage?.createdAt instanceof Date ? latestMessage.createdAt : null
     return {
       id: Number(room.id),
       courseId: Number(room.courseId),
       courseName: course?.name ?? 'Curso',
       name: room.name,
-      createdAt: createdAt.toISOString(),
+      createdAt: room.createdAt.toISOString(),
       latestMessage: latestMessage?.content ?? null,
       latestMessageAt: latestAt ? latestAt.toISOString() : null
     }
   }
 
   private mapMessage(message: ChatMessageEntity, author?: UserEntity): ChatMessageResponse {
-    const createdAt = message.createdAt instanceof Date ? message.createdAt : new Date()
     return {
       id: Number(message.id),
       roomId: Number(message.roomId),
       authorId: Number(message.authorId),
       authorName: author?.fullName ?? 'Usuario',
       content: message.content,
-      createdAt: createdAt.toISOString()
+      createdAt: message.createdAt.toISOString()
     }
   }
 

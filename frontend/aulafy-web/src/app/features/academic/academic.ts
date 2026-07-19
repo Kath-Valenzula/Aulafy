@@ -465,8 +465,7 @@ export class AcademicComponent implements OnInit {
           this.resetEvaluationDraft();
           this.fetchCourseAcademic(this.selectedCourseId!);
         },
-        error: (error) => {
-          console.error('Error al crear evaluacion', error);
+        error: () => {
           this.savingEvaluation = false;
           this.actionMessage = 'No fue posible crear la evaluacion.';
         }
@@ -495,8 +494,7 @@ export class AcademicComponent implements OnInit {
           this.actionMessage = 'Nota registrada correctamente.';
           this.resetGradeDraft();
         },
-        error: (error) => {
-          console.error('Error al registrar nota', error);
+        error: () => {
           this.savingGrade = false;
           this.actionMessage = 'No fue posible registrar la nota.';
         }
@@ -526,8 +524,7 @@ export class AcademicComponent implements OnInit {
         this.selectedStudentId = students[0].id;
         this.fetchStudentAcademic(students[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar alumnos asociados', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -547,8 +544,7 @@ export class AcademicComponent implements OnInit {
         this.grades = grades;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar notas del alumno', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -570,8 +566,7 @@ export class AcademicComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.fetchCourseAcademic(courses[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para notas', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -596,8 +591,7 @@ export class AcademicComponent implements OnInit {
         this.resetEvaluationDraft();
         this.resetGradeDraft();
       },
-      error: (error) => {
-        console.error('Error al cargar evaluaciones del curso', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }

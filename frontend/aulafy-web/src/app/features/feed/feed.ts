@@ -251,8 +251,7 @@ export class FeedComponent implements OnInit {
           this.resetPostDraft();
           this.loadPosts(this.selectedCourseId!);
         },
-        error: (error) => {
-          console.error('Error al crear publicacion', error);
+        error: () => {
           this.savingPost = false;
           this.actionMessage = 'No fue posible crear la publicacion.';
         }
@@ -275,8 +274,7 @@ export class FeedComponent implements OnInit {
         this.commentsByPost[postId] = comments;
         this.loadingCommentsPostId = null;
       },
-      error: (error) => {
-        console.error('Error al cargar comentarios', error);
+      error: () => {
         this.commentsByPost[postId] = [];
         this.loadingCommentsPostId = null;
         this.actionMessage = 'No fue posible cargar los comentarios.';
@@ -310,8 +308,7 @@ export class FeedComponent implements OnInit {
           this.commentsByPost[postId] = [...current, comment];
           this.commentDraftByPost[postId] = '';
         },
-        error: (error) => {
-          console.error('Error al crear comentario', error);
+        error: () => {
           this.savingCommentPostId = null;
           this.actionMessage = 'No fue posible registrar el comentario.';
         }
@@ -350,8 +347,7 @@ export class FeedComponent implements OnInit {
         this.selectedCourseId = courses[0].id;
         this.loadPosts(courses[0].id);
       },
-      error: (error) => {
-        console.error('Error al cargar cursos para muro', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
@@ -370,8 +366,7 @@ export class FeedComponent implements OnInit {
         this.posts = posts;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar publicaciones', error);
+      error: () => {
         this.error = 'No fue posible cargar la informacion. Intenta nuevamente.';
         this.loading = false;
       }
